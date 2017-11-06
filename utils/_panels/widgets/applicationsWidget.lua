@@ -24,7 +24,14 @@ local _canvas = canvas.new{ h = 42 }:appendElements{
     }
 }:mouseCallback(function(c, m, i, x, y)
     if m == "mouseUp" then
-        application.launchOrFocusByBundleID(i)
+        -- odd behavior with SmartGit in that it tries to launch a second time if it's already running,
+        -- so check to see if the app is already present first:
+        local obj = application(i)
+        if obj then
+            obj:activate()
+        else
+            application.launchOrFocusByBundleID(i)
+        end
     end
 end)
 
