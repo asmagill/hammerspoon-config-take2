@@ -48,4 +48,6 @@ slidingPanels:panel("infoPanel"):addWidget("FromSpoon", "CPUMEMBAT", {  x = 0, y
     },
 })
 
+slidingPanels:panel("infoPanel"):addWidget(hs.configdir .. "/utils/_panels/widgets/applicationsWidget.lua")
+
 return slidingPanels:panel("infoPanel")
