@@ -282,7 +282,7 @@ module.eventwatcher = eventtap.new({events.flagsChanged}, function(ev)
         module.eventwatcher2 = eventtap.new({events.flagsChanged, events.keyDown, events.leftMouseDown}, function(ev)
             -- because we listen for multiple event types, it's possible that this callback function may
             -- be queued and executed multiple times... bail if we've already done our work
-            if module.eventWatcher2 then
+            if module.eventwatcher2 then
                 if module.countDown then
                     module.countDown:stop()
                     module.countDown = nil
