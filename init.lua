@@ -27,6 +27,7 @@ local application = require("hs.application")
 local logger      = require("hs.logger")
 local timer       = require("hs.timer")
 local ipc         = require("hs.ipc")
+local alert       = require("hs.alert")
 
 -- something steals focus from an application which was focused before HS starts; capture that
 -- window and then we'll switch back to it at the end
