@@ -40,7 +40,7 @@ finspect = function(...)
 
     -- causes issues with recursive calls to __tostring in inspect
     local mt = getmetatable(args)
-    if type(mt.__metatable) ~= "nil" then
+    if mt and type(mt.__metatable) ~= "nil" then
         print("** protected metatable; can't suppress __tostring formatting  **")
         mt = nil
     end
