@@ -4,10 +4,10 @@ local seen_GCs = {}
 
 local __gc_replacement = function(modName, originalFN)
     seen_GCs[modName] = originalFN
-    return function(...)
+    return function(obj, ...)
 --         print("~~ " .. os.date("%Y-%m-%d %H:%M:%S") .. " : invoking " .. tostring(modName) .. ".__gc")
-        print("~~ " .. timestamp() .. " : invoking " .. tostring(modName) .. ".__gc")
-        originalFN(...)
+        print("~~ " .. timestamp() .. " : invoking " .. tostring(modName) .. ".__gc(" .. tostring(obj) .. ")")
+        originalFN(obj, ...)
     end
 end
 
