@@ -8,6 +8,7 @@ slidingPanels:addPanel("infoPanel", {
     animationDuration = 0.1,
     color             = { white = .35 },
     fillAlpha         = .95,
+    autoClose         = true,
 }):enable()
 
 -- the "FromSpoon" widget takes the following arguments:

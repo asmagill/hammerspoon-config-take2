@@ -1,4 +1,14 @@
 --
+-- need to check with all of the guitk elements:
+--    can this use eventtap and when a mouse up occurs, start to close *IF* no element of the
+--    panel is currently active? This would allow for canvas clicks to close (e.g. as a launcher)
+--  should have a flag to enable/disable this behavior because I can think of panels where I'd want to
+--    keep it open as well.
+--  The goal here is for the items in a panel to not have to *know* that they are in a panel to
+--    trigger useful behavior (like making the panel go away when an action is taken)
+
+
+--
 -- Creates panels which slide from the side of the screen when specific key modifiers are held and the mouse pointer is
 -- moved to the screen edge.  Each panel can have its own elements for display or user interaction.
 --
@@ -45,6 +55,8 @@ local HOVER_DELAY        =  1    -- how long the mouse pointer must be at the sc
 local PADDING            = 10    -- padding between panel background and display area for elements
 local FILL_ALPHA         =  0.25 -- alpha for panel background color
 local STROKE_ALPHA       =  0.5  -- alpha for panel border color
+
+local CLOSING_EVENTS     = { eventtap.event.types.leftMouseUp }
 
 local VALID_SIDES = {
     top    = { horizontal = true  },
@@ -175,9 +187,9 @@ end
 local startPanelTimer = function(self)
     local obj = internalData[self]
     return timer.doEvery(obj.animationDuration / obj.animationSteps, function()
-        local _status = "moveTimer"
+--         local _status = "moveTimer"
         if obj._count == 0 and obj._targetCount == obj.animationSteps then
-            _status = _status .. "; show panel"
+--             _status = _status .. "; show panel"
             obj._panel:show()
         end
 
@@ -197,22 +209,31 @@ local startPanelTimer = function(self)
             y = baseFrame.y + (horizontal and ((side == "bottom") and -offset or offset) or 0),
         }
         obj._panel:topLeft(newTopLeft)
-        _status = _status .. string.format("; %d @ %s", obj._count, finspect(newTopLeft))
+--         _status = _status .. string.format("; %d @ %s", obj._count, finspect(newTopLeft))
         if obj._count == 0 and obj._targetCount == 0 then
-            _status = _status .. "; hidePanel"
+--             _status = _status .. "; hidePanel"
             obj._panel:hide()
             if activeSides[side] == self then activeSides[side] = nil end
         end
         if obj._count == obj._targetCount then
-            _status = _status .. "; target reached, kill moveTimer"
+--             _status = _status .. "; target reached, kill moveTimer"
             obj._panelMoveTimer:stop()
             obj._panelMoveTimer = nil
             obj._persistLock = obj.persistent and obj._count ~= 0 or obj._forcePersist
+            if obj.autoClose and obj._count ~= 0 then
+                obj._eventWatcher = eventtap.new(CLOSING_EVENTS, function(e)
+                    if obj._panel:activeElement() == obj._panel then
+                        obj._eventWatcher:stop()
+                        obj._eventWatcher = nil
+                        self:hide()
+                    end
+                end):start()
+            end
             obj._forcePersist = nil
             obj._targetCount, obj._dir, obj._count = nil, nil, nil
-            _status = _status .. "; persistLock = " .. tostring(obj._persistLock)
+--             _status = _status .. "; persistLock = " .. tostring(obj._persistLock)
         end
-        if module.DEBUG_TRANSIT then print(timestamp(), _status) end
+--         if module.DEBUG_TRANSIT then print(timestamp(), _status) end
     end)
 end
 
@@ -220,23 +241,23 @@ local sensorCallback = function(self, mgr, msg, loc)
     local obj  = internalData[self]
     local side = obj.side
 
-    local _status = msg
+--     local _status = msg
 
     if msg == "enter" then
         if obj._persistLock then
-            _status = _status .. "; break persist lock, change msg to exit"
+--             _status = _status .. "; break persist lock, change msg to exit"
             obj._persistLock = nil
             msg = "exit"
         else
             if activeSides[side] == self then
-                _status = _status .. "; transit, change direction to open"
+--                 _status = _status .. "; transit, change direction to open"
                 obj._targetCount, obj._dir = obj.animationSteps, 1
             elseif not (activeSides[side] or obj._panelMoveTimer) then
-                _status = _status .. "; checking mods"
+--                 _status = _status .. "; checking mods"
                 local cMods, mods = eventtap.checkKeyboardModifiers(), {}
                 for k,v in pairs(VALID_MODS) do if cMods[k] then table.insert(mods, k) end end
                 if finspect(coerceModifiers(obj.mods)) == finspect(coerceModifiers(mods)) then
-                    _status = _status .. "; mods match, make active for side and start delay timer"
+--                     _status = _status .. "; mods match, make active for side and start delay timer"
                     activeSides[side] = self
                     obj._panelDelayTimer = timer.doAfter(obj.hoverDelay, function()
                         if module.DEBUG_TRANSIT then print(timestamp(), "delayTimer; change direction to open; start move timer") end
@@ -252,21 +273,25 @@ local sensorCallback = function(self, mgr, msg, loc)
     end
     if msg == "exit" then
         if obj._panelDelayTimer then
-            _status = _status .. "; kill delay timer and remove from active for side"
+--             _status = _status .. "; kill delay timer and remove from active for side"
             obj._panelDelayTimer:stop()
             obj._panelDelayTimer = nil
             if activeSides[side] == self then activeSides[side] = nil end
         elseif not obj._persistLock then
-            _status = _status .. "; transit, change direction to close"
+--             _status = _status .. "; transit, change direction to close"
             obj._targetCount, obj._dir = 0, -1
             if obj._panel:isShowing() and not obj._panelMoveTimer then
-                _status = _status .. "; start move timer"
+--                 _status = _status .. "; start move timer"
                 obj._count = obj.animationSteps
                 obj._panelMoveTimer = startPanelTimer(self)
+                if obj._eventWatcher then
+                    obj._eventWatcher:stop()
+                    obj._eventWatcher = nil
+                end
             end
         end
     end
-    if module.DEBUG_TRANSIT then print(timestamp(), _status) end
+--     if module.DEBUG_TRANSIT then print(timestamp(), _status) end
 end
 
 -- not sure if we're going to need to do something special when the active screen changes or
@@ -319,6 +344,10 @@ objectMT.__gc = function(self)
         if obj._panelDelayTimer then
             obj._panelDelayTimer:stop()
             obj._panelDelayTimer = nil
+        end
+        if obj._eventWatcher then
+            obj._eventWatcher:stop()
+            obj._eventWatcher = nil
         end
         if obj._sensor then
             obj._sensor:delete() -- passes up to the sensor window
@@ -413,6 +442,10 @@ objectMT.enabled = function(self, ...)
                     obj._panelMoveTimer:stop()
                     obj._panelMoveTimer = nil
                 end
+                if obj._eventWatcher then
+                    obj._eventWatcher:stop()
+                    obj._eventWatcher = nil
+                end
                 obj._targetCount, obj._dir, obj._persistLock, obj._count = nil, nil, nil, nil
                 if activeSides[obj.side] == self then activeSides[obj.side] = nil end
                 obj._panel:hide()
@@ -460,6 +493,17 @@ objectMT.persistent = function(self, ...)
     elseif args.n == 1 and type(args[1]) == "boolean" then
         obj.persistent = args[1]
         obj._persistLock = obj.persistent and obj._panel:isShowing() and not obj._panelMoveTimer or nil -- coerce to nil
+        return self
+    end
+    error("expected optional boolean")
+end
+
+objectMT.autoClose = function(self, ...)
+    local obj, args = internalData[self], table.pack(...)
+    if args.n == 0 then
+        return obj.autoClose
+    elseif args.n == 1 and type(args[1]) == "boolean" then
+        obj.autoClose = args[1]
         return self
     end
     error("expected optional boolean")
@@ -553,6 +597,10 @@ objectMT.show = function(self)
         if obj._panelDelayTimer then
             obj._panelDelayTimer:stop()
             obj._panelDelayTimer = nil
+        end
+        if obj._eventWatcher then
+            obj._eventWatcher:stop()
+            obj._eventWatcher = nil
         end
         if not obj._panelMoveTimer then obj._panelMoveTimer = startPanelTimer(self) end
     end
@@ -653,6 +701,7 @@ module.new = function()
         mods              = {},
         enabled           = false,
         persistent        = false,
+        autoClose         = false,
         animationSteps    = ANIMATION_STEPS,
         animationDuration = ANIMATION_DURATION,
         hoverDelay        = HOVER_DELAY,
@@ -715,12 +764,14 @@ module._properties = {
     side              = objectMT.side,
     size              = objectMT.size,
     persistent        = objectMT.persistent,
+    autoClose         = objectMT.autoClose,
     animationSteps    = objectMT.animationSteps,
     animationDuration = objectMT.animationDuration,
     hoverDelay        = objectMT.hoverDelay,
     padding           = objectMT.padding,
     strokeAlpha       = objectMT.strokeAlpha,
     fillAlpha         = objectMT.fillAlpha,
+    autoClose         = objectMT.autoClose,
 }
 
 return setmetatable(module, {
