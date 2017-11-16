@@ -121,4 +121,6 @@ return setmetatable(obj, {
         end
         return result
     end,
+
+    _object = _object,
 })
