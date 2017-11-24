@@ -1,14 +1,4 @@
 --
--- need to check with all of the guitk elements:
---    can this use eventtap and when a mouse up occurs, start to close *IF* no element of the
---    panel is currently active? This would allow for canvas clicks to close (e.g. as a launcher)
---  should have a flag to enable/disable this behavior because I can think of panels where I'd want to
---    keep it open as well.
---  The goal here is for the items in a panel to not have to *know* that they are in a panel to
---    trigger useful behavior (like making the panel go away when an action is taken)
-
-
---
 -- Creates panels which slide from the side of the screen when specific key modifiers are held and the mouse pointer is
 -- moved to the screen edge.  Each panel can have its own elements for display or user interaction.
 --
@@ -220,12 +210,32 @@ local startPanelTimer = function(self)
             obj._panelMoveTimer:stop()
             obj._panelMoveTimer = nil
             obj._persistLock = obj.persistent and obj._count ~= 0 or obj._forcePersist
-            if obj.autoClose and obj._count ~= 0 then
+            obj._panel:activeElement(nil)
+            if obj._count ~= 0 then
                 obj._eventWatcher = eventtap.new(CLOSING_EVENTS, function(e)
-                    if obj._panel:activeElement() == obj._panel then
-                        obj._eventWatcher:stop()
-                        obj._eventWatcher = nil
-                        self:hide()
+                    if obj.autoClose then
+                        local doAutoClose = true
+                        local where, frame = e:location(), obj._panel:frame()
+                        where.x, where.y = where.x - frame.x, where.y - frame.y
+                        for k,v in pairs(obj._ignoreAutoClose) do
+                            local element = obj._display(k)
+                            if element then
+                                local elementFrame = obj._display:elementFrameDetails(element)._effective
+                                if where.x >= elementFrame.x                    and
+                                   where.x <= (elementFrame.x + elementFrame.w) and
+                                   where.y >= elementFrame.y                    and
+                                   where.y <= (elementFrame.y + elementFrame.h) then
+                                      doAutoClose = false
+                                      break
+                                end
+                            end
+                        end
+
+                        if doAutoClose then
+                            obj._eventWatcher:stop()
+                            obj._eventWatcher = nil
+                            self:hide()
+                        end
                     end
                 end):start()
             end
@@ -656,22 +666,81 @@ objectMT.properties = function(self, ...)
     error("expected optional table of key-value pairs specifying properties to modify")
 end
 
-objectMT.addWidget = function(self, name, ...)
+objectMT.removeWidget = function(self, name)
     local obj = internalData[self]
 
-    local element, properties
+    local element
+    if type(name) == "userdata" then
+        element = name
+    elseif type(name) == "string" then
+        for k,v in pairs(obj._display) do
+            if name == v.frameDetails.id then
+                element = v._element
+                obj._widgets[v.frameDetails.id] = nil
+                break
+            end
+        end
+    else
+        error("unexpected widget type")
+    end
+
+    if element and pcall(require("hs._asm.guitk.element._view")._nextResponder, element) then
+        local fd = obj._display:elementFrameDetails(element)
+        if fd and fd.id then obj._ignoreAutoClose[fd.id] = nil end
+        obj._display:elementRemoveFromManager(element)
+        return self
+    else
+        error("element is not recognized as a widget type (NSView subclass)")
+    end
+end
+
+objectMT.manageableWidgets = function(self)
+    local obj = internalData[self]
+
+    local results = {}
+    for k,v in pairs(obj._widgets) do table.insert(results, k) end
+    return setmetatable(results, { __tostring = finspect })
+end
+
+objectMT.widget = function(self, name)
+    local obj = internalData[self]
+    return obj._widgets[name]
+end
+
+objectMT.addWidget = function(self, name, frameDetails, ...)
+    local obj = internalData[self]
+
+    local element
     if type(name) == "userdata" then
         element    = name
-        properties = ...
+        frameDetails = frameDetails or {}
+        frameDetails.id = frameDetails.id or name
+
     elseif type(name) == "string" then
         local filePath = BASE_PATH .. "widgets/" .. name .. ".lua"
         filePath = (fs.attributes(filePath) and filePath) or (fs.attributes(name) and name) or package.searchpath(name, package.path)
+
+--    if it returns a function, use ... as arguments to function and function should return a table
+--    if it returns a table, use that table
+--    if it doesn't return a table or function, error
+--    table must be
+--        {
+--            element      = userdata of a view which can be an element of the panel
+--            source       = "module", e.g. a spoon or other table with functions to allow manipulation
+--            frameDetails = frameDetails with any changes made
+--        }
+--
+
         if filePath then
-            local contents = { dofile(filePath) }
-            if type(contents[1]) == "function" or (getmetatable(contents[1]) or {}).__call then
-                contents = { contents[1](...) }
+            local contents = dofile(filePath)
+            if type(contents) == "function" or (getmetatable(contents) or {}).__call then
+                contents = contents(frameDetails, ...)
             end
-            element, properties = table.unpack(contents)
+            element      = contents.element
+            frameDetails = contents.frameDetails or frameDetails or {}
+            frameDetails.id = frameDetails.id or name
+
+            obj._widgets[frameDetails.id] = contents.source
         else
             error("unable to locate widget with name " .. name)
         end
@@ -680,7 +749,11 @@ objectMT.addWidget = function(self, name, ...)
     end
 
     if element and pcall(require("hs._asm.guitk.element._view")._nextResponder, element) then
-        obj._display:insert(element, properties or {})
+        if frameDetails.preventAutoClose then
+            obj._ignoreAutoClose[frameDetails.id] = true
+            frameDetails.preventAutoClose = nil
+        end
+        obj._display:insert(element, frameDetails or {})
         return self
     else
         error("element is not recognized as a widget type (NSView subclass)")
@@ -712,6 +785,7 @@ module.new = function()
         _selfLabel        = selfLabel,
         _panel            = guitk.newCanvas{}:level("status")
                                              :ignoresMouseEvents(false)
+                                             :allowTextEntry(true)
                                              :contentManager(guitk.manager.new()),
         _sensor           = guitk.newCanvas{}:level("status")
                                              :collectionBehavior("canJoinAllSpaces")
@@ -719,6 +793,8 @@ module.new = function()
                                                  sensorCallback(self, mgr, msg, loc)
                                              end)),
         _display         = guitk.manager.new(),
+        _widgets         = {},
+        _ignoreAutoClose = {},
     }
 
     local obj = internalData[self]
@@ -771,7 +847,6 @@ module._properties = {
     padding           = objectMT.padding,
     strokeAlpha       = objectMT.strokeAlpha,
     fillAlpha         = objectMT.fillAlpha,
-    autoClose         = objectMT.autoClose,
 }
 
 return setmetatable(module, {

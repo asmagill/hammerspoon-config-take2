@@ -11,6 +11,8 @@ slidingPanels:addPanel("infoPanel", {
     autoClose         = true,
 }):enable()
 
+local filepath = debug.getinfo(1, "S").source:match("^@(.+/).+%.lua$")
+
 -- the "FromSpoon" widget takes the following arguments:
 --
 --  * spoonName    - string
@@ -49,6 +51,12 @@ slidingPanels:panel("infoPanel"):addWidget("FromSpoon", "CPUMEMBAT", {  x = 0, y
     },
 })
 
-slidingPanels:panel("infoPanel"):addWidget(hs.configdir .. "/utils/_panels/widgets/applicationsWidget.lua")
+slidingPanels:panel("infoPanel"):addWidget(filepath .. "widgets/applicationsWidget.lua")
+
+slidingPanels:panel("infoPanel"):addWidget(filepath .. "widgets/guitkTest.lua", {
+    preventAutoClose = true,
+    cX = "33%",
+    bY = "100%"
+})
 
 return slidingPanels:panel("infoPanel")

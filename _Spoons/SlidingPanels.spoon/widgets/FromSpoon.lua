@@ -90,5 +90,9 @@ return function(name, frameDetails, config)
         end)
     end
 
-    return (spoonWrapper or spoonCanvas), frameDetails
+    return {
+        element      = (spoonWrapper or spoonCanvas),
+        source       = spoon,
+        frameDetails = frameDetails,
+    }
 end

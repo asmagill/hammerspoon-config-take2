@@ -1,3 +1,7 @@
+--
+-- rewrite to be editable/managable like a module or userdata
+-- panel updates will (soon) allow for configuring widget after its installed as well
+
 local module = {}
 local USERDATA_TAG = "applicationsWidget"
 
@@ -54,4 +58,55 @@ updateCanvas()
 
 settings.watchKey(USERDATA_TAG .. "Identifier", USERDATA_TAG, updateCanvas)
 
-return _canvas, { y = 0, cX = ".5", id = "applications" }
+module.canvas = _canvas
+
+module.add = function(name, pos)
+    local _bundleIDs = settings.get(USERDATA_TAG)
+    pos = pos or (#_bundleIDs + 1)
+    if application.infoForBundleID(name) then
+        local idx
+        for i,v in ipairs(_bundleIDs) do
+            if v == name then
+                idx = i
+                break
+            end
+        end
+        if idx then
+            if idx < pos then pos = pos - 1 end
+            table.remove(_bundleIDs, idx)
+        end
+        table.insert(_bundleIDs, pos, name)
+        settings.set(USERDATA_TAG, _bundleIDs) -- this will trigger an update so we don't have to
+        return true
+    else
+        return false
+    end
+end
+
+module.remove = function(name)
+    local _bundleIDs = settings.get(USERDATA_TAG)
+    local idx
+    for i,v in ipairs(_bundleIDs) do
+        if v == name then
+            idx = i
+            break
+        end
+    end
+    if idx then
+        table.remove(_bundleIDs, idx)
+        settings.set(USERDATA_TAG, _bundleIDs) -- this will trigger an update so we don't have to
+        return true
+    else
+        return false
+    end
+end
+
+module.registered = function()
+    return settings.get(USERDATA_TAG)
+end
+
+return {
+    element = _canvas,
+    source  = module,
+    frameDetails = { y = 0, cX = ".5", id = "applications" },
+}
