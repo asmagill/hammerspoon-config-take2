@@ -16,7 +16,8 @@ local module = {
 --]=]
 }
 
-local menubar   = require("hs.menubar")
+-- local menubar   = require("hs.menubar")
+local menubar   = require("hs._asm.guitk.menubar")
 local appwatch  = require("hs.application").watcher
 local image     = require("hs.image")
 local settings  = require("hs.settings")

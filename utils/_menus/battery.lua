@@ -21,7 +21,8 @@ local module = {
 --]=]
 }
 
-local menubar    = require("hs.menubar")
+-- local menubar    = require("hs.menubar")
+local menubar    = require("hs._asm.guitk.menubar")
 local utf8       = require("hs.utf8")
 local battery    = require("hs.battery")
 local fnutils    = require("hs.fnutils")
@@ -29,6 +30,7 @@ local settings   = require("hs.settings")
 local speech     = require("hs.speech")
 local styledtext = require("hs.styledtext")
 local timer      = require("hs.timer")
+local host       = require("hs.host")
 
 local onAC       = utf8.codepointToUTF8(0x1F50C) -- plug
 local onBattery  = utf8.codepointToUTF8(0x1F50B) -- battery
@@ -120,7 +122,7 @@ local updateMenuTitle = function()
         text = text ..((timeValue < 0) and "???" or
                 string.format("%d:%02d", math.floor(timeValue/60), timeValue%60))
 
-        local titleColor = (require"hs.host".interfaceStyle() == "Dark") and { white = 1 } or { white = 0 }
+        local titleColor = { white = (host.interfaceStyle() == "Dark") and 1 or 0 }
 
         menuUserData:setTitle(styledtext.new(text,  {
                                                         font = {
@@ -232,15 +234,21 @@ end
 local rawBatteryData
 rawBatteryData = function(tbl)
     local data = {}
+    local rawStyle = {
+        font  = { name = "Menlo", size = 10 },
+        -- apparently a true white based color gets automatically adjusted based on enabled
+        -- status, but an RGB white doesn't; this is more visible, especially when in Dark mode
+        color = { blue = .5, green = .5, red = .5 }
+    }
     for i,v in fnutils.sortByKeys(tbl) do
         if type(v) ~= "table" then
             table.insert(data, {
-                title = styledtext.new(i.." = "..tostring(v), { font = { name ="Menlo", size = 10 } }),
+                title = styledtext.new(i.." = "..tostring(v), rawStyle),
                 disabled = true,
             })
         else
             table.insert(data, {
-                title = styledtext.new(i, { font = { name ="Menlo", size = 10 } }),
+                title = styledtext.new(i, rawStyle),
                 menu = rawBatteryData(v),
                 disabled = not next(v),
             })

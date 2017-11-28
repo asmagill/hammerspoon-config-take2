@@ -33,7 +33,8 @@ e.2......6.3..........t..q....
 ]]
 
 -- caffeine replacement
-local menubar    = require"hs.menubar"
+-- local menubar    = require"hs.menubar"
+local menubar    = require"hs._asm.guitk.menubar"
 local caffeinate = require"hs.caffeinate"
 
 local module = {}
