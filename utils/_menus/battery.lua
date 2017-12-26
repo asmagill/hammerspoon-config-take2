@@ -323,7 +323,7 @@ end
 
 module.start = function()
 --     menuUserData, currentPowerSource = menubar.new(), ""
-    menuUserData, currentPowerSource = menubar.newWithPriority(999), ""
+    menuUserData, currentPowerSource = menubar.new(), ""
 
     powerSourceChangeFN(true)
 --     powerWatcher:start()

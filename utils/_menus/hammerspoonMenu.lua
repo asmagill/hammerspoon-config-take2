@@ -61,7 +61,7 @@ local toggleWatcher = function(setItTo)
 end
 
 
-local watcherMenu = menubar.newWithPriority and menubar.newWithPriority(menubar.priorities.notificationCenter - 1) or menubar.new()
+local watcherMenu = menubar.new()
 
 watcherMenu:setIcon(image.imageFromName("statusicon"))
 
