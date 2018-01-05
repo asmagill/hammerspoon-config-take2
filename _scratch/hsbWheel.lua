@@ -33,7 +33,7 @@ _C[#_C + 1] = {
     clipToPath       = true,
 }
 
-for hue = 0, 1, 1/90 do
+for hue = 0, 1, 1/180 do
     if hue ~= 1 then -- a hue of 0 and 1 are identical, so skip 1 if we actually land on it
         local hsb = { hue = hue, saturation = 1, brightness = 1 }
         local cX, cY = toXY(hsb)
