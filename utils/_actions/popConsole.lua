@@ -9,33 +9,17 @@ module.watchables = watchable.new("popConsole", true)
 module.watchables.enabled = true
 
 module.popTimeout = 1
-module.debug   = false
+module.popFunctions = {}
 
-local prevWindowHolder
+module.debug   = false
 
 local popTimer
 local popCount = 0
 
-local consoleToggleThingy = function()
--- this attempts to keep track of the previously focused window and return us to it
-    local conswin = window.get("Hammerspoon Console")
-    if conswin and application.get("Hammerspoon"):isFrontmost() then
-        conswin:close()
-        if prevWindowHolder and #prevWindowHolder:role() ~= 0 then
-            prevWindowHolder:becomeMain():focus()
-            prevWindowHolder = nil
-        end
-    else
-        prevWindowHolder = window.frontmostWindow()
-        hs.openConsole()
-    end
-end
-
 local handlePops = function()
     if module.debug then hs.printf("~~ heard %d pop(s) in %d second(s)", popCount, module.popTimeout) end
-    if popCount == 2 then
-        consoleToggleThingy()
-    end
+    local doIt = module.popFunctions[popCount]
+    if doIt then doIt() end
     popTimer = nil
     popCount = 0
 end
@@ -80,6 +64,26 @@ module.watchCaffeinatedState = watchable.watch("generalStatus.caffeinatedState",
         end
     end
 end)
+
+local prevWindowHolder
+module.popFunctions[3] = function()
+-- this attempts to keep track of the previously focused window and return us to it
+    local conswin = window.get("Hammerspoon Console")
+    if conswin and application.get("Hammerspoon"):isFrontmost() then
+        conswin:close()
+        if prevWindowHolder and #prevWindowHolder:role() ~= 0 then
+            prevWindowHolder:becomeMain():focus()
+            prevWindowHolder = nil
+        end
+    else
+        prevWindowHolder = window.frontmostWindow()
+        hs.openConsole()
+    end
+end
+
+-- local alert = require("hs.alert")
+-- module.popConsole.popFunctions[2] = function() alert("Oooh, so close!") end
+-- module.popConsole.popFunctions[4] = function() alert("Ok, now you're just showing off...") end
 
 return setmetatable(module, { __tostring = function(self)
     return "Adjust with `self`.watchables.enabled or using hs.watchables with path 'popConsole.enabled'"
