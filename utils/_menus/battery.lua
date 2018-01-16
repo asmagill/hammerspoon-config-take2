@@ -41,6 +41,8 @@ local suppressAudio = settings.get(suppressAudioKey) or false
 local menuUserData = nil
 local currentPowerSource = ""
 
+local batteryPowerSource = function() return battery.powerSource() or "no battery" end
+
 -- Some "notifications" to apply... need to update battery watcher to do these
 module.batteryNotifications = {
     { onBattery = true, percentage = 10, doEvery = false,
@@ -110,70 +112,110 @@ local notificationStatus = {}
 
 local updateMenuTitle = function()
     if menuUserData then
-        local text = string.format("%+d\n", battery.amperage())
+        local titleText = onAC
 
-        local timeValue = -999
-        if battery.powerSource() == "AC Power" then
-            timeValue = battery.timeToFullCharge()
-        else
-            timeValue = battery.timeRemaining()
+        local amp = battery.amperage()
+        if amp then
+            text = string.format("%+d\n", amp)
+
+            local timeValue = -999
+            if batteryPowerSource() == "AC Power" then
+                timeValue = battery.timeToFullCharge()
+            else
+                timeValue = battery.timeRemaining()
+            end
+    -- print(timeValue)
+            text = text ..((timeValue < 0) and "???" or
+                    string.format("%d:%02d", math.floor(timeValue/60), timeValue%60))
+
+            local titleColor = { white = (host.interfaceStyle() == "Dark") and 1 or 0 }
+            titleText = styledtext.new(text,  {
+                font = {
+                    name = "Menlo",
+                    size = 9
+                },
+                color = titleColor,
+                paragraphStyle = {
+                    alignment = "center",
+                },
+            })
         end
--- print(timeValue)
-        text = text ..((timeValue < 0) and "???" or
-                string.format("%d:%02d", math.floor(timeValue/60), timeValue%60))
 
-        local titleColor = { white = (host.interfaceStyle() == "Dark") and 1 or 0 }
-
-        menuUserData:setTitle(styledtext.new(text,  {
-                                                        font = {
-                                                            name = "Menlo",
-                                                            size = 9
-                                                        },
-                                                        color = titleColor,
-                                                        paragraphStyle = {
-                                                            alignment = "center",
-                                                        },
-                                                    }))
+        menuUserData:setTitle(titleText)
     end
 end
 
 local powerSourceChangeFN = function(justOn)
-    local newPowerSource = battery.powerSource()
-    local test = {
-        percentage = battery.percentage(),
-        onBattery = battery.powerSource() == "Battery Power",
-        timeRemaining = battery.timeRemaining(),
-        timeStamp = os.time()
-    }
+    local newPowerSource = batteryPowerSource()
     if menuUserData then updateMenuTitle() end
+    if newPowerSource ~= "no battery" then
+        local test = {
+            percentage = battery.percentage(),
+            onBattery = batteryPowerSource() == "Battery Power",
+            timeRemaining = battery.timeRemaining(),
+            timeStamp = os.time()
+        }
 
-    if currentPowerSource ~= newPowerSource then
-        currentPowerSource = newPowerSource
-        for i,v in ipairs(module.batteryNotifications) do
-            if newPowerSource == "AC Power" then
-                if not v.onBattery then
-                    if v.percentage and test.percentage > v.percentage then notificationStatus[i] = test.timeStamp end
-                end
-            else
-                if v.onBattery then
-                    if v.percentage and test.percentage < v.percentage then notificationStatus[i] = test.timeStamp end
-                    if v.timeRemaining and test.timeRemaining < v.timeRemaining then notificationStatus[i] = test.timeStamp end
+        if currentPowerSource ~= newPowerSource then
+            currentPowerSource = newPowerSource
+            for i,v in ipairs(module.batteryNotifications) do
+                if newPowerSource == "AC Power" then
+                    if not v.onBattery then
+                        if v.percentage and test.percentage > v.percentage then notificationStatus[i] = test.timeStamp end
+                    end
+                else
+                    if v.onBattery then
+                        if v.percentage and test.percentage < v.percentage then notificationStatus[i] = test.timeStamp end
+                        if v.timeRemaining and test.timeRemaining < v.timeRemaining then notificationStatus[i] = test.timeStamp end
+                    end
                 end
             end
+    --         if menuUserData then
+    --             if currentPowerSource == "AC Power" then
+    --                 menuUserData:setTitle(onAC)
+    --             else
+    --                 menuUserData:setTitle(onBattery)
+    --             end
+    --         end
         end
---         if menuUserData then
---             if currentPowerSource == "AC Power" then
---                 menuUserData:setTitle(onAC)
---             else
---                 menuUserData:setTitle(onBattery)
---             end
---         end
-    end
-    if not justOn then
-        for i,v in ipairs(module.batteryNotifications) do
-            if v.onBattery == test.onBattery then
-                local shouldWeDoSomething = false
-                if not notificationStatus[i] then
+        if not justOn then
+            for i,v in ipairs(module.batteryNotifications) do
+                if v.onBattery == test.onBattery then
+                    local shouldWeDoSomething = false
+                    if not notificationStatus[i] then
+                        if v.percentage then
+                            if v.onBattery then
+                                shouldWeDoSomething = (test.percentage - v.percentage) < 0
+                            else
+                                shouldWeDoSomething = (test.percentage - v.percentage) > 0
+                            end
+                        elseif v.timeRemaining then
+                            if v.onBattery and test.timeRemaining > 0 then
+                                shouldWeDoSomething = (test.timeRemaining - v.timeRemaining) < 0
+                            else
+                                shouldWeDoSomething = (test.timeRemaining - v.timeRemaining) > 0
+                            end
+                        else
+                            print("++ unknown test for battery notification #"..tostring(i))
+                        end
+                    elseif notificationStatus[i] and doEvery and
+                      (test.timeStamp - notificationStatus[i]) > v.doEvery then
+                          shouldWeDoSomething = true
+                    end
+    --                print("++ "..tostring(i).." -- "..hs.inspect(v))
+                    if shouldWeDoSomething then
+                        notificationStatus[i] = test.timeStamp
+                        v.fn()
+                    end
+                else
+                -- remove stored status for wrong onBattery types...
+                    if notificationStatus[i] then notificationStatus[i] = nil end
+                end
+            end
+        else
+            for i,v in ipairs(module.batteryNotifications) do
+                if v.onBattery == test.onBattery then
+                    local shouldWeDoSomething = false
                     if v.percentage then
                         if v.onBattery then
                             shouldWeDoSomething = (test.percentage - v.percentage) < 0
@@ -189,41 +231,9 @@ local powerSourceChangeFN = function(justOn)
                     else
                         print("++ unknown test for battery notification #"..tostring(i))
                     end
-                elseif notificationStatus[i] and doEvery and
-                  (test.timeStamp - notificationStatus[i]) > v.doEvery then
-                      shouldWeDoSomething = true
-                end
---                print("++ "..tostring(i).." -- "..hs.inspect(v))
-                if shouldWeDoSomething then
-                    notificationStatus[i] = test.timeStamp
-                    v.fn()
-                end
-            else
-            -- remove stored status for wrong onBattery types...
-                if notificationStatus[i] then notificationStatus[i] = nil end
-            end
-        end
-    else
-        for i,v in ipairs(module.batteryNotifications) do
-            if v.onBattery == test.onBattery then
-                local shouldWeDoSomething = false
-                if v.percentage then
-                    if v.onBattery then
-                        shouldWeDoSomething = (test.percentage - v.percentage) < 0
-                    else
-                        shouldWeDoSomething = (test.percentage - v.percentage) > 0
-                    end
-                elseif v.timeRemaining then
-                    if v.onBattery and test.timeRemaining > 0 then
-                        shouldWeDoSomething = (test.timeRemaining - v.timeRemaining) < 0
-                    else
-                        shouldWeDoSomething = (test.timeRemaining - v.timeRemaining) > 0
-                    end
-                else
-                    print("++ unknown test for battery notification #"..tostring(i))
-                end
 
-                if shouldWeDoSomething then notificationStatus[i] = test.timeStamp end
+                    if shouldWeDoSomething then notificationStatus[i] = test.timeStamp end
+                end
             end
         end
     end
@@ -261,48 +271,54 @@ end
 local displayBatteryData = function(modifier)
     local menuTable = {}
     updateMenuTitle()
-    local pwrIcon = (battery.powerSource() == "AC Power") and onAC or onBattery
-    table.insert(menuTable, { title = pwrIcon.."  "..(
-            (battery.isCharged()  and "Fully Charged") or
-            (battery.isCharging() and (battery.isFinishingCharge() and "Finishing Charge" or "Charging")) or
-            "On Battery"
-        )
-    })
+    if batteryPowerSource() == "no battery" then
+        table.insert(menuTable, { title = onAC .. "  No Battery" })
+    else
+        local pwrIcon = (batteryPowerSource() == "AC Power") and onAC or onBattery
+        table.insert(menuTable, { title = pwrIcon.."  "..(
+                (battery.isCharged()  and "Fully Charged") or
+                (battery.isCharging() and (battery.isFinishingCharge() and "Finishing Charge" or "Charging")) or
+                "On Battery"
+            )
+        })
+    end
 
     table.insert(menuTable, { title = "-" })
 
-    table.insert(menuTable, {
-        title = utf8.codepointToUTF8(0x26A1).."  Current Charge: "..
-            string.format("%.2f%%", battery.percentage())
-    })
-
-    local timeTitle, timeValue = utf8.codepointToUTF8(0x1F552).."  ", nil
-    if battery.powerSource() == "AC Power" then
-        timeTitle = timeTitle.."Time to Full: "
-        timeValue = battery.timeToFullCharge()
-    else
-        timeTitle = timeTitle.."Time Remaining: "
-        timeValue = battery.timeRemaining()
-    end
-
-    table.insert(menuTable, { title = timeTitle..
-        ((timeValue < 0) and "...calculating..." or
-        string.format("%2d:%02d", math.floor(timeValue/60), timeValue%60))
-    })
-
-    table.insert(menuTable, {
-        title = utf8.codepointToUTF8(0x1F340).."  Battery Health: "..
-            string.format("%.2f%%", 100 * battery.maxCapacity()/battery.designCapacity())
-    })
-
-    table.insert(menuTable, {
-        title = utf8.codepointToUTF8(0x1F300).."  Cycles: "..battery.cycles()
-    })
-
-    if battery.healthCondition() then
+    if batteryPowerSource() ~= "no battery" then
         table.insert(menuTable, {
-            title = utf8.codepointToUTF8(0x26A0).."  "..battery.healthCondition()
+            title = utf8.codepointToUTF8(0x26A1).."  Current Charge: "..
+                string.format("%.2f%%", battery.percentage())
         })
+
+        local timeTitle, timeValue = utf8.codepointToUTF8(0x1F552).."  ", nil
+        if batteryPowerSource() == "AC Power" then
+            timeTitle = timeTitle.."Time to Full: "
+            timeValue = battery.timeToFullCharge()
+        else
+            timeTitle = timeTitle.."Time Remaining: "
+            timeValue = battery.timeRemaining()
+        end
+
+        table.insert(menuTable, { title = timeTitle..
+            ((timeValue < 0) and "...calculating..." or
+            string.format("%2d:%02d", math.floor(timeValue/60), timeValue%60))
+        })
+
+        table.insert(menuTable, {
+            title = utf8.codepointToUTF8(0x1F340).."  Battery Health: "..
+                string.format("%.2f%%", 100 * battery.maxCapacity()/battery.designCapacity())
+        })
+
+        table.insert(menuTable, {
+            title = utf8.codepointToUTF8(0x1F300).."  Cycles: "..battery.cycles()
+        })
+
+        if battery.healthCondition() then
+            table.insert(menuTable, {
+                title = utf8.codepointToUTF8(0x26A0).."  "..battery.healthCondition()
+            })
+        end
     end
 
     table.insert(menuTable, { title = "-" })
