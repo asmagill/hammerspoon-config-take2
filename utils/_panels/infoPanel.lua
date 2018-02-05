@@ -53,10 +53,10 @@ slidingPanels:panel("infoPanel"):addWidget("FromSpoon", "CPUMEMBAT", {  x = 0, y
 
 slidingPanels:panel("infoPanel"):addWidget(filepath .. "widgets/applicationsWidget.lua")
 
-slidingPanels:panel("infoPanel"):addWidget(filepath .. "widgets/guitkTest.lua", {
-    preventAutoClose = true,
-    cX = "33%",
-    bY = "100%"
-})
+-- slidingPanels:panel("infoPanel"):addWidget(filepath .. "widgets/guitkTest.lua", {
+--     preventAutoClose = true,
+--     cX = "33%",
+--     bY = "100%"
+-- })
 
 return slidingPanels:panel("infoPanel")
