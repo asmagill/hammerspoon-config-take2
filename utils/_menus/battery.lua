@@ -87,7 +87,7 @@ module.batteryNotifications = {
         fn = function()
             local alert = require("hs.alert")
             local battery = require("hs.battery")
-            alert.show("Battery has "..tostring(math.floor(battery.timeRemaining())).." minutes left...", 10)
+            alert.show("Battery has " .. tostring(math.floor(battery.timeRemaining())) .. " minutes left...", 10)
         end
     },
     { onBattery = false, percentage = 10, doEvery = false,
@@ -196,13 +196,13 @@ local powerSourceChangeFN = function(justOn)
                                 shouldWeDoSomething = (test.timeRemaining - v.timeRemaining) > 0
                             end
                         else
-                            print("++ unknown test for battery notification #"..tostring(i))
+                            print("++ unknown test for battery notification #" .. tostring(i))
                         end
                     elseif notificationStatus[i] and doEvery and
                       (test.timeStamp - notificationStatus[i]) > v.doEvery then
                           shouldWeDoSomething = true
                     end
-    --                print("++ "..tostring(i).." -- "..hs.inspect(v))
+    --                print("++ " .. tostring(i) .. " -- " .. hs.inspect(v))
                     if shouldWeDoSomething then
                         notificationStatus[i] = test.timeStamp
                         v.fn()
@@ -229,7 +229,7 @@ local powerSourceChangeFN = function(justOn)
                             shouldWeDoSomething = (test.timeRemaining - v.timeRemaining) > 0
                         end
                     else
-                        print("++ unknown test for battery notification #"..tostring(i))
+                        print("++ unknown test for battery notification #" .. tostring(i))
                     end
 
                     if shouldWeDoSomething then notificationStatus[i] = test.timeStamp end
@@ -253,7 +253,7 @@ rawBatteryData = function(tbl)
     for i,v in fnutils.sortByKeys(tbl) do
         if type(v) ~= "table" then
             table.insert(data, {
-                title = styledtext.new(i.." = "..tostring(v), rawStyle),
+                title = styledtext.new(i .. " = " .. tostring(v), rawStyle),
                 disabled = true,
             })
         else
@@ -275,7 +275,7 @@ local displayBatteryData = function(modifier)
         table.insert(menuTable, { title = onAC .. "  No Battery" })
     else
         local pwrIcon = (batteryPowerSource() == "AC Power") and onAC or onBattery
-        table.insert(menuTable, { title = pwrIcon.."  "..(
+        table.insert(menuTable, { title = pwrIcon .. "  " .. (
                 (battery.isCharged()  and "Fully Charged") or
                 (battery.isCharging() and (battery.isFinishingCharge() and "Finishing Charge" or "Charging")) or
                 "On Battery"
@@ -285,40 +285,45 @@ local displayBatteryData = function(modifier)
 
     table.insert(menuTable, { title = "-" })
 
-    if batteryPowerSource() ~= "no battery" then
-        table.insert(menuTable, {
-            title = utf8.codepointToUTF8(0x26A1).."  Current Charge: "..
-                string.format("%.2f%%", battery.percentage())
-        })
+    table.insert(menuTable, {
+        title = utf8.codepointToUTF8(0x26A1) .. "  Current Charge: " ..
+            string.format("%.2f%%", (battery.percentage() or "n/a"))
+    })
 
-        local timeTitle, timeValue = utf8.codepointToUTF8(0x1F552).."  ", nil
-        if batteryPowerSource() == "AC Power" then
-            timeTitle = timeTitle.."Time to Full: "
-            timeValue = battery.timeToFullCharge()
-        else
-            timeTitle = timeTitle.."Time Remaining: "
-            timeValue = battery.timeRemaining()
-        end
+    local timeTitle, timeValue = utf8.codepointToUTF8(0x1F552) .. "  ", nil
+    if batteryPowerSource() == "AC Power" then
+        timeTitle = timeTitle .. "Time to Full: "
+        timeValue = battery.timeToFullCharge()
+    else
+        timeTitle = timeTitle .. "Time Remaining: "
+        timeValue = battery.timeRemaining()
+    end
 
-        table.insert(menuTable, { title = timeTitle..
+    if timeValue then
+        table.insert(menuTable, { title = timeTitle ..
             ((timeValue < 0) and "...calculating..." or
             string.format("%2d:%02d", math.floor(timeValue/60), timeValue%60))
         })
-
-        table.insert(menuTable, {
-            title = utf8.codepointToUTF8(0x1F340).."  Battery Health: "..
-                string.format("%.2f%%", 100 * battery.maxCapacity()/battery.designCapacity())
+    else
+        table.insert(menuTable, { title = timeTitle .. "n/a"
         })
+    end
 
+    local maxCapacity, designCapacity = battery.maxCapacity(), battery.designCapacity()
+    table.insert(menuTable, {
+        title = utf8.codepointToUTF8(0x1F340) .. "  Battery Health: " ..
+            (maxCapacity and designCapacity and string.format("%.2f%%", 100 * maxCapacity/designCapacity) or "n/a")
+    })
+
+    table.insert(menuTable, {
+        title = utf8.codepointToUTF8(0x1F300) .. "  Cycles: ".. (battery.cycles() or "n/a")
+    })
+
+    local healthcondition = battery.healthCondition()
+    if healthCondition then
         table.insert(menuTable, {
-            title = utf8.codepointToUTF8(0x1F300).."  Cycles: "..battery.cycles()
+            title = utf8.codepointToUTF8(0x26A0) .. "  " .. healthCondition
         })
-
-        if battery.healthCondition() then
-            table.insert(menuTable, {
-                title = utf8.codepointToUTF8(0x26A0).."  "..battery.healthCondition()
-            })
-        end
     end
 
     table.insert(menuTable, { title = "-" })
