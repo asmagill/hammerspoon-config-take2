@@ -19,8 +19,9 @@ local _log = require("hs.logger").new(USERDATA_TAG, "warning")
 
 local _chooserCommonCallback = function(item, serverList)
     if item then
-        local site = serverList[item.text]
-        local link = "http://" .. site:hostname() .. ":" .. tostring(site:port())
+--         local site = serverList[item.text]
+--         local link = "http://" .. site:hostname() .. ":" .. tostring(site:port())
+        local link = item.subText
         _log.f("open %s", link)
         hs.execute("open " .. link)
     end
@@ -29,10 +30,14 @@ end
 local _chooserCommonChoices = function(serverList)
     local options = {}
     for k,v in fnutils.sortByKeys(serverList) do
-        local hostname = v:hostname()
+        local hostname, link = v:hostname(), "n/a"
+        if hostname then
+            local path = (v:txtRecord() or {}).path or "/"
+            link = string.format("http://%s:%d%s", hostname, v:port(), path)
+        end
         table.insert(options, {
             text    = v:name(),
-            subText = hostname and string.format("http://%s:%d", hostname, v:port()) or "n/a",
+            subText = link,
         })
     end
     return options
