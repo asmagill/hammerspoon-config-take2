@@ -3,10 +3,19 @@ local watchable   = require("hs.watchable")
 local window      = require("hs.window")
 local application = require("hs.application")
 local timer       = require("hs.timer")
+local settings    = require("hs.settings")
+local caffeinate  = require("hs.caffeinate")
+
+local USERDATA_TAG = "_asm_popConsole"
 
 local module = {}
 module.watchables = watchable.new("popConsole", true)
-module.watchables.enabled = true
+
+local startEnabled = settings.get(USERDATA_TAG)
+startEnabled = (startEnabled == nil) or startEnabled
+module.watchables.enabled = startEnabled
+
+local supressSettingsUpdate = false
 
 module.popTimeout = 1
 module.popFunctions = {}
@@ -39,7 +48,8 @@ module.callback = function(w)
     end
 end
 
-module._noiseWatcher = noises.new(module.callback):start()
+module._noiseWatcher = noises.new(module.callback)
+if module.watchables.enabled then module._noiseWatcher:start() end
 
 module.toggleForWatchablesEnabled = watchable.watch("popConsole.enabled", function(w, p, i, oldValue, value)
     if value then
@@ -47,12 +57,14 @@ module.toggleForWatchablesEnabled = watchable.watch("popConsole.enabled", functi
     else
         module._noiseWatcher:stop()
     end
+    if not supressSettingsUpdate then settings.set(USERDATA_TAG, value) end
 end)
 
-local caffeinate = require("hs.caffeinate")
 -- the listener can prevent or delay system sleep, so disable as appropriate
 module.watchCaffeinatedState = watchable.watch("generalStatus.caffeinatedState", function(w, p, i, old, new)
 --     print(string.format("~~~ %s popConsole caffeinatedWatcher called with %s (%d), was %s (%d), currently %s", timestamp(), caffeinate.watcher[new], new, caffeinate.watcher[old], old, module.watchables.enabled))
+    -- we don't want to save the toggling if enabled is changed by the caffeinate watcher
+    supressSettingsUpdate = true
     if new == 1 or new == 10 then -- systemWillSleep or screensDidLock
         module.wasActive = module.watchables.enabled
         module.watchables.enabled = false
@@ -63,6 +75,7 @@ module.watchCaffeinatedState = watchable.watch("generalStatus.caffeinatedState",
             module.watchables.enabled = true
         end
     end
+    supressSettingsUpdate = false
 end)
 
 local prevWindowHolder
