@@ -116,7 +116,7 @@ local updateMenuTitle = function()
 
         local amp = battery.amperage()
         if amp then
-            text = string.format("%+d\n", amp)
+            local text = string.format("%+d\n", amp)
 
             local timeValue = -999
             if batteryPowerSource() == "AC Power" then
