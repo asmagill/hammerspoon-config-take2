@@ -15,12 +15,18 @@ local host    = require("hs.host")
 local fnutils = require("hs.fnutils")
 local hotkey  = require("hs.hotkey")
 
+-- make this whatever you want, or comment it out entirely
+hotkey.bind({"cmd", "alt", "ctrl"}, "=", function() module.toggle() end)
+
+-- ditto if you're using the wide area domain lookup as well
+if ENABLE_WIDE_AREA_DOMAIN then
+    hotkey.bind({"cmd", "alt", "ctrl", "shift"}, "=", function() module.toggleWide() end)
+end
+
 local _log = require("hs.logger").new(USERDATA_TAG, "warning")
 
 local _chooserCommonCallback = function(item, serverList)
     if item then
---         local site = serverList[item.text]
---         local link = "http://" .. site:hostname() .. ":" .. tostring(site:port())
         local link = item.subText
         _log.f("open %s", link)
         hs.execute("open " .. link)
@@ -42,8 +48,6 @@ local _chooserCommonChoices = function(serverList)
     end
     return options
 end
-
-hotkey.bind({"cmd", "alt", "ctrl"}, "=", function() module.toggle() end)
 
 local _servers = {}
 
@@ -90,8 +94,6 @@ module.toggle = function()
 end
 
 if ENABLE_WIDE_AREA_DOMAIN then
-    hotkey.bind({"cmd", "alt", "ctrl", "shift"}, "=", function() module.toggleWide() end)
-
     local _serversWide = {}
 
     local _chooserWide = chooser.new(function(item) _chooserCommonCallback(item, _serversWide) end)
