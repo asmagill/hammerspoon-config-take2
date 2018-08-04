@@ -129,4 +129,5 @@ timer.doAfter(1, function()
     end
 end)
 
-hs.loadSpoon('FadeLogo'):start(.5)
+hs.loadSpoon("SleepCorners"):start()
+hs.loadSpoon("FadeLogo"):start(.5)
