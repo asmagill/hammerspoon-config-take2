@@ -9,14 +9,14 @@ The visual feed back provided by this spoon is of a small plus (for triggering s
 
 Note that sleep prevention is not guaranteed; macOS may override our attempts at staying awake in extreme situations (CPU temperature dangerously high, low battery, etc.) See `hs.caffeinate` for more details.
 
-Download: `svn export https://github.com/asmagill/hammerspoon-config/trunk/_Spoons/SleepCorners.spoon`
+Download: `svn export https://github.com/asmagill/hammerspoon-config-take2/trunk/_Spoons/SleepCorners.spoon`
 
 
 ### Installation
 
 ~~~sh
 $ cd .hammerspoon/Spoons
-$ svn export https://github.com/asmagill/hammerspoon-config/trunk/_Spoons/SleepCorners.spoon
+$ svn export https://github.com/asmagill/hammerspoon-config-take2/trunk/_Spoons/SleepCorners.spoon
 ~~~
 
 ### Usage

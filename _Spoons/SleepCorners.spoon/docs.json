@@ -17,10 +17,10 @@
           "",
           "When the mouse pointer moves into the trigger area for the sleep now hot corner, visual feedback will be provided for the user. If the user does not move the mouse pointer out of the trigger area within the number of seconds specified by this variable, display sleep will be activated."
         ],
+        "desc" : "Specifies the number of seconds, default 2, the mouse pointer must remain within the trigger area of the sleep now corner in order to put the system's display to sleep.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.sleepDelay",
         "notes" : [
 
         ],
@@ -29,8 +29,8 @@
         "returns" : [
 
         ],
-        "name" : "sleepDelay",
-        "desc" : "Specifies the number of seconds, default 2, the mouse pointer must remain within the trigger area of the sleep now corner in order to put the system's display to sleep."
+        "def" : "SleepCorners.sleepDelay",
+        "name" : "sleepDelay"
       },
       {
         "doc" : "Specifies the screen on which the sleep corners are made active. Defaults to the value returned by `hs.screen.primaryScreen()`.\n\nThis variable may be set to an `hs.screen` userdata object or a function which returns an `hs.screen` userdata object. For example, to make the sleep corners active on the screen with the currently focused window, you could use the following function:\n\n    SleepCorners.sleepScreen = function()\n        return hs.screen.mainScreen()\n    end",
@@ -43,10 +43,10 @@
           "        return hs.screen.mainScreen()",
           "    end"
         ],
+        "desc" : "Specifies the screen on which the sleep corners are made active. Defaults to the value returned by `hs.screen.primaryScreen()`.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.sleepScreen",
         "notes" : [
 
         ],
@@ -55,8 +55,8 @@
         "returns" : [
 
         ],
-        "name" : "sleepScreen",
-        "desc" : "Specifies the screen on which the sleep corners are made active. Defaults to the value returned by `hs.screen.primaryScreen()`."
+        "def" : "SleepCorners.sleepScreen",
+        "name" : "sleepScreen"
       },
       {
         "doc" : "Specifies the location of the sleep now corner on the screen. Defaults to \"LL\".\n\nThis variable may be set to one of the following string values:\n\n  `*`  - Do not provide a sleep now corner (disable this feature)\n  `UL` - Upper left corner\n  `UR` - Upper right corner\n  `LR` - Lower right corner\n  `LL` - Lower left corner",
@@ -71,10 +71,10 @@
           "  `LR` - Lower right corner",
           "  `LL` - Lower left corner"
         ],
+        "desc" : "Specifies the location of the sleep now corner on the screen. Defaults to \"LL\".",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.sleepNowCorner",
         "notes" : [
 
         ],
@@ -83,8 +83,8 @@
         "returns" : [
 
         ],
-        "name" : "sleepNowCorner",
-        "desc" : "Specifies the location of the sleep now corner on the screen. Defaults to \"LL\"."
+        "def" : "SleepCorners.sleepNowCorner",
+        "name" : "sleepNowCorner"
       },
       {
         "doc" : "Specifies the location of the never sleep corner on the screen. Defaults to \"LR\".\n\nThis variable may be set to one of the following string values:\n\n  * `*`  - Do not provide a sleep now corner (disable this feature)\n  * `UL` - Upper left corner\n  * `UR` - Upper right corner\n  * `LR` - Lower right corner\n  * `LL` - Lower left corner",
@@ -99,10 +99,10 @@
           "  * `LR` - Lower right corner",
           "  * `LL` - Lower left corner"
         ],
+        "desc" : "Specifies the location of the never sleep corner on the screen. Defaults to \"LR\".",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.neverSleepCorner",
         "notes" : [
 
         ],
@@ -111,18 +111,18 @@
         "returns" : [
 
         ],
-        "name" : "neverSleepCorner",
-        "desc" : "Specifies the location of the never sleep corner on the screen. Defaults to \"LR\"."
+        "def" : "SleepCorners.neverSleepCorner",
+        "name" : "neverSleepCorner"
       },
       {
         "doc" : "Specifies the height and width in screen pixels, default 20, of the visual feedback to be displayed when the mouse pointer moves into one of the recognized hot corners",
         "stripped_doc" : [
           "Specifies the height and width in screen pixels, default 20, of the visual feedback to be displayed when the mouse pointer moves into one of the recognized hot corners"
         ],
+        "desc" : "Specifies the height and width in screen pixels, default 20, of the visual feedback to be displayed when the mouse pointer moves into one of the recognized hot corners",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.feedbackSize",
         "notes" : [
 
         ],
@@ -131,8 +131,8 @@
         "returns" : [
 
         ],
-        "name" : "feedbackSize",
-        "desc" : "Specifies the height and width in screen pixels, default 20, of the visual feedback to be displayed when the mouse pointer moves into one of the recognized hot corners"
+        "def" : "SleepCorners.feedbackSize",
+        "name" : "feedbackSize"
       },
       {
         "doc" : "Specifies the height and width in screen pixels, default 2, of the trigger area for the recognized hot corners.\n\nThe trigger area, which may be smaller than the [SleepCorners.feedbackSize](#feedbackSize) area, is the region which the mouse pointer must be moved into before the specified feedback or sleep activity will occur.",
@@ -141,10 +141,10 @@
           "",
           "The trigger area, which may be smaller than the [SleepCorners.feedbackSize](#feedbackSize) area, is the region which the mouse pointer must be moved into before the specified feedback or sleep activity will occur."
         ],
+        "desc" : "Specifies the height and width in screen pixels, default 2, of the trigger area for the recognized hot corners.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.triggerSize",
         "notes" : [
 
         ],
@@ -153,8 +153,8 @@
         "returns" : [
 
         ],
-        "name" : "triggerSize",
-        "desc" : "Specifies the height and width in screen pixels, default 2, of the trigger area for the recognized hot corners."
+        "def" : "SleepCorners.triggerSize",
+        "name" : "triggerSize"
       },
       {
         "doc" : "Specifies which action should be preferred if both the sleep now and never sleep hot corners are assigned to the same location on the screen. The default is false.\n\nIf this variable is set to `true`, then sleep now action will be triggered if both hot corners are assigned to the same location on the screen. If this variable is set to `false`, then the never sleep action will be triggered.\n\nNote that this variable has no effect if the hot corners are distinct (i.e. are not assigned to the same corner)",
@@ -165,10 +165,10 @@
           "",
           "Note that this variable has no effect if the hot corners are distinct (i.e. are not assigned to the same corner)"
         ],
+        "desc" : "Specifies which action should be preferred if both the sleep now and never sleep hot corners are assigned to the same location on the screen. The default is false.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.preferSleepNow",
         "notes" : [
 
         ],
@@ -177,8 +177,8 @@
         "returns" : [
 
         ],
-        "name" : "preferSleepNow",
-        "desc" : "Specifies which action should be preferred if both the sleep now and never sleep hot corners are assigned to the same location on the screen. The default is false."
+        "def" : "SleepCorners.preferSleepNow",
+        "name" : "preferSleepNow"
       },
       {
         "doc" : "A table, default `{ fn = true }`, specifying keyboard modifiers which if held when the mouse pointer enters the sleep now hot corner will trigger sleep immediately rather then delay for [SleepCorners.sleepDelay](#sleepDelay) seconds.\n\nThis variable may be set to nil or an empty table, disabling the immediate sleep option, or a table containing one or more of the following keys:\n\n  * `fn`    - Set to true to require that the `Fn` key be pressed. May not be available on all keyboards, especially non-Apple ones.\n  * `cmd`   - Set to true to require that the Command (⌘) key be pressed\n  * `alt`   - Set to true to require that the Alt (or Option) (⌥) key be pressed\n  * `shift` - Set to true to require that the Shift (⇧) key be pressed\n  * `ctrl`  - Set to true to require that the Control (^) key be pressed\n\nIf this table contains multiple keys, then all of the specified modifiers must be pressed for immediate sleep to take affect.",
@@ -195,10 +195,10 @@
           "",
           "If this table contains multiple keys, then all of the specified modifiers must be pressed for immediate sleep to take affect."
         ],
+        "desc" : "A table, default `{ fn = true }`, specifying keyboard modifiers which if held when the mouse pointer enters the sleep now hot corner will trigger sleep immediately rather then delay for [SleepCorners.sleepDelay](#sleepDelay) seconds.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.immediateSleepModifiers",
         "notes" : [
 
         ],
@@ -207,8 +207,8 @@
         "returns" : [
 
         ],
-        "name" : "immediateSleepModifiers",
-        "desc" : "A table, default `{ fn = true }`, specifying keyboard modifiers which if held when the mouse pointer enters the sleep now hot corner will trigger sleep immediately rather then delay for [SleepCorners.sleepDelay](#sleepDelay) seconds."
+        "def" : "SleepCorners.immediateSleepModifiers",
+        "name" : "immediateSleepModifiers"
       },
       {
         "doc" : "Specifies whether the sleep now corner should trigger the display sleep or lock the users session. Defaults to false.\n\nWhen this variable is set to true, triggering the sleep now corner will lock the users session. When this variable is false, the display will be put to sleep instead.\n\nNote that depending upon the user's settings in the Security & Privacy System Preferences, triggering the display sleep may also lock the user session immediately.",
@@ -219,10 +219,10 @@
           "",
           "Note that depending upon the user's settings in the Security & Privacy System Preferences, triggering the display sleep may also lock the user session immediately."
         ],
+        "desc" : "Specifies whether the sleep now corner should trigger the display sleep or lock the users session. Defaults to false.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.sleepNowShouldLock",
         "notes" : [
 
         ],
@@ -231,8 +231,8 @@
         "returns" : [
 
         ],
-        "name" : "sleepNowShouldLock",
-        "desc" : "Specifies whether the sleep now corner should trigger the display sleep or lock the users session. Defaults to false."
+        "def" : "SleepCorners.sleepNowShouldLock",
+        "name" : "sleepNowShouldLock"
       },
       {
         "doc" : "Specifies whether the sleep now corner, when the modifiers defined for [SleepCorners.immediateSleepModifiers](#immediateSleepModifiers) are also held, should trigger the display sleep or lock the users session. Defaults to true.\n\nWhen this variable is set to true, triggering the sleep now corner for immediate sleep will lock the users session. When this variable is false, the display will be put to sleep instead.\n\nNote that depending upon the user's settings in the Security & Privacy System Preferences, triggering the display sleep may also lock the user session immediately.",
@@ -243,10 +243,10 @@
           "",
           "Note that depending upon the user's settings in the Security & Privacy System Preferences, triggering the display sleep may also lock the user session immediately."
         ],
+        "desc" : "Specifies whether the sleep now corner, when the modifiers defined for [SleepCorners.immediateSleepModifiers](#immediateSleepModifiers) are also held, should trigger the display sleep or lock the users session. Defaults to true.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.immediateSleepShouldLock",
         "notes" : [
 
         ],
@@ -255,8 +255,8 @@
         "returns" : [
 
         ],
-        "name" : "immediateSleepShouldLock",
-        "desc" : "Specifies whether the sleep now corner, when the modifiers defined for [SleepCorners.immediateSleepModifiers](#immediateSleepModifiers) are also held, should trigger the display sleep or lock the users session. Defaults to true."
+        "def" : "SleepCorners.immediateSleepShouldLock",
+        "name" : "immediateSleepShouldLock"
       },
       {
         "doc" : "A table, default `{ fn = true }`, specifying keyboard modifiers which if held when the mouse pointer enters the never sleep hot corner will disable display sleep and leave it disabled even if the mouse pointer leaves the hot corner. While the never sleep lock is in effect the never sleep visual feedback will remain visible in the appropriate corner of the screen. The never sleep lock may is unlocked when you move the mouse pointer back into the never sleep corner with the modifiers held down a second time or move the mouse pointer into the sleep now corner.\n\nThis variable may be set to nil or an empty table, disabling the never sleep lock option, or a table containing one or more of the following keys:\n\n  * `fn`    - Set to true to require that the `Fn` key be pressed. May not be available on all keyboards, especially non-Apple ones.\n  * `cmd`   - Set to true to require that the Command (⌘) key be pressed\n  * `alt`   - Set to true to require that the Alt (or Option) (⌥) key be pressed\n  * `shift` - Set to true to require that the Shift (⇧) key be pressed\n  * `ctrl`  - Set to true to require that the Control (^) key be pressed\n\nIf this table contains multiple keys, then all of the specified modifiers must be pressed for the never sleep lock to be triggered.",
@@ -273,10 +273,10 @@
           "",
           "If this table contains multiple keys, then all of the specified modifiers must be pressed for the never sleep lock to be triggered."
         ],
+        "desc" : "A table, default `{ fn = true }`, specifying keyboard modifiers which if held when the mouse pointer enters the never sleep hot corner will disable display sleep and leave it disabled even if the mouse pointer leaves the hot corner. While the never sleep lock is in effect the never sleep visual feedback will remain visible in the appropriate corner of the screen. The never sleep lock may is unlocked when you move the mouse pointer back into the never sleep corner with the modifiers held down a second time or move the mouse pointer into the sleep now corner.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.neverSleepLockModifiers",
         "notes" : [
 
         ],
@@ -285,26 +285,177 @@
         "returns" : [
 
         ],
-        "name" : "neverSleepLockModifiers",
-        "desc" : "A table, default `{ fn = true }`, specifying keyboard modifiers which if held when the mouse pointer enters the never sleep hot corner will disable display sleep and leave it disabled even if the mouse pointer leaves the hot corner. While the never sleep lock is in effect the never sleep visual feedback will remain visible in the appropriate corner of the screen. The never sleep lock may is unlocked when you move the mouse pointer back into the never sleep corner with the modifiers held down a second time or move the mouse pointer into the sleep now corner."
+        "def" : "SleepCorners.neverSleepLockModifiers",
+        "name" : "neverSleepLockModifiers"
       }
     ],
     "stripped_doc" : [
 
     ],
+    "desc" : "Trigger or prevent screen saver\/sleep by moving your mouse pointer to specified hot corners on your screen.",
     "Deprecated" : [
 
     ],
-    "desc" : "Trigger or prevent screen saver\/sleep by moving your mouse pointer to specified hot corners on your screen.",
     "type" : "Module",
     "Constructor" : [
 
     ],
-    "doc" : "Trigger or prevent screen saver\/sleep by moving your mouse pointer to specified hot corners on your screen.\n\nWhile this functionality is provided by macOS in the Mission Control System Preferences, it doesn't provide any type of visual feedback so it's easy to forget which corners have been assigned which roles.\n\nThe visual feed back provided by this spoon is of a small plus (for triggering sleep now) or a small minus (to prevent sleep) when the mouse pointer is moved into the appropriate corner. This feedback was inspired by a vague recollection of an early Mac screen saver (After Dark maybe?) which provided similar functionality. If someone knows for certain, please inform me and I will give appropriate attribution.\n\nNote that sleep prevention is not guaranteed; macOS may override our attempts at staying awake in extreme situations (CPU temperature dangerously high, low battery, etc.) See `hs.caffeinate` for more details.\n\nDownload: `svn export https:\/\/github.com\/asmagill\/hammerspoon-config\/trunk\/_Spoons\/SleepCorners.spoon`",
-    "Field" : [
-
+    "doc" : "Trigger or prevent screen saver\/sleep by moving your mouse pointer to specified hot corners on your screen.\n\nWhile this functionality is provided by macOS in the Mission Control System Preferences, it doesn't provide any type of visual feedback so it's easy to forget which corners have been assigned which roles.\n\nThe visual feed back provided by this spoon is of a small plus (for triggering sleep now) or a small minus (to prevent sleep) when the mouse pointer is moved into the appropriate corner. This feedback was inspired by a vague recollection of an early Mac screen saver (After Dark maybe?) which provided similar functionality. If someone knows for certain, please inform me and I will give appropriate attribution.\n\nNote that sleep prevention is not guaranteed; macOS may override our attempts at staying awake in extreme situations (CPU temperature dangerously high, low battery, etc.) See `hs.caffeinate` for more details.\n\nDownload: `svn export https:\/\/github.com\/asmagill\/hammerspoon-config-take2\/trunk\/_Spoons\/SleepCorners.spoon`",
+    "Method" : [
+      {
+        "doc" : "Returns whether or not the sleep corners are currently active\n\nParameters:\n * None\n\nReturns:\n * `true` if the sleep corners are currently active or `false` if they are not\n\nNotes:\n * This method only identifies whether or not the SleepCorners spoon has been started; it does not check whether or not the specified corners have been set to a location of \"*\" with [SleepCorners.sleepNowCorner](#sleepNowCorner) or [SleepCorners.neverSleepCorner](#neverSleepCorner).\n * If you want to check to see if SleepCorners has been started and that at least one of the corners is assigned to a corner, you should use something like `SleepCorners:isActive() and (SleepCorners.sleepNowCorner ~= \"*\" or SleepCorners.neverSleepCorner ~= \"*\")`",
+        "stripped_doc" : [
+          "Returns whether or not the sleep corners are currently active",
+          ""
+        ],
+        "desc" : "Returns whether or not the sleep corners are currently active",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+          " * This method only identifies whether or not the SleepCorners spoon has been started; it does not check whether or not the specified corners have been set to a location of \"*\" with [SleepCorners.sleepNowCorner](#sleepNowCorner) or [SleepCorners.neverSleepCorner](#neverSleepCorner).",
+          " * If you want to check to see if SleepCorners has been started and that at least one of the corners is assigned to a corner, you should use something like `SleepCorners:isActive() and (SleepCorners.sleepNowCorner ~= \"*\" or SleepCorners.neverSleepCorner ~= \"*\")`"
+        ],
+        "signature" : "SleepCorners:isActive() -> boolean",
+        "type" : "Method",
+        "returns" : [
+          " * `true` if the sleep corners are currently active or `false` if they are not",
+          ""
+        ],
+        "def" : "SleepCorners:isActive() -> boolean",
+        "name" : "isActive"
+      },
+      {
+        "doc" : "Starts monitoring the defined sleep corners to allow triggering or preventing the system display  sleep state.\n\nParameters:\n * None\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * has no effect if SleepCorners has already been started",
+        "stripped_doc" : [
+          "Starts monitoring the defined sleep corners to allow triggering or preventing the system display  sleep state.",
+          ""
+        ],
+        "desc" : "Starts monitoring the defined sleep corners to allow triggering or preventing the system display  sleep state.",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+          " * has no effect if SleepCorners has already been started"
+        ],
+        "signature" : "SleepCorners:start() -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the SleepCorners spoon object",
+          ""
+        ],
+        "def" : "SleepCorners:start() -> self",
+        "name" : "start"
+      },
+      {
+        "doc" : "Stop monitoring the defined sleep corners.\n\nParameters:\n * None\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * has no effect if SleepCorners has already been stopped\n * if SleepCorners was active, this method will return the display idle sleep setting back to its previous state and reset the never sleep lock if it has been triggered.",
+        "stripped_doc" : [
+          "Stop monitoring the defined sleep corners.",
+          ""
+        ],
+        "desc" : "Stop monitoring the defined sleep corners.",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+          " * has no effect if SleepCorners has already been stopped",
+          " * if SleepCorners was active, this method will return the display idle sleep setting back to its previous state and reset the never sleep lock if it has been triggered."
+        ],
+        "signature" : "SleepCorners:stop() -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the SleepCorners spoon object",
+          ""
+        ],
+        "def" : "SleepCorners:stop() -> self",
+        "name" : "stop"
+      },
+      {
+        "doc" : "Toggles or sets whether or not SleepCorners is currently monitoring the defined screen corners for managing the system display's sleep state and displays an alert indicating the new state of the SleepCorners spoon.\n\nParameters:\n * `state` - an optional boolean which specifies specifically whether SleepCorners should be started if it isn't already running (true) or stopped if it currently is running (false)\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * If `state` is not provided, this method will start SleepCorners if it is currently stopped or stop it if is currently started.\n * `SleepCorners:toggle(true)` is equivalent to [SleepCorners:start()](#start) with the addition of displaying an alert specifying that SleepCorners is active.\n * `SleepCorners:toggle(false)` is equivalent to [SleepCorners:stop()](#stop) with the addition of displaying an alert specifying that SleepCorners has been deactivated.",
+        "stripped_doc" : [
+          "Toggles or sets whether or not SleepCorners is currently monitoring the defined screen corners for managing the system display's sleep state and displays an alert indicating the new state of the SleepCorners spoon.",
+          ""
+        ],
+        "desc" : "Toggles or sets whether or not SleepCorners is currently monitoring the defined screen corners for managing the system display's sleep state and displays an alert indicating the new state of the SleepCorners spoon.",
+        "parameters" : [
+          " * `state` - an optional boolean which specifies specifically whether SleepCorners should be started if it isn't already running (true) or stopped if it currently is running (false)",
+          ""
+        ],
+        "notes" : [
+          " * If `state` is not provided, this method will start SleepCorners if it is currently stopped or stop it if is currently started.",
+          " * `SleepCorners:toggle(true)` is equivalent to [SleepCorners:start()](#start) with the addition of displaying an alert specifying that SleepCorners is active.",
+          " * `SleepCorners:toggle(false)` is equivalent to [SleepCorners:stop()](#stop) with the addition of displaying an alert specifying that SleepCorners has been deactivated."
+        ],
+        "signature" : "SleepCorners:toggle([state]) -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the SleepCorners spoon object",
+          ""
+        ],
+        "def" : "SleepCorners:toggle([state]) -> self",
+        "name" : "toggle"
+      },
+      {
+        "doc" : "Temporarily show the SleepCorner feedback images in their current locations as a reminder of their positions on the screen.\n\nParameters:\n * `duration` - an optional number, default 3, specifying the number of seconds the feedback images should be displayed. If you specify `false` and the feedback images are currently being shown, the timer will be cur short and the images will be removed immediately.\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * this method will temporarily show the feedback images even if SleepCorners has been stopped (or has not yet been started).",
+        "stripped_doc" : [
+          "Temporarily show the SleepCorner feedback images in their current locations as a reminder of their positions on the screen.",
+          ""
+        ],
+        "desc" : "Temporarily show the SleepCorner feedback images in their current locations as a reminder of their positions on the screen.",
+        "parameters" : [
+          " * `duration` - an optional number, default 3, specifying the number of seconds the feedback images should be displayed. If you specify `false` and the feedback images are currently being shown, the timer will be cur short and the images will be removed immediately.",
+          ""
+        ],
+        "notes" : [
+          " * this method will temporarily show the feedback images even if SleepCorners has been stopped (or has not yet been started)."
+        ],
+        "signature" : "SleepCorners:show([duration]) -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the SleepCorners spoon object",
+          ""
+        ],
+        "def" : "SleepCorners:show([duration]) -> self",
+        "name" : "show"
+      },
+      {
+        "doc" : "Binds hotkeys for SleepCorners\n\nParameters:\n * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:\n   * \"start\"  - start monitoring the defined corners\n   * \"stop\"   - stop monitoring the defined corners\n   * \"toggle\" - toggles monitoring on or off\n   * \"show\"   - shows the current corners for 3 seconds as a reminder of their assigned locations\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:\n   * `command`   - is one of the commands listed above\n   * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`\n   * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`",
+        "stripped_doc" : [
+          "Binds hotkeys for SleepCorners",
+          ""
+        ],
+        "desc" : "Binds hotkeys for SleepCorners",
+        "parameters" : [
+          " * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:",
+          "   * \"start\"  - start monitoring the defined corners",
+          "   * \"stop\"   - stop monitoring the defined corners",
+          "   * \"toggle\" - toggles monitoring on or off",
+          "   * \"show\"   - shows the current corners for 3 seconds as a reminder of their assigned locations",
+          ""
+        ],
+        "notes" : [
+          " * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:",
+          "   * `command`   - is one of the commands listed above",
+          "   * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`",
+          "   * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`"
+        ],
+        "signature" : "SleepCorners:bindHotkeys(mapping) -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the SleepCorners spoon object",
+          ""
+        ],
+        "def" : "SleepCorners:bindHotkeys(mapping) -> self",
+        "name" : "bindHotkeys"
+      }
     ],
     "Command" : [
+
+    ],
+    "Field" : [
 
     ],
     "items" : [
@@ -313,10 +464,10 @@
         "stripped_doc" : [
           "Specifies the height and width in screen pixels, default 20, of the visual feedback to be displayed when the mouse pointer moves into one of the recognized hot corners"
         ],
+        "desc" : "Specifies the height and width in screen pixels, default 20, of the visual feedback to be displayed when the mouse pointer moves into one of the recognized hot corners",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.feedbackSize",
         "notes" : [
 
         ],
@@ -325,8 +476,8 @@
         "returns" : [
 
         ],
-        "name" : "feedbackSize",
-        "desc" : "Specifies the height and width in screen pixels, default 20, of the visual feedback to be displayed when the mouse pointer moves into one of the recognized hot corners"
+        "def" : "SleepCorners.feedbackSize",
+        "name" : "feedbackSize"
       },
       {
         "doc" : "A table, default `{ fn = true }`, specifying keyboard modifiers which if held when the mouse pointer enters the sleep now hot corner will trigger sleep immediately rather then delay for [SleepCorners.sleepDelay](#sleepDelay) seconds.\n\nThis variable may be set to nil or an empty table, disabling the immediate sleep option, or a table containing one or more of the following keys:\n\n  * `fn`    - Set to true to require that the `Fn` key be pressed. May not be available on all keyboards, especially non-Apple ones.\n  * `cmd`   - Set to true to require that the Command (⌘) key be pressed\n  * `alt`   - Set to true to require that the Alt (or Option) (⌥) key be pressed\n  * `shift` - Set to true to require that the Shift (⇧) key be pressed\n  * `ctrl`  - Set to true to require that the Control (^) key be pressed\n\nIf this table contains multiple keys, then all of the specified modifiers must be pressed for immediate sleep to take affect.",
@@ -343,10 +494,10 @@
           "",
           "If this table contains multiple keys, then all of the specified modifiers must be pressed for immediate sleep to take affect."
         ],
+        "desc" : "A table, default `{ fn = true }`, specifying keyboard modifiers which if held when the mouse pointer enters the sleep now hot corner will trigger sleep immediately rather then delay for [SleepCorners.sleepDelay](#sleepDelay) seconds.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.immediateSleepModifiers",
         "notes" : [
 
         ],
@@ -355,8 +506,8 @@
         "returns" : [
 
         ],
-        "name" : "immediateSleepModifiers",
-        "desc" : "A table, default `{ fn = true }`, specifying keyboard modifiers which if held when the mouse pointer enters the sleep now hot corner will trigger sleep immediately rather then delay for [SleepCorners.sleepDelay](#sleepDelay) seconds."
+        "def" : "SleepCorners.immediateSleepModifiers",
+        "name" : "immediateSleepModifiers"
       },
       {
         "doc" : "Specifies whether the sleep now corner, when the modifiers defined for [SleepCorners.immediateSleepModifiers](#immediateSleepModifiers) are also held, should trigger the display sleep or lock the users session. Defaults to true.\n\nWhen this variable is set to true, triggering the sleep now corner for immediate sleep will lock the users session. When this variable is false, the display will be put to sleep instead.\n\nNote that depending upon the user's settings in the Security & Privacy System Preferences, triggering the display sleep may also lock the user session immediately.",
@@ -367,10 +518,10 @@
           "",
           "Note that depending upon the user's settings in the Security & Privacy System Preferences, triggering the display sleep may also lock the user session immediately."
         ],
+        "desc" : "Specifies whether the sleep now corner, when the modifiers defined for [SleepCorners.immediateSleepModifiers](#immediateSleepModifiers) are also held, should trigger the display sleep or lock the users session. Defaults to true.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.immediateSleepShouldLock",
         "notes" : [
 
         ],
@@ -379,8 +530,8 @@
         "returns" : [
 
         ],
-        "name" : "immediateSleepShouldLock",
-        "desc" : "Specifies whether the sleep now corner, when the modifiers defined for [SleepCorners.immediateSleepModifiers](#immediateSleepModifiers) are also held, should trigger the display sleep or lock the users session. Defaults to true."
+        "def" : "SleepCorners.immediateSleepShouldLock",
+        "name" : "immediateSleepShouldLock"
       },
       {
         "doc" : "Specifies the location of the never sleep corner on the screen. Defaults to \"LR\".\n\nThis variable may be set to one of the following string values:\n\n  * `*`  - Do not provide a sleep now corner (disable this feature)\n  * `UL` - Upper left corner\n  * `UR` - Upper right corner\n  * `LR` - Lower right corner\n  * `LL` - Lower left corner",
@@ -395,10 +546,10 @@
           "  * `LR` - Lower right corner",
           "  * `LL` - Lower left corner"
         ],
+        "desc" : "Specifies the location of the never sleep corner on the screen. Defaults to \"LR\".",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.neverSleepCorner",
         "notes" : [
 
         ],
@@ -407,8 +558,8 @@
         "returns" : [
 
         ],
-        "name" : "neverSleepCorner",
-        "desc" : "Specifies the location of the never sleep corner on the screen. Defaults to \"LR\"."
+        "def" : "SleepCorners.neverSleepCorner",
+        "name" : "neverSleepCorner"
       },
       {
         "doc" : "A table, default `{ fn = true }`, specifying keyboard modifiers which if held when the mouse pointer enters the never sleep hot corner will disable display sleep and leave it disabled even if the mouse pointer leaves the hot corner. While the never sleep lock is in effect the never sleep visual feedback will remain visible in the appropriate corner of the screen. The never sleep lock may is unlocked when you move the mouse pointer back into the never sleep corner with the modifiers held down a second time or move the mouse pointer into the sleep now corner.\n\nThis variable may be set to nil or an empty table, disabling the never sleep lock option, or a table containing one or more of the following keys:\n\n  * `fn`    - Set to true to require that the `Fn` key be pressed. May not be available on all keyboards, especially non-Apple ones.\n  * `cmd`   - Set to true to require that the Command (⌘) key be pressed\n  * `alt`   - Set to true to require that the Alt (or Option) (⌥) key be pressed\n  * `shift` - Set to true to require that the Shift (⇧) key be pressed\n  * `ctrl`  - Set to true to require that the Control (^) key be pressed\n\nIf this table contains multiple keys, then all of the specified modifiers must be pressed for the never sleep lock to be triggered.",
@@ -425,10 +576,10 @@
           "",
           "If this table contains multiple keys, then all of the specified modifiers must be pressed for the never sleep lock to be triggered."
         ],
+        "desc" : "A table, default `{ fn = true }`, specifying keyboard modifiers which if held when the mouse pointer enters the never sleep hot corner will disable display sleep and leave it disabled even if the mouse pointer leaves the hot corner. While the never sleep lock is in effect the never sleep visual feedback will remain visible in the appropriate corner of the screen. The never sleep lock may is unlocked when you move the mouse pointer back into the never sleep corner with the modifiers held down a second time or move the mouse pointer into the sleep now corner.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.neverSleepLockModifiers",
         "notes" : [
 
         ],
@@ -437,8 +588,8 @@
         "returns" : [
 
         ],
-        "name" : "neverSleepLockModifiers",
-        "desc" : "A table, default `{ fn = true }`, specifying keyboard modifiers which if held when the mouse pointer enters the never sleep hot corner will disable display sleep and leave it disabled even if the mouse pointer leaves the hot corner. While the never sleep lock is in effect the never sleep visual feedback will remain visible in the appropriate corner of the screen. The never sleep lock may is unlocked when you move the mouse pointer back into the never sleep corner with the modifiers held down a second time or move the mouse pointer into the sleep now corner."
+        "def" : "SleepCorners.neverSleepLockModifiers",
+        "name" : "neverSleepLockModifiers"
       },
       {
         "doc" : "Specifies which action should be preferred if both the sleep now and never sleep hot corners are assigned to the same location on the screen. The default is false.\n\nIf this variable is set to `true`, then sleep now action will be triggered if both hot corners are assigned to the same location on the screen. If this variable is set to `false`, then the never sleep action will be triggered.\n\nNote that this variable has no effect if the hot corners are distinct (i.e. are not assigned to the same corner)",
@@ -449,10 +600,10 @@
           "",
           "Note that this variable has no effect if the hot corners are distinct (i.e. are not assigned to the same corner)"
         ],
+        "desc" : "Specifies which action should be preferred if both the sleep now and never sleep hot corners are assigned to the same location on the screen. The default is false.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.preferSleepNow",
         "notes" : [
 
         ],
@@ -461,8 +612,8 @@
         "returns" : [
 
         ],
-        "name" : "preferSleepNow",
-        "desc" : "Specifies which action should be preferred if both the sleep now and never sleep hot corners are assigned to the same location on the screen. The default is false."
+        "def" : "SleepCorners.preferSleepNow",
+        "name" : "preferSleepNow"
       },
       {
         "doc" : "Specifies the number of seconds, default 2, the mouse pointer must remain within the trigger area of the sleep now corner in order to put the system's display to sleep.\n\nWhen the mouse pointer moves into the trigger area for the sleep now hot corner, visual feedback will be provided for the user. If the user does not move the mouse pointer out of the trigger area within the number of seconds specified by this variable, display sleep will be activated.",
@@ -471,10 +622,10 @@
           "",
           "When the mouse pointer moves into the trigger area for the sleep now hot corner, visual feedback will be provided for the user. If the user does not move the mouse pointer out of the trigger area within the number of seconds specified by this variable, display sleep will be activated."
         ],
+        "desc" : "Specifies the number of seconds, default 2, the mouse pointer must remain within the trigger area of the sleep now corner in order to put the system's display to sleep.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.sleepDelay",
         "notes" : [
 
         ],
@@ -483,8 +634,8 @@
         "returns" : [
 
         ],
-        "name" : "sleepDelay",
-        "desc" : "Specifies the number of seconds, default 2, the mouse pointer must remain within the trigger area of the sleep now corner in order to put the system's display to sleep."
+        "def" : "SleepCorners.sleepDelay",
+        "name" : "sleepDelay"
       },
       {
         "doc" : "Specifies the location of the sleep now corner on the screen. Defaults to \"LL\".\n\nThis variable may be set to one of the following string values:\n\n  `*`  - Do not provide a sleep now corner (disable this feature)\n  `UL` - Upper left corner\n  `UR` - Upper right corner\n  `LR` - Lower right corner\n  `LL` - Lower left corner",
@@ -499,10 +650,10 @@
           "  `LR` - Lower right corner",
           "  `LL` - Lower left corner"
         ],
+        "desc" : "Specifies the location of the sleep now corner on the screen. Defaults to \"LL\".",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.sleepNowCorner",
         "notes" : [
 
         ],
@@ -511,8 +662,8 @@
         "returns" : [
 
         ],
-        "name" : "sleepNowCorner",
-        "desc" : "Specifies the location of the sleep now corner on the screen. Defaults to \"LL\"."
+        "def" : "SleepCorners.sleepNowCorner",
+        "name" : "sleepNowCorner"
       },
       {
         "doc" : "Specifies whether the sleep now corner should trigger the display sleep or lock the users session. Defaults to false.\n\nWhen this variable is set to true, triggering the sleep now corner will lock the users session. When this variable is false, the display will be put to sleep instead.\n\nNote that depending upon the user's settings in the Security & Privacy System Preferences, triggering the display sleep may also lock the user session immediately.",
@@ -523,10 +674,10 @@
           "",
           "Note that depending upon the user's settings in the Security & Privacy System Preferences, triggering the display sleep may also lock the user session immediately."
         ],
+        "desc" : "Specifies whether the sleep now corner should trigger the display sleep or lock the users session. Defaults to false.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.sleepNowShouldLock",
         "notes" : [
 
         ],
@@ -535,8 +686,8 @@
         "returns" : [
 
         ],
-        "name" : "sleepNowShouldLock",
-        "desc" : "Specifies whether the sleep now corner should trigger the display sleep or lock the users session. Defaults to false."
+        "def" : "SleepCorners.sleepNowShouldLock",
+        "name" : "sleepNowShouldLock"
       },
       {
         "doc" : "Specifies the screen on which the sleep corners are made active. Defaults to the value returned by `hs.screen.primaryScreen()`.\n\nThis variable may be set to an `hs.screen` userdata object or a function which returns an `hs.screen` userdata object. For example, to make the sleep corners active on the screen with the currently focused window, you could use the following function:\n\n    SleepCorners.sleepScreen = function()\n        return hs.screen.mainScreen()\n    end",
@@ -549,10 +700,10 @@
           "        return hs.screen.mainScreen()",
           "    end"
         ],
+        "desc" : "Specifies the screen on which the sleep corners are made active. Defaults to the value returned by `hs.screen.primaryScreen()`.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.sleepScreen",
         "notes" : [
 
         ],
@@ -561,8 +712,8 @@
         "returns" : [
 
         ],
-        "name" : "sleepScreen",
-        "desc" : "Specifies the screen on which the sleep corners are made active. Defaults to the value returned by `hs.screen.primaryScreen()`."
+        "def" : "SleepCorners.sleepScreen",
+        "name" : "sleepScreen"
       },
       {
         "doc" : "Specifies the height and width in screen pixels, default 2, of the trigger area for the recognized hot corners.\n\nThe trigger area, which may be smaller than the [SleepCorners.feedbackSize](#feedbackSize) area, is the region which the mouse pointer must be moved into before the specified feedback or sleep activity will occur.",
@@ -571,10 +722,10 @@
           "",
           "The trigger area, which may be smaller than the [SleepCorners.feedbackSize](#feedbackSize) area, is the region which the mouse pointer must be moved into before the specified feedback or sleep activity will occur."
         ],
+        "desc" : "Specifies the height and width in screen pixels, default 2, of the trigger area for the recognized hot corners.",
         "parameters" : [
 
         ],
-        "def" : "SleepCorners.triggerSize",
         "notes" : [
 
         ],
@@ -583,8 +734,8 @@
         "returns" : [
 
         ],
-        "name" : "triggerSize",
-        "desc" : "Specifies the height and width in screen pixels, default 2, of the trigger area for the recognized hot corners."
+        "def" : "SleepCorners.triggerSize",
+        "name" : "triggerSize"
       },
       {
         "doc" : "Binds hotkeys for SleepCorners\n\nParameters:\n * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:\n   * \"start\"  - start monitoring the defined corners\n   * \"stop\"   - stop monitoring the defined corners\n   * \"toggle\" - toggles monitoring on or off\n   * \"show\"   - shows the current corners for 3 seconds as a reminder of their assigned locations\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:\n   * `command`   - is one of the commands listed above\n   * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`\n   * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`",
@@ -592,6 +743,7 @@
           "Binds hotkeys for SleepCorners",
           ""
         ],
+        "desc" : "Binds hotkeys for SleepCorners",
         "parameters" : [
           " * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:",
           "   * \"start\"  - start monitoring the defined corners",
@@ -600,7 +752,6 @@
           "   * \"show\"   - shows the current corners for 3 seconds as a reminder of their assigned locations",
           ""
         ],
-        "def" : "SleepCorners:bindHotkeys(mapping) -> self",
         "notes" : [
           " * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:",
           "   * `command`   - is one of the commands listed above",
@@ -613,278 +764,127 @@
           " * the SleepCorners spoon object",
           ""
         ],
-        "name" : "bindHotkeys",
-        "desc" : "Binds hotkeys for SleepCorners"
-      },
-      {
-        "doc" : "Returns whether or not the sleep corners are currently active\n\nParameters:\n * None\n\nReturns:\n * `true` if the sleep corners are currently active or `false` if they are not\n\nNotes:\n * This method only identifies whether or not the SleepCorners spoon has been started; it does not check whether or not the specified corners have been set to a location of \"*\" with [SleepCorners.sleepNowCorner](#sleepNowCorner) or [SleepCorners.neverSleepCorner](#neverSleepCorner).\n * If you want to check to see if SleepCorners has been started and that at least one of the corners is assigned to a corner, you should use something like `SleepCorners:isActive() and (SleepCorners.sleepNowCorner ~= \"*\" or SleepCorners.neverSleepCorner ~= \"*\")`",
-        "stripped_doc" : [
-          "Returns whether or not the sleep corners are currently active",
-          ""
-        ],
-        "parameters" : [
-          " * None",
-          ""
-        ],
-        "def" : "SleepCorners:isActive() -> boolean",
-        "notes" : [
-          " * This method only identifies whether or not the SleepCorners spoon has been started; it does not check whether or not the specified corners have been set to a location of \"*\" with [SleepCorners.sleepNowCorner](#sleepNowCorner) or [SleepCorners.neverSleepCorner](#neverSleepCorner).",
-          " * If you want to check to see if SleepCorners has been started and that at least one of the corners is assigned to a corner, you should use something like `SleepCorners:isActive() and (SleepCorners.sleepNowCorner ~= \"*\" or SleepCorners.neverSleepCorner ~= \"*\")`"
-        ],
-        "signature" : "SleepCorners:isActive() -> boolean",
-        "type" : "Method",
-        "returns" : [
-          " * `true` if the sleep corners are currently active or `false` if they are not",
-          ""
-        ],
-        "name" : "isActive",
-        "desc" : "Returns whether or not the sleep corners are currently active"
-      },
-      {
-        "doc" : "Temporarily show the SleepCorner feedback images in their current locations as a reminder of their positions on the screen.\n\nParameters:\n * `duration` - an optional number, default 3, specifying the number of seconds the feedback images should be displayed. If you specify `false` and the feedback images are currently being shown, the timer will be cur short and the images will be removed immediately.\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * this method will temporarily show the feedback images even if SleepCorners has been stopped (or has not yet been started).",
-        "stripped_doc" : [
-          "Temporarily show the SleepCorner feedback images in their current locations as a reminder of their positions on the screen.",
-          ""
-        ],
-        "parameters" : [
-          " * `duration` - an optional number, default 3, specifying the number of seconds the feedback images should be displayed. If you specify `false` and the feedback images are currently being shown, the timer will be cur short and the images will be removed immediately.",
-          ""
-        ],
-        "def" : "SleepCorners:show([duration]) -> self",
-        "notes" : [
-          " * this method will temporarily show the feedback images even if SleepCorners has been stopped (or has not yet been started)."
-        ],
-        "signature" : "SleepCorners:show([duration]) -> self",
-        "type" : "Method",
-        "returns" : [
-          " * the SleepCorners spoon object",
-          ""
-        ],
-        "name" : "show",
-        "desc" : "Temporarily show the SleepCorner feedback images in their current locations as a reminder of their positions on the screen."
-      },
-      {
-        "doc" : "Starts monitoring the defined sleep corners to allow triggering or preventing the system display  sleep state.\n\nParameters:\n * None\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * has no effect if SleepCorners has already been started",
-        "stripped_doc" : [
-          "Starts monitoring the defined sleep corners to allow triggering or preventing the system display  sleep state.",
-          ""
-        ],
-        "parameters" : [
-          " * None",
-          ""
-        ],
-        "def" : "SleepCorners:start() -> self",
-        "notes" : [
-          " * has no effect if SleepCorners has already been started"
-        ],
-        "signature" : "SleepCorners:start() -> self",
-        "type" : "Method",
-        "returns" : [
-          " * the SleepCorners spoon object",
-          ""
-        ],
-        "name" : "start",
-        "desc" : "Starts monitoring the defined sleep corners to allow triggering or preventing the system display  sleep state."
-      },
-      {
-        "doc" : "Stop monitoring the defined sleep corners.\n\nParameters:\n * None\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * has no effect if SleepCorners has already been stopped\n * if SleepCorners was active, this method will return the display idle sleep setting back to its previous state and reset the never sleep lock if it has been triggered.",
-        "stripped_doc" : [
-          "Stop monitoring the defined sleep corners.",
-          ""
-        ],
-        "parameters" : [
-          " * None",
-          ""
-        ],
-        "def" : "SleepCorners:stop() -> self",
-        "notes" : [
-          " * has no effect if SleepCorners has already been stopped",
-          " * if SleepCorners was active, this method will return the display idle sleep setting back to its previous state and reset the never sleep lock if it has been triggered."
-        ],
-        "signature" : "SleepCorners:stop() -> self",
-        "type" : "Method",
-        "returns" : [
-          " * the SleepCorners spoon object",
-          ""
-        ],
-        "name" : "stop",
-        "desc" : "Stop monitoring the defined sleep corners."
-      },
-      {
-        "doc" : "Toggles or sets whether or not SleepCorners is currently monitoring the defined screen corners for managing the system display's sleep state and displays an alert indicating the new state of the SleepCorners spoon.\n\nParameters:\n * `state` - an optional boolean which specifies specifically whether SleepCorners should be started if it isn't already running (true) or stopped if it currently is running (false)\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * If `state` is not provided, this method will start SleepCorners if it is currently stopped or stop it if is currently started.\n * `SleepCorners:toggle(true)` is equivalent to [SleepCorners:start()](#start) with the addition of displaying an alert specifying that SleepCorners is active.\n * `SleepCorners:toggle(false)` is equivalent to [SleepCorners:stop()](#stop) with the addition of displaying an alert specifying that SleepCorners has been deactivated.",
-        "stripped_doc" : [
-          "Toggles or sets whether or not SleepCorners is currently monitoring the defined screen corners for managing the system display's sleep state and displays an alert indicating the new state of the SleepCorners spoon.",
-          ""
-        ],
-        "parameters" : [
-          " * `state` - an optional boolean which specifies specifically whether SleepCorners should be started if it isn't already running (true) or stopped if it currently is running (false)",
-          ""
-        ],
-        "def" : "SleepCorners:toggle([state]) -> self",
-        "notes" : [
-          " * If `state` is not provided, this method will start SleepCorners if it is currently stopped or stop it if is currently started.",
-          " * `SleepCorners:toggle(true)` is equivalent to [SleepCorners:start()](#start) with the addition of displaying an alert specifying that SleepCorners is active.",
-          " * `SleepCorners:toggle(false)` is equivalent to [SleepCorners:stop()](#stop) with the addition of displaying an alert specifying that SleepCorners has been deactivated."
-        ],
-        "signature" : "SleepCorners:toggle([state]) -> self",
-        "type" : "Method",
-        "returns" : [
-          " * the SleepCorners spoon object",
-          ""
-        ],
-        "name" : "toggle",
-        "desc" : "Toggles or sets whether or not SleepCorners is currently monitoring the defined screen corners for managing the system display's sleep state and displays an alert indicating the new state of the SleepCorners spoon."
-      }
-    ],
-    "Method" : [
-      {
-        "doc" : "Returns whether or not the sleep corners are currently active\n\nParameters:\n * None\n\nReturns:\n * `true` if the sleep corners are currently active or `false` if they are not\n\nNotes:\n * This method only identifies whether or not the SleepCorners spoon has been started; it does not check whether or not the specified corners have been set to a location of \"*\" with [SleepCorners.sleepNowCorner](#sleepNowCorner) or [SleepCorners.neverSleepCorner](#neverSleepCorner).\n * If you want to check to see if SleepCorners has been started and that at least one of the corners is assigned to a corner, you should use something like `SleepCorners:isActive() and (SleepCorners.sleepNowCorner ~= \"*\" or SleepCorners.neverSleepCorner ~= \"*\")`",
-        "stripped_doc" : [
-          "Returns whether or not the sleep corners are currently active",
-          ""
-        ],
-        "parameters" : [
-          " * None",
-          ""
-        ],
-        "def" : "SleepCorners:isActive() -> boolean",
-        "notes" : [
-          " * This method only identifies whether or not the SleepCorners spoon has been started; it does not check whether or not the specified corners have been set to a location of \"*\" with [SleepCorners.sleepNowCorner](#sleepNowCorner) or [SleepCorners.neverSleepCorner](#neverSleepCorner).",
-          " * If you want to check to see if SleepCorners has been started and that at least one of the corners is assigned to a corner, you should use something like `SleepCorners:isActive() and (SleepCorners.sleepNowCorner ~= \"*\" or SleepCorners.neverSleepCorner ~= \"*\")`"
-        ],
-        "signature" : "SleepCorners:isActive() -> boolean",
-        "type" : "Method",
-        "returns" : [
-          " * `true` if the sleep corners are currently active or `false` if they are not",
-          ""
-        ],
-        "name" : "isActive",
-        "desc" : "Returns whether or not the sleep corners are currently active"
-      },
-      {
-        "doc" : "Starts monitoring the defined sleep corners to allow triggering or preventing the system display  sleep state.\n\nParameters:\n * None\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * has no effect if SleepCorners has already been started",
-        "stripped_doc" : [
-          "Starts monitoring the defined sleep corners to allow triggering or preventing the system display  sleep state.",
-          ""
-        ],
-        "parameters" : [
-          " * None",
-          ""
-        ],
-        "def" : "SleepCorners:start() -> self",
-        "notes" : [
-          " * has no effect if SleepCorners has already been started"
-        ],
-        "signature" : "SleepCorners:start() -> self",
-        "type" : "Method",
-        "returns" : [
-          " * the SleepCorners spoon object",
-          ""
-        ],
-        "name" : "start",
-        "desc" : "Starts monitoring the defined sleep corners to allow triggering or preventing the system display  sleep state."
-      },
-      {
-        "doc" : "Stop monitoring the defined sleep corners.\n\nParameters:\n * None\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * has no effect if SleepCorners has already been stopped\n * if SleepCorners was active, this method will return the display idle sleep setting back to its previous state and reset the never sleep lock if it has been triggered.",
-        "stripped_doc" : [
-          "Stop monitoring the defined sleep corners.",
-          ""
-        ],
-        "parameters" : [
-          " * None",
-          ""
-        ],
-        "def" : "SleepCorners:stop() -> self",
-        "notes" : [
-          " * has no effect if SleepCorners has already been stopped",
-          " * if SleepCorners was active, this method will return the display idle sleep setting back to its previous state and reset the never sleep lock if it has been triggered."
-        ],
-        "signature" : "SleepCorners:stop() -> self",
-        "type" : "Method",
-        "returns" : [
-          " * the SleepCorners spoon object",
-          ""
-        ],
-        "name" : "stop",
-        "desc" : "Stop monitoring the defined sleep corners."
-      },
-      {
-        "doc" : "Toggles or sets whether or not SleepCorners is currently monitoring the defined screen corners for managing the system display's sleep state and displays an alert indicating the new state of the SleepCorners spoon.\n\nParameters:\n * `state` - an optional boolean which specifies specifically whether SleepCorners should be started if it isn't already running (true) or stopped if it currently is running (false)\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * If `state` is not provided, this method will start SleepCorners if it is currently stopped or stop it if is currently started.\n * `SleepCorners:toggle(true)` is equivalent to [SleepCorners:start()](#start) with the addition of displaying an alert specifying that SleepCorners is active.\n * `SleepCorners:toggle(false)` is equivalent to [SleepCorners:stop()](#stop) with the addition of displaying an alert specifying that SleepCorners has been deactivated.",
-        "stripped_doc" : [
-          "Toggles or sets whether or not SleepCorners is currently monitoring the defined screen corners for managing the system display's sleep state and displays an alert indicating the new state of the SleepCorners spoon.",
-          ""
-        ],
-        "parameters" : [
-          " * `state` - an optional boolean which specifies specifically whether SleepCorners should be started if it isn't already running (true) or stopped if it currently is running (false)",
-          ""
-        ],
-        "def" : "SleepCorners:toggle([state]) -> self",
-        "notes" : [
-          " * If `state` is not provided, this method will start SleepCorners if it is currently stopped or stop it if is currently started.",
-          " * `SleepCorners:toggle(true)` is equivalent to [SleepCorners:start()](#start) with the addition of displaying an alert specifying that SleepCorners is active.",
-          " * `SleepCorners:toggle(false)` is equivalent to [SleepCorners:stop()](#stop) with the addition of displaying an alert specifying that SleepCorners has been deactivated."
-        ],
-        "signature" : "SleepCorners:toggle([state]) -> self",
-        "type" : "Method",
-        "returns" : [
-          " * the SleepCorners spoon object",
-          ""
-        ],
-        "name" : "toggle",
-        "desc" : "Toggles or sets whether or not SleepCorners is currently monitoring the defined screen corners for managing the system display's sleep state and displays an alert indicating the new state of the SleepCorners spoon."
-      },
-      {
-        "doc" : "Temporarily show the SleepCorner feedback images in their current locations as a reminder of their positions on the screen.\n\nParameters:\n * `duration` - an optional number, default 3, specifying the number of seconds the feedback images should be displayed. If you specify `false` and the feedback images are currently being shown, the timer will be cur short and the images will be removed immediately.\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * this method will temporarily show the feedback images even if SleepCorners has been stopped (or has not yet been started).",
-        "stripped_doc" : [
-          "Temporarily show the SleepCorner feedback images in their current locations as a reminder of their positions on the screen.",
-          ""
-        ],
-        "parameters" : [
-          " * `duration` - an optional number, default 3, specifying the number of seconds the feedback images should be displayed. If you specify `false` and the feedback images are currently being shown, the timer will be cur short and the images will be removed immediately.",
-          ""
-        ],
-        "def" : "SleepCorners:show([duration]) -> self",
-        "notes" : [
-          " * this method will temporarily show the feedback images even if SleepCorners has been stopped (or has not yet been started)."
-        ],
-        "signature" : "SleepCorners:show([duration]) -> self",
-        "type" : "Method",
-        "returns" : [
-          " * the SleepCorners spoon object",
-          ""
-        ],
-        "name" : "show",
-        "desc" : "Temporarily show the SleepCorner feedback images in their current locations as a reminder of their positions on the screen."
-      },
-      {
-        "doc" : "Binds hotkeys for SleepCorners\n\nParameters:\n * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:\n   * \"start\"  - start monitoring the defined corners\n   * \"stop\"   - stop monitoring the defined corners\n   * \"toggle\" - toggles monitoring on or off\n   * \"show\"   - shows the current corners for 3 seconds as a reminder of their assigned locations\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:\n   * `command`   - is one of the commands listed above\n   * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`\n   * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`",
-        "stripped_doc" : [
-          "Binds hotkeys for SleepCorners",
-          ""
-        ],
-        "parameters" : [
-          " * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:",
-          "   * \"start\"  - start monitoring the defined corners",
-          "   * \"stop\"   - stop monitoring the defined corners",
-          "   * \"toggle\" - toggles monitoring on or off",
-          "   * \"show\"   - shows the current corners for 3 seconds as a reminder of their assigned locations",
-          ""
-        ],
         "def" : "SleepCorners:bindHotkeys(mapping) -> self",
-        "notes" : [
-          " * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:",
-          "   * `command`   - is one of the commands listed above",
-          "   * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`",
-          "   * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`"
+        "name" : "bindHotkeys"
+      },
+      {
+        "doc" : "Returns whether or not the sleep corners are currently active\n\nParameters:\n * None\n\nReturns:\n * `true` if the sleep corners are currently active or `false` if they are not\n\nNotes:\n * This method only identifies whether or not the SleepCorners spoon has been started; it does not check whether or not the specified corners have been set to a location of \"*\" with [SleepCorners.sleepNowCorner](#sleepNowCorner) or [SleepCorners.neverSleepCorner](#neverSleepCorner).\n * If you want to check to see if SleepCorners has been started and that at least one of the corners is assigned to a corner, you should use something like `SleepCorners:isActive() and (SleepCorners.sleepNowCorner ~= \"*\" or SleepCorners.neverSleepCorner ~= \"*\")`",
+        "stripped_doc" : [
+          "Returns whether or not the sleep corners are currently active",
+          ""
         ],
-        "signature" : "SleepCorners:bindHotkeys(mapping) -> self",
+        "desc" : "Returns whether or not the sleep corners are currently active",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+          " * This method only identifies whether or not the SleepCorners spoon has been started; it does not check whether or not the specified corners have been set to a location of \"*\" with [SleepCorners.sleepNowCorner](#sleepNowCorner) or [SleepCorners.neverSleepCorner](#neverSleepCorner).",
+          " * If you want to check to see if SleepCorners has been started and that at least one of the corners is assigned to a corner, you should use something like `SleepCorners:isActive() and (SleepCorners.sleepNowCorner ~= \"*\" or SleepCorners.neverSleepCorner ~= \"*\")`"
+        ],
+        "signature" : "SleepCorners:isActive() -> boolean",
+        "type" : "Method",
+        "returns" : [
+          " * `true` if the sleep corners are currently active or `false` if they are not",
+          ""
+        ],
+        "def" : "SleepCorners:isActive() -> boolean",
+        "name" : "isActive"
+      },
+      {
+        "doc" : "Temporarily show the SleepCorner feedback images in their current locations as a reminder of their positions on the screen.\n\nParameters:\n * `duration` - an optional number, default 3, specifying the number of seconds the feedback images should be displayed. If you specify `false` and the feedback images are currently being shown, the timer will be cur short and the images will be removed immediately.\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * this method will temporarily show the feedback images even if SleepCorners has been stopped (or has not yet been started).",
+        "stripped_doc" : [
+          "Temporarily show the SleepCorner feedback images in their current locations as a reminder of their positions on the screen.",
+          ""
+        ],
+        "desc" : "Temporarily show the SleepCorner feedback images in their current locations as a reminder of their positions on the screen.",
+        "parameters" : [
+          " * `duration` - an optional number, default 3, specifying the number of seconds the feedback images should be displayed. If you specify `false` and the feedback images are currently being shown, the timer will be cur short and the images will be removed immediately.",
+          ""
+        ],
+        "notes" : [
+          " * this method will temporarily show the feedback images even if SleepCorners has been stopped (or has not yet been started)."
+        ],
+        "signature" : "SleepCorners:show([duration]) -> self",
         "type" : "Method",
         "returns" : [
           " * the SleepCorners spoon object",
           ""
         ],
-        "name" : "bindHotkeys",
-        "desc" : "Binds hotkeys for SleepCorners"
+        "def" : "SleepCorners:show([duration]) -> self",
+        "name" : "show"
+      },
+      {
+        "doc" : "Starts monitoring the defined sleep corners to allow triggering or preventing the system display  sleep state.\n\nParameters:\n * None\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * has no effect if SleepCorners has already been started",
+        "stripped_doc" : [
+          "Starts monitoring the defined sleep corners to allow triggering or preventing the system display  sleep state.",
+          ""
+        ],
+        "desc" : "Starts monitoring the defined sleep corners to allow triggering or preventing the system display  sleep state.",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+          " * has no effect if SleepCorners has already been started"
+        ],
+        "signature" : "SleepCorners:start() -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the SleepCorners spoon object",
+          ""
+        ],
+        "def" : "SleepCorners:start() -> self",
+        "name" : "start"
+      },
+      {
+        "doc" : "Stop monitoring the defined sleep corners.\n\nParameters:\n * None\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * has no effect if SleepCorners has already been stopped\n * if SleepCorners was active, this method will return the display idle sleep setting back to its previous state and reset the never sleep lock if it has been triggered.",
+        "stripped_doc" : [
+          "Stop monitoring the defined sleep corners.",
+          ""
+        ],
+        "desc" : "Stop monitoring the defined sleep corners.",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+          " * has no effect if SleepCorners has already been stopped",
+          " * if SleepCorners was active, this method will return the display idle sleep setting back to its previous state and reset the never sleep lock if it has been triggered."
+        ],
+        "signature" : "SleepCorners:stop() -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the SleepCorners spoon object",
+          ""
+        ],
+        "def" : "SleepCorners:stop() -> self",
+        "name" : "stop"
+      },
+      {
+        "doc" : "Toggles or sets whether or not SleepCorners is currently monitoring the defined screen corners for managing the system display's sleep state and displays an alert indicating the new state of the SleepCorners spoon.\n\nParameters:\n * `state` - an optional boolean which specifies specifically whether SleepCorners should be started if it isn't already running (true) or stopped if it currently is running (false)\n\nReturns:\n * the SleepCorners spoon object\n\nNotes:\n * If `state` is not provided, this method will start SleepCorners if it is currently stopped or stop it if is currently started.\n * `SleepCorners:toggle(true)` is equivalent to [SleepCorners:start()](#start) with the addition of displaying an alert specifying that SleepCorners is active.\n * `SleepCorners:toggle(false)` is equivalent to [SleepCorners:stop()](#stop) with the addition of displaying an alert specifying that SleepCorners has been deactivated.",
+        "stripped_doc" : [
+          "Toggles or sets whether or not SleepCorners is currently monitoring the defined screen corners for managing the system display's sleep state and displays an alert indicating the new state of the SleepCorners spoon.",
+          ""
+        ],
+        "desc" : "Toggles or sets whether or not SleepCorners is currently monitoring the defined screen corners for managing the system display's sleep state and displays an alert indicating the new state of the SleepCorners spoon.",
+        "parameters" : [
+          " * `state` - an optional boolean which specifies specifically whether SleepCorners should be started if it isn't already running (true) or stopped if it currently is running (false)",
+          ""
+        ],
+        "notes" : [
+          " * If `state` is not provided, this method will start SleepCorners if it is currently stopped or stop it if is currently started.",
+          " * `SleepCorners:toggle(true)` is equivalent to [SleepCorners:start()](#start) with the addition of displaying an alert specifying that SleepCorners is active.",
+          " * `SleepCorners:toggle(false)` is equivalent to [SleepCorners:stop()](#stop) with the addition of displaying an alert specifying that SleepCorners has been deactivated."
+        ],
+        "signature" : "SleepCorners:toggle([state]) -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the SleepCorners spoon object",
+          ""
+        ],
+        "def" : "SleepCorners:toggle([state]) -> self",
+        "name" : "toggle"
       }
     ],
     "name" : "SleepCorners"

@@ -9,7 +9,7 @@
 ---
 --- Note that sleep prevention is not guaranteed; macOS may override our attempts at staying awake in extreme situations (CPU temperature dangerously high, low battery, etc.) See `hs.caffeinate` for more details.
 ---
---- Download: `svn export https://github.com/asmagill/hammerspoon-config/trunk/_Spoons/SleepCorners.spoon`
+--- Download: `svn export https://github.com/asmagill/hammerspoon-config-take2/trunk/_Spoons/SleepCorners.spoon`
 
 -- local logger  = require("hs.logger")
 
@@ -17,7 +17,7 @@ local obj    = {
 -- Metadata
     name      = "SleepCorners",
     author    = "A-Ron",
-    homepage  = "https://github.com/asmagill/hammerspoon-config/tree/master/_Spoons/SleepCorners.spoon",
+    homepage  = "https://github.com/asmagill/hammerspoon-config-take2/tree/master/_Spoons/SleepCorners.spoon",
     license   = "MIT - https://opensource.org/licenses/MIT",
     spoonPath = debug.getinfo(1, "S").source:match("^@(.+/).+%.lua$"),
 }
