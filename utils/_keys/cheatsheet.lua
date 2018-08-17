@@ -267,7 +267,9 @@ module.cs:bind({}, "escape", function() module.cs:exit() end)
 -- mimic CheatSheet's trigger for holding Command Key
 
 module.eventwatcher = eventtap.new({events.flagsChanged}, function(ev)
-    module.cmdPressed = ev:getFlags():containExactly{ "cmd" }
+    -- been getting triggered too easily and making the mac slow, so let's make it a little
+    -- harder to do on accident
+    module.cmdPressed = ev:getFlags():containExactly{ "cmd", "fn" }
 
     if module.cmdPressed then
         module.eventwatcher:stop()
