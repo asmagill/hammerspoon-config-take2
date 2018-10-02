@@ -1,10 +1,11 @@
-local timer  = require("hs.timer")
-local wifi   = require("hs.wifi")
-local canvas = require("hs.canvas")
-local screen = require("hs.screen")
+local timer      = require("hs.timer")
+local wifi       = require("hs.wifi")
+local canvas     = require("hs.canvas")
+local screen     = require("hs.screen")
+local styledtext = require("hs.styledtext")
 
-local hotkey  = require("hs.hotkey")
-local mods    = require("hs._asm.extras").mods
+local hotkey     = require("hs.hotkey")
+local mods       = require("hs._asm.extras").mods
 
 local wifimeter = require("utils.wifimeter")
 
@@ -69,6 +70,11 @@ _canvas[#_canvas + 1] = {
     fillColor   = noiseColor,
 }
 
+_canvas[#_canvas + 1] = {
+    id = "legend",
+    type = "text",
+}
+
 module._canvas = _canvas
 module._noisePoints = noisePoints
 module._signalPoints = signalPoints
@@ -98,6 +104,26 @@ local updateDataPoints = function()
     _canvas.noisePoints.coordinates = noisePoints
     _canvas.signalPoints.coordinates = signalPoints
 
+    local legend = styledtext.new(
+        string.format("S:%ddB N:%ddB\nSNR: %d", wifiDetails.rssi, wifiDetails.noise, wifiDetails.rssi - wifiDetails.noise),
+        {
+            font = {
+                name = "Menlo",
+                size = 10,
+            },
+            color = { white = 1.0 },
+            paragraphStyle = {
+                alignment = "right",
+                maximumLineHeight = 10,
+            }
+        }
+    )
+    local legendFrame = _canvas:minimumTextSize(legend)
+    legendFrame.x = (boxWidth - legendFrame.w) / 2
+    legendFrame.y = padding
+    _canvas.legend.frame = legendFrame
+    _canvas.legend.text = legend
+
     canvas.enableScreenUpdates()
 end
 
@@ -118,25 +144,35 @@ module.wifimeter = wifimeter
 module["2GHz"] = wifimeter.new("2GHz"):setNetworkPersistence(0)
 module["5GHz"] = wifimeter.new("5GHz"):setNetworkPersistence(0)
 
+hotkey.bind(mods.CAsC, "w", function()
+    if not module["2GHz"]:visible() then
+        if module.sampleTimer:running() then
+            module.stop()
+        else
+             module.start()
+        end
+    end
+end)
+
 hotkey.bind(mods.CASC, "w", function()
-    if module.sampleTimer:running() then
+    if module.sampleTimer:running() and module["2GHz"]:visible() then
         module.stop()
         module["2GHz"] = module["2GHz"]:hide():stop()
         module["5GHz"] = module["5GHz"]:hide():stop()
     else
-        module.start()
+         if not module.sampleTimer:running() then module.start() end
         local screenFrame = screen.primaryScreen():fullFrame()
         module["2GHz"] = module["2GHz"]:setFrame{
-            x = screenFrame.x + screenFrame.w * 1/10,
+            x = screenFrame.x + 10,
             y = screenFrame.y + 44,
-            h = screenFrame.h * 1/3,
-            w = screenFrame.w * 8/10,
+            h = screenFrame.h * 2/3,
+            w = screenFrame.w * 1/2 - 15,
         }:show():start()
         module["5GHz"] = module["5GHz"]:setFrame{
-            x = screenFrame.x + screenFrame.w * 1/10,
-            y = screenFrame.y + 66 + screenFrame.h * 1/3,
-            h = screenFrame.h * 1/3,
-            w = screenFrame.w * 8/10,
+            x = screenFrame.x + screenFrame.w * 1/2 + 5,
+            y = screenFrame.y + 44,
+            h = screenFrame.h * 2/3,
+            w = screenFrame.w * 1/2 - 15,
         }:show():start()
 
     end

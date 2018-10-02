@@ -141,7 +141,6 @@ local variablesThatCauseUpdates = {
     },
     showNames          = true,
     highlightJoined    = true,
-    showNoiseLevels    = false,
     networkPersistence = 2,
     drawingLevel       = canvas.windowLevels.popUpMenu,
 }
@@ -232,6 +231,10 @@ objectMT.__methodIndex.hide = function(self)
     return self
 end
 
+objectMT.__methodIndex.visible = function(self)
+    return objectMT.__internalData[self].isVisible or false
+end
+
 objectMT.__methodIndex.delete = function(self)
     local index = 0
     for i, v in ipairs(observers) do
@@ -262,7 +265,6 @@ objectMT.__methodIndex.updateWifiData = function(self, latestScan)
             local label = tostring(v.bssid) .. "_" .. tostring(v.ssid) .. "-" .. tostring(v.wlanChannel.number)
             if objectMT.__internalData[self].seenNetworks[label] then
                 objectMT.__internalData[self].seenNetworks[label].signal   = v.rssi
-                objectMT.__internalData[self].seenNetworks[label].noise    = v.noise
                 objectMT.__internalData[self].seenNetworks[label].lastSeen = 0
                 objectMT.__internalData[self].seenNetworks[label].joined   = nil
             else
@@ -277,7 +279,6 @@ objectMT.__methodIndex.updateWifiData = function(self, latestScan)
                     channel     = v.wlanChannel.number,
                     width       = tonumber(v.wlanChannel.width:match("^(%d+)MHz")),
                     signal      = v.rssi,
-                    noise       = v.noise,
                     lastSeen    = 0,
                     colorNumber = colorNumber,
                 }
@@ -344,15 +345,15 @@ objectMT.__methodIndex.updateCanvas = function(self)
     self.canvas:appendElements{
         type  = "text",
         frame = {
-            x = self.frame.w - (textLabelBox.w + 2),
-            y = self.frame.h - (textLabelBox.h + 4),
+            x = self.frame.w - (textLabelBox.w + 4),
+            y = self.frame.h - (textLabelBox.h + 3),
             h = textLabelBox.h,
             w = textLabelBox.w,
         },
         text  = textLabel,
     }
 
-    -- arcs and labels (and eventually? noise levels)
+    -- arcs and labels
     self.canvas:appendElements{
         type   = "rectangle",
         action = "clip",
@@ -401,8 +402,8 @@ objectMT.__methodIndex.updateCanvas = function(self)
                 w = labelBox.w,
             }
             if labelFrame.x < self.padding then labelFrame.x = self.padding end
-            if (labelFrame.x + labelFrame.w) > (self.frame.w - self.padding * 2) then
-                labelFrame.x = self.frame.w - self.padding * 2 - labelFrame.w
+            if (labelFrame.x + labelFrame.w) > (self.frame.w - self.padding) then
+                labelFrame.x = self.frame.w - self.padding - labelFrame.w
             end
             self.canvas:appendElements{
                 type  = "text",
