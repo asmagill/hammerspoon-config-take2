@@ -1,0 +1,2 @@
+-- require("hs.window")
+hs.ipc.cliInstall()

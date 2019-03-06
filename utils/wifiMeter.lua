@@ -256,50 +256,57 @@ objectMT.__methodIndex.delete = function(self)
 end
 
 objectMT.__methodIndex.updateWifiData = function(self, latestScan)
-    local iface = wifi.interfaceDetails()
-    for k, v in pairs(objectMT.__internalData[self].seenNetworks) do
-        v.lastSeen = v.lastSeen + 1
-    end
-    for i, v in ipairs(latestScan) do
-        if v.wlanChannel.band == self.band then
-            local label = tostring(v.bssid) .. "_" .. tostring(v.ssid) .. "-" .. tostring(v.wlanChannel.number)
-            if objectMT.__internalData[self].seenNetworks[label] then
-                objectMT.__internalData[self].seenNetworks[label].signal   = v.rssi
-                objectMT.__internalData[self].seenNetworks[label].lastSeen = 0
-                objectMT.__internalData[self].seenNetworks[label].joined   = nil
-            else
-                local colorNumber = objectMT.__internalData[self].colorNumberForLabels[label]
-                if not colorNumber then
-                    colorNumber = objectMT.__internalData[self].lastColorAssigned + 1
-                    objectMT.__internalData[self].lastColorAssigned = colorNumber
-                    objectMT.__internalData[self].colorNumberForLabels[label] = colorNumber
-                end
-                objectMT.__internalData[self].seenNetworks[label] = {
-                    name        = v.ssid,
-                    channel     = v.wlanChannel.number,
-                    width       = tonumber(v.wlanChannel.width:match("^(%d+)MHz")),
-                    signal      = v.rssi,
-                    lastSeen    = 0,
-                    colorNumber = colorNumber,
-                }
-            end
-            if (iface.wlanChannel.band   == v.wlanChannel.band) and
-               (iface.wlanChannel.number == v.wlanChannel.number) and
-               (iface.wlanChannel.width  == v.wlanChannel.width) and
-               (iface.bssid              == v.bssid) then
-                  objectMT.__internalData[self].seenNetworks[label].joined = true
-            end
-        end
-    end
-    if type(self.networkPersistence) == "number" then
+-- apparently macOS got more sensitive about scanning too often sometime after Yosemite,
+-- so we alternate between valid data and an error string... just skip it when its not
+-- a table containing useful data
+    if type(latestScan) == "table" then
+        local iface = wifi.interfaceDetails()
         for k, v in pairs(objectMT.__internalData[self].seenNetworks) do
-            if v.lastSeen > self.networkPersistence then
-                objectMT.__internalData[self].seenNetworks[k] = nil
+            v.lastSeen = v.lastSeen + 1
+        end
+        for i, v in ipairs(latestScan) do
+            if v.wlanChannel.band == self.band then
+                local label = tostring(v.bssid) .. "_" .. tostring(v.ssid) .. "-" .. tostring(v.wlanChannel.number)
+                if objectMT.__internalData[self].seenNetworks[label] then
+                    objectMT.__internalData[self].seenNetworks[label].signal   = v.rssi
+                    objectMT.__internalData[self].seenNetworks[label].lastSeen = 0
+                    objectMT.__internalData[self].seenNetworks[label].joined   = nil
+                else
+                    local colorNumber = objectMT.__internalData[self].colorNumberForLabels[label]
+                    if not colorNumber then
+                        colorNumber = objectMT.__internalData[self].lastColorAssigned + 1
+                        objectMT.__internalData[self].lastColorAssigned = colorNumber
+                        objectMT.__internalData[self].colorNumberForLabels[label] = colorNumber
+                    end
+                    objectMT.__internalData[self].seenNetworks[label] = {
+                        name        = v.ssid,
+                        channel     = v.wlanChannel.number,
+                        width       = tonumber(v.wlanChannel.width:match("^(%d+)MHz")),
+                        signal      = v.rssi,
+                        lastSeen    = 0,
+                        colorNumber = colorNumber,
+                    }
+                end
+                if (iface.wlanChannel.band   == v.wlanChannel.band) and
+                   (iface.wlanChannel.number == v.wlanChannel.number) and
+                   (iface.wlanChannel.width  == v.wlanChannel.width) and
+                   (iface.bssid              == v.bssid) then
+                      objectMT.__internalData[self].seenNetworks[label].joined = true
+                end
             end
         end
+        if type(self.networkPersistence) == "number" then
+            for k, v in pairs(objectMT.__internalData[self].seenNetworks) do
+                if v.lastSeen > self.networkPersistence then
+                    objectMT.__internalData[self].seenNetworks[k] = nil
+                end
+            end
+        end
+        self.lastScanTime = module.lastScanTime
+        self:updateCanvas()
+--     else
+--         print("++ error retrieving wifi data: ", latestScan)
     end
-    self.lastScanTime = module.lastScanTime
-    self:updateCanvas()
     return self
 end
 

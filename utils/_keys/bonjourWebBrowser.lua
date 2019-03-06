@@ -85,6 +85,12 @@ local _browser = bonjour.browser.new():findServices("_http._tcp.", function(...)
     _browserCommonCallback(_servers, _chooser, ...)
 end)
 
+-- using ESP-link to program AVR devices requires a different service, but it's still
+-- HTTP, so pile them in as well...
+local _arduino = bonjour.browser.new():findServices("_arduino._tcp.", function(...)
+    _browserCommonCallback(_servers, _chooser, ...)
+end)
+
 module.toggle = function()
     if _chooser:isVisible() then
         _chooser:hide()
@@ -118,6 +124,7 @@ local _debug = {
     _servers     = _servers,
     _serversWide = _serversWide,
     _browser     = _browser,
+    _arduino     = _arduino,
     _browserWide = _browserWide,
     _chooser     = _chooser,
     _chooserWide = _chooserWide,
