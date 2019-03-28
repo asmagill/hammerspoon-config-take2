@@ -1,2 +1,2 @@
 -- require("hs.window")
-hs.ipc.cliInstall()
+hs.ipc.cliInstall("/opt/amagill")
