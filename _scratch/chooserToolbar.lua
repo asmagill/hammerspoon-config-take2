@@ -84,6 +84,22 @@ local toolbarItems = {
                     }:imageFromCanvas(),
         fn         = function(...) changeChooserEntries(list3, ...) end,
     },
+    {
+        id         = "remove",
+        selectable = false,
+        label      = "Remove",
+        image      = canvas.new{ h = 50, w = 50 }:appendElements{
+                           {
+                                frame = { h = 50, w = 50, x = 0, y = -6 },
+                                text = stext.new("🚫", {
+                                    font = { name = ".AppleSystemUIFont", size = 50 },
+                                    paragraphStyle = { alignment = "center" }
+                                }),
+                                type = "text",
+                            }
+                    }:imageFromCanvas(),
+        fn         = function(bar, parent, item) parent:attachedToolbar(nil) end,
+    },
 }
 
 local _toolbar = toolbar.new("chooserToolbarTest")
@@ -103,5 +119,6 @@ module._toolbar = _toolbar
 module._chooser = _chooser
 
 module.show = function() _chooser:show() end
+module.attach = function() _chooser:attachedToolbar(_toolbar) end
 
 return module
