@@ -95,6 +95,8 @@ end
 
 history = _asm._actions.consoleHistory.history
 
+preview = _asm._actions.quickPreview.preview
+
 _asm.gc  = require("utils.gc")
 
 print()
