@@ -85,13 +85,29 @@ local toolbarItems = {
         fn         = function(...) changeChooserEntries(list3, ...) end,
     },
     {
+        id         = "hide",
+        selectable = false,
+        label      = "Hide",
+        image      = canvas.new{ h = 50, w = 50 }:appendElements{
+                           {
+                                frame = { h = 50, w = 50, x = 0, y = -6 },
+                                text = stext.new("🚫", {
+                                    font = { name = ".AppleSystemUIFont", size = 50 },
+                                    paragraphStyle = { alignment = "center" }
+                                }),
+                                type = "text",
+                            }
+                    }:imageFromCanvas(),
+        fn         = function(bar, parent, item) bar:visible(false) end,
+    },
+    {
         id         = "remove",
         selectable = false,
         label      = "Remove",
         image      = canvas.new{ h = 50, w = 50 }:appendElements{
                            {
                                 frame = { h = 50, w = 50, x = 0, y = -6 },
-                                text = stext.new("🚫", {
+                                text = stext.new("☠", {
                                     font = { name = ".AppleSystemUIFont", size = 50 },
                                     paragraphStyle = { alignment = "center" }
                                 }),
