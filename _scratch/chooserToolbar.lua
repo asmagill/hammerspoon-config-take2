@@ -116,6 +116,42 @@ local toolbarItems = {
                     }:imageFromCanvas(),
         fn         = function(bar, parent, item) parent:attachedToolbar(nil) end,
     },
+    {
+        id         = "titleBar",
+        selectable = false,
+        label      = "Adjust",
+        image      = canvas.new{ h = 50, w = 50 }:appendElements{
+                           {
+                                frame = { h = 50, w = 50, x = 0, y = -6 },
+                                text = stext.new("🔼", {
+                                    font = { name = ".AppleSystemUIFont", size = 50 },
+                                    paragraphStyle = { alignment = "center" }
+                                }),
+                                type = "text",
+                            }
+                    }:imageFromCanvas(),
+        fn         = function(bar, parent, item)
+                         bar:inTitleBar(not bar:inTitleBar())
+                         if bar:inTitleBar() then
+                             textToDisplay = "🔽"
+                         else
+                             textToDisplay = "🔼"
+                         end
+                         bar:modifyItem{
+                             id = "titleBar",
+                             image = canvas.new{ h = 50, w = 50 }:appendElements{
+                                 {
+                                     frame = { h = 50, w = 50, x = 0, y = -6 },
+                                     text = stext.new(textToDisplay, {
+                                         font = { name = ".AppleSystemUIFont", size = 50 },
+                                         paragraphStyle = { alignment = "center" }
+                                     }),
+                                     type = "text",
+                                 }
+                             }:imageFromCanvas(),
+                         }
+                     end,
+    },
 }
 
 local _toolbar = toolbar.new("chooserToolbarTest")
