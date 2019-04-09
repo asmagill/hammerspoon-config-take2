@@ -206,11 +206,6 @@ local generateHtml = function(allMenuItems)
               </div>
           </footer>
 
-<!-- use the local version
-          <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/2.2.2/isotope.pkgd.min.js"></script>
--->
-          <script src="http://localhost:7734/isotope.pkgd.min.js"></script>
-
           <script type="text/javascript">
             var elem = document.querySelector('.content');
             var iso = new Isotope( elem, {
@@ -242,7 +237,19 @@ module.cs = hotkey.modal.new()
                     h = screenFrame.h - 100,
                     w = screenFrame.w - 100,
                 }
-                module.myView = webview.new(viewFrame, { developerExtrasEnabled = true })
+                if not module._contentController then
+                    module._contentController = webview.usercontent.new("injectedLocalJS")
+                    local scriptPath = hs.configdir .. "/_localAssets/isotope.pkgd.min.js"
+                    local f = io.open(scriptPath)
+                    if f then
+                        local jsCode = f:read("a")
+                        f:close()
+                        module._contentController:injectScript{ source = jsCode }
+                    else
+                        print("*** Unable to load " .. scriptPath)
+                    end
+                end
+                module.myView = webview.new(viewFrame, { developerExtrasEnabled = true }, module._contentController)
                       :windowStyle("utility")
                       :closeOnEscape(true)
                       :allowGestures(true)
