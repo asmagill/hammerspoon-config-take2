@@ -1,14 +1,3 @@
--- TODO:
---    implement keyboard support
---    document both spoons
---    display of device; smaller text, separate icon/text spaces?
---    autosave position?
---    add save button?
---    add keyboard toggle button/
---    add more keyboard equivalents?
---        editable through setting?
-
-
 local layout = {}
 
 local stext = require("hs.styledtext")
@@ -17,7 +6,7 @@ local canvas = require("hs.canvas")
 local buttonStyle = {
     font = { name = "Menlo", size = 18 },
     paragraphStyle = { alignment = "center" },
-    color = { white = 0 },
+    color = { white = 1 },
 }
 
 layout.buttons = {
@@ -27,7 +16,7 @@ layout.buttons = {
         char = stext.new(utf8.char(0x2612), {
             font = { name = "Menlo", size = 14 },
             paragraphStyle = { alignment = "center" },
-            color = { white = 0 },
+            color = { white = 1 },
         }),
         offset = { x = 1, y = -7.5 },
     },
@@ -36,7 +25,7 @@ layout.buttons = {
         char = stext.new(utf8.char(0x29bf), {
             font = { name = "Menlo", size = 14 },
             paragraphStyle = { alignment = "center" },
-            color = { white = 0 },
+            color = { white = 1 },
         }),
         offset = { x = 1, y = -6 },
     },
@@ -50,10 +39,10 @@ layout.buttons = {
                 lineBreak                     = "truncateTail",
 --                 allowsTighteningForTruncation = false,
             },
-            color = { white = 0 },
+            color = { white = 1 },
         }),
         triggerUpdate = true,
-        offset = { x = 0, y = -1 }, -- some characters seem off, even using canvas:minimumTextSize
+        offset = { x = 0, y = 0 }, -- some characters seem off, even using canvas:minimumTextSize
     },
     _Active = {
         enabled = true, -- include in grid size determination
@@ -65,7 +54,7 @@ layout.buttons = {
         char = stext.new(utf8.char(0x2328), {
             font = { name = "Menlo", size = 28 },
             paragraphStyle = { alignment = "center" },
-            color = { white = 0 },
+            color = { white = 1 },
         }),
         offset = { x = 0, y = -4 }, -- some characters seem off, even using canvas:minimumTextSize
     },
@@ -111,13 +100,11 @@ layout.buttons = {
         pos = { x = 1, y = 6, w = 1, h = 1 },
         char = stext.new(utf8.char(0x23ef), buttonStyle),
         offset = { x = 0, y = -.5 }, -- some characters seem off, even using canvas:minimumTextSize
-        key = "space",
     },
     Select = {
         enabled = true,
         pos = { x = 1, y = 3, w = 1, h = 1 },
         char = stext.new(utf8.char(0x26aa), buttonStyle),
-        key = "return",
         offset = { x = 0, y = -1 }, -- some characters seem off, even using canvas:minimumTextSize
         triggerUpdate = true,
     },
@@ -126,28 +113,24 @@ layout.buttons = {
         pos = { x = 0, y = 3, w = 1, h = 1 },
         char = stext.new(utf8.char(0x25c0), buttonStyle),
         offset = { x = -1, y = -3 }, -- some characters seem off, even using canvas:minimumTextSize
-        key = "left",
     },
     Right = {
         enabled = true,
         pos = { x = 2, y = 3, w = 1, h = 1 },
         char = stext.new(utf8.char(0x25b6), buttonStyle),
         offset = { x = 1, y = -3 }, -- some characters seem off, even using canvas:minimumTextSize
-        key = "right",
     },
     Down = {
         enabled = true,
         pos = { x = 1, y = 4, w = 1, h = 1 },
         char = stext.new(utf8.char(0x25bc), buttonStyle),
         offset = { x = .5, y = -2 }, -- some characters seem off, even using canvas:minimumTextSize
-        key = "down",
     },
     Up = {
         enabled = true,
         pos = { x = 1, y = 2, w = 1, h = 1 },
         char = stext.new(utf8.char(0x25b2), buttonStyle),
         offset = { x = .5, y = -3 }, -- some characters seem off, even using canvas:minimumTextSize
-        key = "up",
     },
     Back = {
         enabled = true,

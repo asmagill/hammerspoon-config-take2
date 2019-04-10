@@ -1,3 +1,11 @@
+-- TODO:
+--    document both spoons
+--    implement keyboard support
+--    add keyEquivelants toggle button?
+--    display of device; smaller text, separate icon/text spaces?
+--  + add save button (for position only; other settings require console since they're likely to be set either once or in code every time)
+--  + add more keyboard equivalents?
+--  +     editable through setting?
 
 --- === RokuRemote ===
 ---
@@ -46,28 +54,54 @@ obj.logger = _log
 obj._layout = dofile(obj.spoonPath .. "layout.lua")
 
 -- for timers, etc so they don't get collected
-local __internals = { timers = {}, cachedImages = {}, keyRepeating = {} }
+local __internals = {
+    timers       = {},
+    cachedImages = {},
+    keyRepeating = {},
+    -- apparently there is a bug perhaps introduced in a new OS X release with the NSStatusBar approach
+    -- used for menu items that means pop up menus aren't always deleted from the menubar correctly...
+    -- its probably time to stop using the deprecated approach anyways and finish the more "Apple approved"
+    -- version in hs._asm.guitk.menubar soon... until then, lets create them once to at least mitigate the
+    -- issue
+    menus        = {
+        _Launch = menu.new():removeFromMenuBar(),
+        _Device = menu.new():removeFromMenuBar(),
+        _Move   = menu.new():removeFromMenuBar(),
+    }
+}
 
 local sf = screen.mainScreen():fullFrame()
 
 ---------- Spoon Variables ----------
 
+local startingPosition = settings.get(obj.name .. "_position") or {
+    x = sf.x + sf.w - (obj._layout.gridSize.w + 2) * obj._layout.buttonSize,
+    y = sf.y + sf.h - (obj._layout.gridSize.h + 3) * obj._layout.buttonSize,
+}
+
 -- for spoon level variables -- they are wrapped by obj's __index/__newindex metamethods so they appear
 -- as regular variables and are thus documented as such; by doing this we can consolidate data validation
 -- in obj's metatable rather than have to test each time they are used
 local __spoonVariables = {
-    position         = settings.get(obj.name .. "_position") or {
-        x = sf.x + sf.w - (obj._layout.gridSize.w + 2) * obj._layout.buttonSize,
-        y = sf.y + sf.h - (obj._layout.gridSize.h + 3) * obj._layout.buttonSize,
-    },
-    color            = settings.get(obj.name .. "_color") or { white = .25, alpha = .75 },
+    position         = startingPosition,
+    remoteColor      = settings.get(obj.name .. "_remoteColor")      or { white = .25, alpha = .75 },
     buttonFrameColor = settings.get(obj.name .. "_buttonFrameColor") or { white = 0 },
     buttonHoverColor = settings.get(obj.name .. "_buttonHoverColor") or { red = 1, green = 1, alpha = .5 },
     buttonClickColor = settings.get(obj.name .. "_buttonClickColor") or { red = 1, green = 1, alpha = .75 },
-    autoDim          = settings.get(obj.name .. "_autoDim") or true,
-    enableKeys       = settings.get(obj.name .. "_enableKeys") or true,
-    dimAlpha         = settings.get(obj.name .. "_dimAlpha") or .25,
-    visibleAlpha     = settings.get(obj.name .. "_visibleAlpha") or .75,
+    autoDim          = settings.get(obj.name .. "_autoDim")          or true,
+    enableKeys       = settings.get(obj.name .. "_enableKeys")       or true,
+    dimAlpha         = settings.get(obj.name .. "_dimAlpha")         or .25,
+    visibleAlpha     = settings.get(obj.name .. "_visibleAlpha")     or .75,
+    keyEquivalents   = settings.get(obj.name .. "_keyEquivalents")   or {
+        Play   = { {},        "space",      },
+        Select = { {},        "return",     },
+        Left   = { {},        "left",  true },
+        Right  = { {},        "right", true },
+        Up     = { {},        "up",    true },
+        Down   = { {},        "down",  true },
+        Home   = { { "cmd" }, "h",          },
+        Back   = { { "cmd" }, "b",          },
+    }
 }
 
 ---------- Local Functions ----------
@@ -114,7 +148,14 @@ local updateRemoteCanvas = function()
                         __internals._rCanvas[k .. "_text"].action = "strokeAndFill"
 
                         if __internals._rDevice then
-                            __internals._rCanvas[k .. "_text"].text = v.char .. " " .. __internals._rDevice:name()
+                            __internals._rCanvas[k .. "_text"].text = stext.new(__internals._rDevice:name(), {
+                                      font = { name = "Menlo", size = 14 },
+                                      paragraphStyle = {
+                                          alignment                     = "center",
+                                          lineBreak                     = "truncateTail",
+                                      },
+                                      color = { white = 1 },
+                                  })
                         else
                             __internals._rCanvas[k .. "_text"].text = v.char
                         end
@@ -134,7 +175,7 @@ local updateRemoteCanvas = function()
                                 local text = stext.new(__internals._rDevice:currentApp(), {
                                     font = { name = "Menlo", size = 18 },
                                     paragraphStyle = { alignment = "center", lineBreak = "truncateTail", allowsTighteningForTruncation = false },
-                                    color = { white = 0 },
+                                    color = { white = 1 },
                                 })
                                 local textFrame = icon:minimumTextSize(text)
                                 local iconFrame = icon:frame()
@@ -217,7 +258,7 @@ local remoteMouseCallback = function(c, m, id, x, y)
 
             if m == "mouseUp" then
                 c[id].fillColor = __spoonVariables.buttonHoverColor
-                if buttonDef.triggerUpdate then doDelayedUpdate(1) end
+                if buttonDef.triggerUpdate then doDelayedUpdate(.1) end
             elseif m == "mouseDown" then
                 c[id].fillColor = __spoonVariables.buttonClickColor
             end
@@ -247,7 +288,7 @@ local remoteMouseCallback = function(c, m, id, x, y)
                             checked = (v == __internals._rDevice),
                             fn      = function(...)
                                 obj:selectDevice(v:sn())
-                                doDelayedUpdate(1)
+                                doDelayedUpdate(.1)
                             end,
                         })
                     end
@@ -255,16 +296,19 @@ local remoteMouseCallback = function(c, m, id, x, y)
                     table.insert(popup, { title = "-" })
                     table.insert(popup, {
                         title = "Rescan network",
-                        fn    = function(...) roku:discoverDevices() end,
+                        fn    = function(...)
+                                    roku:discoverDevices()
+                                    doDelayedUpdate(.1)
+                                end,
                     })
                     local frame = __internals._rCanvas[id].frame_raw
                     local topLeft = __internals._rCanvas:topLeft()
                     -- allow arrow keys to be used in the pop-up menu
                     if __spoonVariables.enableKeys and keysEnabled then __internals._modalKeys:exit() end
-                    menu.new(false):setMenu(popup):popupMenu({
+                    __internals.menus[id]:setMenu(popup):popupMenu({
                         x = frame.x + topLeft.x,
                         y = frame.y + topLeft.y + frame.h
-                    })
+                    }, true)
                     -- they should get restarted during update for mouseUp or upon re-entry if mouse outside
                     doDelayedUpdate(.1) -- in case they release outside of the menu
                 end
@@ -284,7 +328,7 @@ local remoteMouseCallback = function(c, m, id, x, y)
                             image   = icon,
                             fn      = function(...)
                                 __internals._rDevice:launch(v[2].id)
-                                doDelayedUpdate(1)
+                                doDelayedUpdate(.1)
                             end,
                         })
                     end
@@ -294,10 +338,10 @@ local remoteMouseCallback = function(c, m, id, x, y)
                     local topLeft = __internals._rCanvas:topLeft()
                     -- allow arrow keys to be used in the pop-up menu
                     if __spoonVariables.enableKeys and keysEnabled then __internals._modalKeys:exit() end
-                    menu.new(false):setMenu(popup):popupMenu({
+                    __internals.menus[id]:setMenu(popup):popupMenu({
                         x = frame.x + topLeft.x,
                         y = frame.y + topLeft.y + frame.h
-                    })
+                    }, true)
                     -- they should get restarted during update for mouseUp or upon re-entry if mouse outside
                     doDelayedUpdate(.1) -- in case they release outside of the menu
                 end
@@ -305,21 +349,61 @@ local remoteMouseCallback = function(c, m, id, x, y)
                 if m == "mouseUp" then obj:hide() end
             elseif id == "_Move" then
                 if m == "mouseDown" then
-                    __internals._mouseMoveTracker = eventtap.new(
-                        { events.leftMouseDragged, events.leftMouseUp },
-                        function(e)
-                            if e:getType() == events.leftMouseUp then
-                                __internals._mouseMoveTracker:stop()
-                                __internals._mouseMoveTracker = nil
-                            else
-                                local mousePosition = mouse.getAbsolutePosition()
-                                __internals._rCanvas:topLeft({
-                                    x = mousePosition.x - x,
-                                    y = mousePosition.y - y
-                                })
+                    if eventtap.checkMouseButtons().right or eventtap.checkKeyboardModifiers().ctrl then
+                        local popup = {
+                            {
+                                title = "Save as start position",
+                                fn    = function(...)
+                                    local tl = __internals._rCanvas:topLeft()
+                                    startingPosition.x = tl.x
+                                    startingPosition.y = tl.y
+                                    settings.set(obj.name .. "_position", startingPosition)
+                                    doDelayedUpdate(.1)
+                                end,
+                            }, {
+                                title = "-",
+                            }, {
+                                title = "Current start position:",
+                                disabled = true,
+                            }, {
+                                title = "x = " .. tostring(startingPosition.x),
+                                indent = 2,
+                                disabled = true,
+                            }, {
+                                title = "y = " .. tostring(startingPosition.y),
+                                indent = 2,
+                                disabled = true,
+                            }
+                        }
+                        local frame = __internals._rCanvas[id].frame_raw
+                        local topLeft = __internals._rCanvas:topLeft()
+                        -- allow arrow keys to be used in the pop-up menu
+                        if __spoonVariables.enableKeys and keysEnabled then __internals._modalKeys:exit() end
+                        __internals.menus[id]:setMenu(popup):popupMenu({
+                            x = frame.x + topLeft.x,
+                            y = frame.y + topLeft.y + frame.h
+                        }, true)
+                        -- they should get restarted during update for mouseUp or upon re-entry if mouse outside
+                        doDelayedUpdate(.1) -- in case they release outside of the menu
+                    else
+                        __internals._mouseMoveTracker = eventtap.new(
+                            { events.leftMouseDragged, events.leftMouseUp },
+                            function(e)
+                                if e:getType() == events.leftMouseUp then
+                                    __internals._mouseMoveTracker:stop()
+                                    __internals._mouseMoveTracker = nil
+                                else
+                                    local mousePosition = mouse.getAbsolutePosition()
+                                    __spoonVariables.position = {
+                                        x = mousePosition.x - x,
+                                        y = mousePosition.y - y,
+                                    }
+                                    __internals._rCanvas:topLeft(__spoonVariables.position)
+
+                                end
                             end
-                        end
-                    ):start()
+                        ):start()
+                    end
                 end
 --             elseif id == "_Keyboard" then
             else
@@ -377,7 +461,7 @@ local createRemoteCanvas = function()
                 xRadius = obj._layout.buttonSize / 2,
                 yRadius = obj._layout.buttonSize / 2,
             },
-            fillColor           = __spoonVariables.color,
+            fillColor           = __spoonVariables.remoteColor,
             trackMouseEnterExit = true,
         }
 
@@ -521,12 +605,14 @@ local createRemoteCanvas = function()
                     text  = v.char,
                 }
 
-                if v.key then
-                    if fnutils.contains({ "up", "down", "left", "right" }, v.key) then
-                        local key = v.key
-                        __internals._modalKeys:bind({}, key,  function()
-                                                                    __internals.keyRepeating[key] = false
-                                                                    mimicCallback(k, "mouseDown")
+                local keyEquivalent = __spoonVariables.keyEquivalents[k]
+                if keyEquivalent then
+                    local mods, key, repeats = keyEquivalent[1], keyEquivalent[2], keyEquivalent[3]
+
+                    if repeats then
+                        __internals._modalKeys:bind(mods, key,  function()
+                                                                  __internals.keyRepeating[key] = false
+                                                                  mimicCallback(k, "mouseDown")
                                                                 end,
                                                                 function()
                                                                     if not __internals.keyRepeating[key] then
@@ -538,7 +624,7 @@ local createRemoteCanvas = function()
                                                                     mimicCallback(k, "mouseUp")
                                                                 end)
                     else
-                        __internals._modalKeys:bind({}, v.key, function() mimicCallback(k, "mouseDown") end,
+                        __internals._modalKeys:bind(mods, key, function() mimicCallback(k, "mouseDown") end,
                                                                function() mimicCallback(k, "mouseUp") end)
                     end
                 end
@@ -552,12 +638,14 @@ end
 
 ---------- Spoon Methods ----------
 
-obj.saveSettings = function(self)
+obj.saveSettings = function(self, andPos)
     -- in case called as function
-    if self ~= obj then self = obj end
+    if self ~= obj then self, andPos = obj, self end
 
     for k,v in pairs(__spoonVariables) do
-        settings.set(obj.name .. "_" .. k, v)
+        if andPos or not k:match("^" .. obj.name .. "_position$") then
+            settings.set(obj.name .. "_" .. k, v)
+        end
     end
 
     return self
