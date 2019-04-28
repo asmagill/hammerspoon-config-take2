@@ -660,6 +660,7 @@ obj.selectDevice = function(self, dev)
     else
         local rDev = roku:device(dev)
         if rDev then
+            roku:addDevice(rDev:host(), rDev:port()) -- mark it as manually added so it won't disappear on us if its slow to respond to a future discovery scan
             __internals._rDevice = rDev
         else
             _log.ef("%s device not found; current selected device unchanged", dev)
