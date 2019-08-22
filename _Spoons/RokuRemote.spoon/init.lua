@@ -44,6 +44,7 @@ local obj    = {
     homepage  = "https://github.com/asmagill/hammerspoon-config/tree/master/_Spoons/RokuRemote.spoon",
     license   = "MIT - https://opensource.org/licenses/MIT",
     spoonPath = debug.getinfo(1, "S").source:match("^@(.+/).+%.lua$"),
+    spoonMeta = "placeholder for _coresetup metadata creation",
 }
 local metadataKeys = {} ; for k, v in require("hs.fnutils").sortByKeys(obj) do table.insert(metadataKeys, k) end
 
