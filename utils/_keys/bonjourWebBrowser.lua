@@ -9,7 +9,7 @@ local USERDATA_TAG = debug.getinfo(1).short_src:match("([^/]+)%.lua$")
 local WIDE_AREA_DOMAIN = "dns-sd.org."
 local ENABLE_WIDE_AREA_DOMAIN = false
 
-local bonjour = require("hs._asm.bonjour")
+local bonjour = require("hs.bonjour")
 local chooser = require("hs.chooser")
 local host    = require("hs.host")
 local fnutils = require("hs.fnutils")
