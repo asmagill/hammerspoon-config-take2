@@ -133,3 +133,5 @@ end)
 
 hs.loadSpoon("SleepCorners"):start()
 hs.loadSpoon("FadeLogo"):start(.5)
+hs.loadSpoon("BonjourLauncher"):start():bindHotkeys{ toggle = { { "cmd", "alt", "ctrl" }, "=" }}
+
