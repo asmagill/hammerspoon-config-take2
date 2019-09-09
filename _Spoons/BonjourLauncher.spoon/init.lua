@@ -2,6 +2,11 @@
 ---
 --- List advertised services on your network that match defined templates and provide a list for the user to access them.
 
+-- TODO:
+--   start/stop service detection, resolve, and monitor when chooser show/hide rather then stop/start to minimize impact on system
+--   document
+--   other templates?
+
 local logger  = require("hs.logger")
 local spoons  = require("hs.spoons")
 local bonjour = require("hs.bonjour")
@@ -219,7 +224,7 @@ end
 
 local bonjourServiceResolveCallback = function(svc, msg, ...)
     if msg == "resolved" then
-        svc:stop():monitor(bonjourTextRecordMonitorCallback)
+        svc:stop()
         if _chooser and svc:type() == _currentlySelected then _chooser:refreshChoicesCallback() end
     elseif msg == "error" then
         _log.ef("error for service resolve callback: %s", table.pack(...)[1])
@@ -241,7 +246,8 @@ local bonjourFindServicesCallback = function(b, msg, ...)
         end
         if state then
             if not foundIdx then
-                table.insert(_services[svcType], svc:resolve(bonjourServiceResolveCallback))
+                table.insert(_services[svcType], svc:resolve(bonjourServiceResolveCallback)
+                                                    :monitor(bonjourTextRecordMonitorCallback))
             end
         else
             if foundIdx then
@@ -299,8 +305,7 @@ obj.start = function(self)
             _browsers[k]:stop()
             _browsers[k] = nil
             for i,v2 in ipairs(_services[k]) do
-                v2:stop()
-                v2:stopMonitoring()
+                v2:stop():stopMonitoring()
             end
             _services[k] = nil
         end
