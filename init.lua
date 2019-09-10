@@ -28,6 +28,7 @@ local logger      = require("hs.logger")
 local timer       = require("hs.timer")
 local ipc         = require("hs.ipc")
 local alert       = require("hs.alert")
+local image       = require("hs.image")
 
 -- something steals focus from an application which was focused before HS starts; capture that
 -- window and then we'll switch back to it at the end
@@ -133,5 +134,18 @@ end)
 
 hs.loadSpoon("SleepCorners"):start()
 hs.loadSpoon("FadeLogo"):start(.5)
-hs.loadSpoon("BonjourLauncher"):start():bindHotkeys{ toggle = { { "cmd", "alt", "ctrl" }, "=" }}
+hs.loadSpoon("BonjourLauncher")
+-- using ESP8266 with ESP-Link on some, my own code on others; ESP-Link advertises only one type; mine both
+-- _http._tcp. and _arduino._tcp. but on differing ports; so far everything *is* on 80 for web, so this
+-- ignores the port. May need to consider more complex logic in templates for filtering things out
+table.insert(spoon.BonjourLauncher.templates, {
+    image   = hs.image.imageFromAppBundle("cc.arduino.Arduino"),
+    label   = "Arduino",
+    type    = "_arduino._tcp.",
+    text    = "%name% (%txt:vendor %)",
+    subText = "http://%hostname%:%port%/%txt:path%",
+    url     = "http://%hostname%:%port%/%txt:path%",
+    filter  = function(svc) local p = svc:port() ; return (p ~= 8266) and (p ~= -1) end,
+})
+spoon.BonjourLauncher:start():bindHotkeys{ toggle = { { "cmd", "alt", "ctrl" }, "=" }}
 
