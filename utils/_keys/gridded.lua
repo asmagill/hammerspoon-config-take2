@@ -48,7 +48,7 @@ end
     hotkey.bind(mods.CASC, "right", adjustMargins( 0,  1), nil, adjustMargins( 0,  1))
 
 -- visual aid
-    hotkey.bind(mods.CAsC, "v", grid.show)
+    hotkey.bind(mods.CASC, "v", grid.show)
 
 
 return setmetatable(module, {
