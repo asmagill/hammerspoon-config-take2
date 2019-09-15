@@ -2,7 +2,8 @@ local slidingPanels = hs.loadSpoon("SlidingPanels")
 
 slidingPanels:addPanel("infoPanel", {
     side              = "top",
-    size              = 1/3,
+--     size              = 1/3,
+    size              = 2/9,
     modifiers         = { "fn" },
     persistent        = true,
     animationDuration = 0.1,
@@ -23,7 +24,8 @@ local filepath = debug.getinfo(1, "S").source:match("^@(.+/).+%.lua$")
 --    * vars       - table of key-value pairs for spoon to be set before "start", if present, is invoked
 --    * background - a table specifying a canvas element, e.g. a rectangle or an image, to use as the background for the spoon canvas. This can be useful to provide contrast if the spoon's coloring is hard to see against the panel's background.
 
-slidingPanels:panel("infoPanel"):addWidget("FromSpoon", "HCalendar",      { rX = "100%", bY = "100%" })
+-- slidingPanels:panel("infoPanel"):addWidget("FromSpoon", "HCalendar",      { rX = "100%", bY = "100%" })
+slidingPanels:panel("infoPanel"):addWidget("FromSpoon", "HCalendar",      { cX = "50%", bY = "100%" })
 
 slidingPanels:panel("infoPanel"):addWidget("FromSpoon", "CircleClock",    { rX = "100%",  y = 0 }, {
     background = {
