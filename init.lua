@@ -134,10 +134,17 @@ end)
 
 hs.loadSpoon("SleepCorners"):start()
 hs.loadSpoon("FadeLogo"):start(.5)
-hs.loadSpoon("BonjourLauncher")
+hs.loadSpoon("BonjourLauncher"):start():bindHotkeys{
+    toggle = { { "cmd", "alt", "ctrl" }, "=" },
+    ["toggle_ssh._tcp."] = { { "cmd", "alt", "ctrl" }, "s" },
+    ["toggle_http._tcp."] = { { "cmd", "alt", "ctrl" }, "w" },
+    ["toggle_rfb._tcp."] = { { "cmd", "alt", "ctrl" }, "v" },
+}
 -- using ESP8266 with ESP-Link on some, my own code on others; ESP-Link advertises only one type; mine both
--- _http._tcp. and _arduino._tcp. but on differing ports; so far everything *is* on 80 for web, so this
--- ignores the port. May need to consider more complex logic in templates for filtering things out
+-- _http._tcp. and _arduino._tcp. but on differing ports; this captures the _arduino._tcp. entries and filters
+-- out those that are on the default arduino OTA update port (or that haven't been resolved yet as -1 indicates
+-- that the service is still being resolved) under the assumption that such an advertisement that uses a
+-- different port is probably a web server... So far, this has held, but we'll see about future updates...
 table.insert(spoon.BonjourLauncher.templates, {
     image   = hs.image.imageFromAppBundle("cc.arduino.Arduino"),
     label   = "Arduino",
@@ -146,6 +153,5 @@ table.insert(spoon.BonjourLauncher.templates, {
     subText = "http://%hostname%:%port%/%txt:path%",
     url     = "http://%hostname%:%port%/%txt:path%",
     filter  = function(svc) local p = svc:port() ; return (p ~= 8266) and (p ~= -1) end,
+    hidden  = true,
 })
-spoon.BonjourLauncher:start():bindHotkeys{ toggle = { { "cmd", "alt", "ctrl" }, "=" }}
-
