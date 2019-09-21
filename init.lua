@@ -134,7 +134,7 @@ end)
 
 hs.loadSpoon("SleepCorners"):start()
 hs.loadSpoon("FadeLogo"):start(.5)
-hs.loadSpoon("BonjourLauncher"):start():bindHotkeys{
+hs.loadSpoon("BonjourLauncher"):start():addRecipes("SSH", "SMB", "AFP", "VNC_RealVNC_Alternate"):bindHotkeys{
     toggle = { { "cmd", "alt", "ctrl" }, "=" },
     ["toggle_ssh._tcp."] = { { "cmd", "alt", "ctrl" }, "s" },
     ["toggle_http._tcp."] = { { "cmd", "alt", "ctrl" }, "w" },
