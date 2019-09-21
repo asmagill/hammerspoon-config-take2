@@ -1,44 +1,25 @@
 --- === BonjourLauncher ===
 ---
 --- List advertised services on your network that match defined templates and provide a list for the user to access them.
+---
+--- Safari used to provide a list of web servers which advertised themselves via Bonjour in the Bookmarks menu or in a pop-up menu off of the toolbar. This feature was removed some time ago, for reasons best known to Apple.
+---
+--- Because I always found it useful to use these advertised web servers to check on the status of printer ink levels, etc. on my network, the `hs.bonjour` module and this spoon bring back an easy way to see what devices on your network are advertising a web server, and many other services which can use Bonjour (also sometimes referred to as ZeroConf or Avahi, especially on Linux servers) to advertise their presence.
 
--- TODO:
--- * start/stop service detection, resolve, and monitor when chooser show/hide rather then stop/start
--- * document
--- * filter login in templates to exclude certain advertisements? add filter function seems easiest...
--- *    filter = function(svc) return true/false end, to include/exclude
--- * wrapper for templates variable so you can see current settings via tostring?
---
--- * add `disabled` field to templates?
--- * add `hidden` field to templates to create lists which aren't in toolbar by default (but are still enabled)?
--- *   make note in documentation that this may be ignored if they have customized the toolbar
---
--- * add `type` arg to `:show` which pulls up/switches to specified type, even if it's currently hiddem?
--- * add `show/toggle_xxx_xxx` psuedo function to bindKeys for assigning way to move chooser to specific page automatically?
---
--- * document psuedo mappings
--- * document hidden and disabled keys
---
--- * add variables to adjust chooser display mode/colors/etc?
+-- Maybe TODO:
 --   variable for allow customization?
 --   allow toolbar spacer items in templates? if so, maybe remove customization?
 --
--- * reorder actions in template: `fn`, then `url` then `cmd`
--- *    if `fn` then invoke with fn(svc, chooserRecord) so `fn` can determine if it should use
--- *        `cmd` or `url` or do its own thing based on txtRecords, etc.
+-- + hotkeys to move left/right in toolbar?
+--   add vars to change mapping?
+--   document
 --
--- * put entire template entry into chooser record? that way user fields get passed in as well
--- *     do field substitution on all (user) records of type string (other than type and label)?
--- *     add to `filter` fn as well?
+--   Allow psuedo keybinding based on label key so duplicate service types with different launchers can be defined (e.g. one VNC that always uses URL, another that always uses executable command.)
+--   adjust documentation to mention this
 --
---   hotkeys to move left/right in toolbar?
---
--- - other templates?
---   * vnc (_rfb._tcp.)
---
---   rewrite companion spoon BonjourBrowser for discovery/investigation
---      current approach is buggy/incomplete/inefficient... in a word, ugly
---      add method to export table ready for adding to templates based on selection?
+--   Document about customizing toolbar and give examples of use predefinedTemplates and
+--     method for clearing stored customizations?
+--     creating entirely new ones in spoon doc header
 
 local logger   = require("hs.logger")
 local spoons   = require("hs.spoons")
@@ -72,6 +53,8 @@ local metadataKeys = {} ; for k, v in fnutils.sortByKeys(obj) do table.insert(me
 local _log = logger.new(obj.name)
 obj.logger = _log
 
+obj.recipes = dofile(obj.spoonPath .. "recipes.lua")
+
 obj.__index = obj
 
 ---------- Local Functions And Variables ----------
@@ -81,7 +64,7 @@ local _toolbar
 local _currentlySelected
 local _browsers = {}
 local _services = {}
-local _hotkey
+local _hotkeys  = {}
 local _tooltip
 
 -- figure out default rows and width so setting the spoon variable to nil will reset it
@@ -98,10 +81,16 @@ local finspect = function(...)
     return inspect(tmp, { newline = " ", indent = "" })
 end
 
-local clearToolTipAndHotKey = function()
-    if _hotkey then
-        _hotkey:disable()
-        _hotkey = nil
+local clearToolTipAndHotKeys = function(all)
+    if _hotkeys.tooltip then
+        _hotkeys.tooltip:disable()
+        _hotkeys.tooltip = nil
+    end
+    if all then
+        for k,v in pairs(_hotkeys) do
+            v:disable()
+            _hotkeys[k] = nil
+        end
     end
     if _tooltip then
         _tooltip:delete()
@@ -110,7 +99,7 @@ local clearToolTipAndHotKey = function()
 end
 
 local stopAndClearBonjourQueries = function()
-    clearToolTipAndHotKey()
+    clearToolTipAndHotKeys(true)
     for k, v in pairs(_browsers) do
         _browsers[k]:stop()
         _browsers[k] = nil
@@ -235,7 +224,7 @@ local fillPlaceholders = function(svc, str)
 end
 
 local chooserToolbarCallback = function(tb, ch, id)
-    clearToolTipAndHotKey()
+    clearToolTipAndHotKeys()
     _currentlySelected = id
     tb:selectedItem(_currentlySelected)
     validateCurrentlySelected()
@@ -266,8 +255,57 @@ local showChooserCallback = function()
     _toolbar = toolbar.new(obj.name .. "_toolbar", items):setCallback(chooserToolbarCallback)
                                                          :canCustomize(true)
                                                          :autosaves(true)
-   _chooser:attachedToolbar(obj.displayToolbar and _toolbar or nil)
-
+    _chooser:attachedToolbar(obj.displayToolbar and _toolbar or nil)
+    if obj.displayToolbar then
+        _hotkeys.left = hotkey.bind({"cmd"}, "left", nil, function()
+            local items = _toolbar:items()
+            local current
+            for i,v in ipairs(items) do
+                if v == _currentlySelected then
+                    current = i
+                    break
+                end
+            end
+            if not current then current = #items + 1 end
+            local nextItem = items[current - 1]
+            while nextItem do
+                if nextItem:match("^NSToolbar") then
+                    current = current - 1
+                    nextItem = items[current - 1]
+                else
+                    break
+                end
+            end
+            if nextItem then
+                _currentlySelected = nextItem
+                chooserToolbarCallback(_toolbar, _chooser, _currentlySelected)
+            end
+        end)
+        _hotkeys.right = hotkey.bind({"cmd"}, "right", nil, function()
+            local items = _toolbar:items()
+            local current
+            for i,v in ipairs(items) do
+                if v == _currentlySelected then
+                    current = i
+                    break
+                end
+            end
+            if not current then current = 0 end
+            local nextItem = items[current + 1]
+            while nextItem do
+                if nextItem:match("^NSToolbar") then
+                    current = current + 1
+                    nextItem = items[current + 1]
+                else
+                    break
+                end
+            end
+            if nextItem then
+                _currentlySelected = nextItem
+                chooserToolbarCallback(_toolbar, _chooser, _currentlySelected)
+            end
+        end)
+    end
     chooserToolbarCallback(_toolbar, _chooser, _currentlySelected)
 end
 
@@ -346,7 +384,7 @@ local chooserRightClickCallback = function(row)
     if row > 0 then
         local details = _chooser:selectedRowContents(row)
         if next(details) then
-            clearToolTipAndHotKey()
+            clearToolTipAndHotKeys()
             local pos    = mouse.getAbsolutePosition()
             local output = inspect(details._txt_)
             _tooltip = canvas.new{ x = pos.x, y = pos.y, h = 100, w = 100 }
@@ -363,7 +401,7 @@ local chooserRightClickCallback = function(row)
             }
             local size   = _tooltip:minimumTextSize(#_tooltip, output)
             _tooltip:size(size):show()
-            _hotkey = hotkey.bind({}, "escape", nil, clearToolTipAndHotKey)
+            _hotkeys.tooltip = hotkey.bind({}, "escape", nil, clearToolTipAndHotKeys)
         end
     end
 end
@@ -454,81 +492,80 @@ obj.templates[#obj.templates + 1] = {
 --     fn      = function(svcObj) end,
 }
 
-obj.templates[#obj.templates + 1] = {
-    image   = image.imageFromAppBundle("com.apple.Terminal"), -- optional
-    label   = "SSH",                                          -- optional
-    type    = "_ssh._tcp.",                                   -- required
-    text    = "%name%",                                       -- optional, defaults to "%name%"
-    subText = "%hostname%:%port% (%address4%/%address6%)",    -- optional
-    hidden  = true,
-    url     = "ssh://%hostname%:%port%",                      -- only one of url, cmd, fn required
---     cmd     = "string passed to os.execute",
---     fn      = function(svcObj) end,
-}
+-- obj.templates[#obj.templates + 1] = {
+--     image   = image.imageFromAppBundle("com.apple.Terminal"), -- optional
+--     label   = "SSH",                                          -- optional
+--     type    = "_ssh._tcp.",                                   -- required
+--     text    = "%name%",                                       -- optional, defaults to "%name%"
+--     subText = "%hostname%:%port% (%address4%/%address6%)",    -- optional
+--     hidden  = true,
+--     url     = "ssh://%hostname%:%port%",                      -- only one of url, cmd, fn required
+-- --     cmd     = "string passed to os.execute",
+-- --     fn      = function(svcObj) end,
+-- }
 
-obj.templates[#obj.templates + 1] = {
-    image   = image.imageFromName("NSNetwork"),
-    label   = "SMB",
-    type    = "_smb._tcp.",
-    text    = "%name%",
-    subText = "smb://%hostname%:%port%",
-    hidden  = true,
-    url     = "smb://%hostname%:%port%",
---     cmd     = "string passed to os.execute",
---     fn      = function(svcObj) end,
-}
+-- obj.templates[#obj.templates + 1] = {
+--     image   = image.imageFromName("NSNetwork"),
+--     label   = "SMB",
+--     type    = "_smb._tcp.",
+--     text    = "%name%",
+--     subText = "smb://%hostname%:%port%",
+--     hidden  = true,
+--     url     = "smb://%hostname%:%port%",
+-- --     cmd     = "string passed to os.execute",
+-- --     fn      = function(svcObj) end,
+-- }
 
+-- obj.templates[#obj.templates + 1] = {
+--     image   = canvas.new{ h = 128, w = 128 }:appendElements(
+--                               { type="image", image = image.imageFromName("NSNetwork") },
+--                               { type="image", image = image.imageFromName("NSTouchBarColorPickerFont") }
+--               ):imageFromCanvas(),
+--     label   = "AFP",
+--     type    = "_afpovertcp._tcp.",
+--     text    = "%name%",
+--     subText = "afp://%hostname%:%port%",
+--     hidden  = true,
+--     url     = "afp://%hostname%:%port%",
+-- --     cmd     = "string passed to os.execute",
+-- --     fn      = function(svcObj) end,
+-- }
 
-obj.templates[#obj.templates + 1] = {
-    image   = canvas.new{ h = 128, w = 128 }:appendElements(
-                              { type="image", image = image.imageFromName("NSNetwork") },
-                              { type="image", image = image.imageFromName("NSTouchBarColorPickerFont") }
-              ):imageFromCanvas(),
-    label   = "AFP",
-    type    = "_afpovertcp._tcp.",
-    text    = "%name%",
-    subText = "afp://%hostname%:%port%",
-    hidden  = true,
-    url     = "afp://%hostname%:%port%",
---     cmd     = "string passed to os.execute",
---     fn      = function(svcObj) end,
-}
-
--- Raspberry PI machines running Raspbian linux have RealVNC server installed to
--- provide remote access to the desktop, but this uses an encryption scheme not
--- understood by Apples Screen Sharing app. To allow us to programtically determine
--- when to use the RealVNC viewer instead of the default, you will need to create the
--- file /etc/avahi/services/vnc.service on the Raspberry Pi with the following contents:
---
---     <?xml version="1.0" standalone='no'?>
---     <!DOCTYPE service-group SYSTEM "avahi-service.dtd">
---     <service-group>
---       <name replace-wildcards="yes">%h</name>
---       <service>
---         <type>_rfb._tcp</type>
---         <port>5900</port>
---         <txt-record>RealVNC=True</txt-record>
---       </service>
---     </service-group>
---
-obj.templates[#obj.templates + 1] = {
-    image   = image.imageFromAppBundle("com.apple.ScreenSharing"),
-    label   = "VNC",
-    type    = "_rfb._tcp.",
-    text    = "%name%",
-    subText = "vnc://%hostname%:%port%",
-    hidden  = true,
-    url     = "vnc://%hostname%:%port%", -- used in fn when RealVNC not set ; see below
-    cmd     = "open -a \"VNC Viewer\" --args %hostname%:%port%", -- used in fn when RealVNC set; see below
-    fn      = function(svc, choice)
-        local tr = svc:txtRecord()
-        if tr and tr.RealVNC then
-            hs.execute(choice.cmd)
-        else
-            urlevent.openURL(choice.url)
-        end
-    end,
-}
+-- -- Raspberry PI machines running Raspbian linux have RealVNC server installed to
+-- -- provide remote access to the desktop, but this uses an encryption scheme not
+-- -- understood by Apples Screen Sharing app. To allow us to programtically determine
+-- -- when to use the RealVNC viewer instead of the default, you will need to create the
+-- -- file /etc/avahi/services/vnc.service on the Raspberry Pi with the following contents:
+-- --
+-- --     <?xml version="1.0" standalone='no'?>
+-- --     <!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+-- --     <service-group>
+-- --       <name replace-wildcards="yes">%h</name>
+-- --       <service>
+-- --         <type>_rfb._tcp</type>
+-- --         <port>5900</port>
+-- --         <txt-record>RealVNC=True</txt-record>
+-- --       </service>
+-- --     </service-group>
+-- --
+-- obj.templates[#obj.templates + 1] = {
+--     image   = image.imageFromAppBundle("com.apple.ScreenSharing"),
+--     label   = "VNC",
+--     type    = "_rfb._tcp.",
+--     text    = "%name%",
+--     subText = "vnc://%hostname%:%port%",
+--     hidden  = true,
+--     url     = "vnc://%hostname%:%port%", -- used in fn when RealVNC not set ; see below
+--     cmd     = "open -a \"VNC Viewer\" --args %hostname%:%port%", -- used in fn when RealVNC set; see below
+--     fn      = function(svc, choice)
+--         local tr = svc:txtRecord()
+--         if tr and tr.RealVNC then
+--             hs.execute(choice.cmd)
+--         else
+--             urlevent.openURL(choice.url)
+--         end
+--     end,
+-- }
 
 -- spoon vars, except for templates, are stored here so we can validate and implement them immediately upon change with the modules __newindex matamethod (see end of file)
 
@@ -800,6 +837,37 @@ obj.bindHotkeys = function(self, mapping)
     return self
 end
 
+--- BonjourLauncher:addRecipes(recipe, ...) -> self
+--- Method
+--- Add predefined recipes to [BonjourLauncher.templates](#templates) for display by the BonjourLauncher chooser.
+---
+--- Paramters:
+---  * `recipe`, ... - One or more string values matching a variable name in `BonjourLauncher.recipes` which define basic templates for common services which you may wish to add to your BonjourLauncer chooser window.
+---
+--- Returns:
+---  * the BonjourLauncer object
+---
+--- Notes:
+---  * This method is basically a wrapper which performs `table.insert(spoon.BonjourLauncher.templates, spoon.BonjourLauncher.recipes.*recipe*)` for each of the recipe names specified as a paraneter to this method. You may invoke this method multiple times or combine multiple recipes into one invocation by specifying more thane one string, each separated by a comma.
+obj.addRecipes = function(self, ...)
+    local recipeList = table.pack(...)
+    -- in case called as function
+    if self ~= obj then
+        table.insert(recipeList, 1, self)
+        self = obj
+    end
+
+    for i, v in ipairs(recipeList) do
+        if obj.recipes[v] then
+            table.insert(obj.templates, obj.recipes[v])
+        else
+            _log.wf("unrecognized recipe '%s' passed to %s.addRecipes; skipping", obj.name, v)
+        end
+    end
+
+    return self
+end
+
 return setmetatable(obj, {
     -- cleaner, IMHO, then "table: 0x????????????????"
     __tostring = function(self)
@@ -819,7 +887,7 @@ return setmetatable(obj, {
                 _browsers          = _browsers,
                 _services          = _services,
                 _tooltip           = _tooltip,
-                _hotkey            = _hotkey,
+                _hotkeys            = _hotkeys,
             }
         else
             return _internals[key]
