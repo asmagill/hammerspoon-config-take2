@@ -135,10 +135,10 @@ end)
 hs.loadSpoon("SleepCorners"):start()
 hs.loadSpoon("FadeLogo"):start(.5)
 hs.loadSpoon("BonjourLauncher"):start():addRecipes("SSH", "SMB", "AFP", "VNC_RealVNC_Alternate"):bindHotkeys{
-    toggle = { { "cmd", "alt", "ctrl" }, "=" },
-    ["toggle_ssh._tcp."] = { { "cmd", "alt", "ctrl" }, "s" },
-    ["toggle_http._tcp."] = { { "cmd", "alt", "ctrl" }, "w" },
-    ["toggle_rfb._tcp."] = { { "cmd", "alt", "ctrl" }, "v" },
+    toggle      = { { "cmd", "alt", "ctrl" }, "=" },
+    toggle_SSH  = { { "cmd", "alt", "ctrl" }, "s" },
+    toggle_HTTP = { { "cmd", "alt", "ctrl" }, "w" },
+    toggle_VNC  = { { "cmd", "alt", "ctrl" }, "v" },
 }
 -- using ESP8266 with ESP-Link on some, my own code on others; ESP-Link advertises only one type; mine both
 -- _http._tcp. and _arduino._tcp. but on differing ports; this captures the _arduino._tcp. entries and filters
