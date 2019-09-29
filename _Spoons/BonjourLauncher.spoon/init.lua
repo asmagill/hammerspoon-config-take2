@@ -7,18 +7,16 @@
 --- Because I always found it useful to use these advertised web servers to check on the status of printer ink levels, etc. on my network, the `hs.bonjour` module and this spoon bring back an easy way to see what devices on your network are advertising a web server, and many other services which can use Bonjour (also sometimes referred to as ZeroConf or Avahi, especially on Linux servers) to advertise their presence.
 
 -- Maybe TODO:
---   variable for allow customization?
+--   variable for enable/disable customization?
 --   allow toolbar spacer items in templates? if so, maybe remove customization?
+--   method for clearing stored customizations?
+--
 --
 -- + hotkeys to move left/right in toolbar?
 --   add vars to change mapping?
 --   document
 --
---   Allow psuedo keybinding based on label key so duplicate service types with different launchers can be defined (e.g. one VNC that always uses URL, another that always uses executable command.)
---   adjust documentation to mention this
---
 --   Document about customizing toolbar and give examples of use predefinedTemplates and
---     method for clearing stored customizations?
 --     creating entirely new ones in spoon doc header
 
 local logger   = require("hs.logger")
@@ -113,7 +111,7 @@ end
 
 local bonjourTextRecordMonitorCallback = function(svc, msg, ...)
     if msg == "txtRecord" then
-        if _chooser and svc:type() == _currentlySelected then _chooser:refreshChoicesCallback(true) end
+        if _chooser then _chooser:refreshChoicesCallback(true) end
     elseif msg == "error" then
         _log.ef("error for service txtRecord monitoring callback: %s", table.pack(...)[1])
     else
@@ -124,7 +122,7 @@ end
 local bonjourServiceResolveCallback = function(svc, msg, ...)
     if msg == "resolved" then
 --         svc:stop()
-        if _chooser and svc:type() == _currentlySelected then _chooser:refreshChoicesCallback(true) end
+        if _chooser then _chooser:refreshChoicesCallback(true) end
     elseif msg == "error" then
         _log.ef("error for service resolve callback: %s", table.pack(...)[1])
     else
@@ -135,27 +133,35 @@ end
 local bonjourFindServicesCallback = function(b, msg, ...)
     if msg == "service" then
         local state, svc, more = ...
-        local foundIdx
-        local svcType = svc:type()
-        for i,v in ipairs(_services[svcType]) do
-            if v == svc then
-                foundIdx = i
+        local foundIdx, foundLabel = nil, nil
+        for k,v in pairs(_browsers) do
+            if v == b then
+                foundLabel = k
                 break
             end
         end
-        if state then
-            if not foundIdx then
-                table.insert(_services[svcType], svc:resolve(bonjourServiceResolveCallback)
-                                                    :monitor(bonjourTextRecordMonitorCallback))
+        if foundLabel then
+            for i,v in ipairs(_services[foundLabel]) do
+                if v == svc then
+                    foundIdx = i
+                    break
+                end
             end
-        else
-            if foundIdx then
-                svc:stop()
-                svc:stopMonitoring()
-                table.remove(_services[svcType], foundIdx)
+
+            if state then
+                if not foundIdx then
+                    table.insert(_services[foundLabel], svc:resolve(bonjourServiceResolveCallback)
+                                                        :monitor(bonjourTextRecordMonitorCallback))
+                end
+            else
+                if foundIdx then
+                    svc:stop()
+                    svc:stopMonitoring()
+                    table.remove(_services[foundLabel], foundIdx)
+                end
             end
+            if _chooser then _chooser:refreshChoicesCallback(true) end
         end
-        if _chooser and svcType == _currentlySelected then _chooser:refreshChoicesCallback(true) end
     elseif msg == "error" then
         _log.ef("error for find services callback: %s", table.pack(...)[1])
     else
@@ -164,14 +170,15 @@ local bonjourFindServicesCallback = function(b, msg, ...)
 end
 
 local validateCurrentlySelected = function()
-    if not _currentlySelected then _currentlySelected = obj.templates[1].type end
+    if not _currentlySelected then _currentlySelected = obj.templates[1].label or obj.templates[1].type end
     if _toolbar and _currentlySelected ~= _toolbar:selectedItem() then
-        _currentlySelected = _toolbar:selectedItem() or obj.templates[1].type
+        _currentlySelected = _toolbar:selectedItem() or obj.templates[1].label or obj.templates[1].type
         _toolbar:selectedItem(_currentlySelected)
     end
     if not _browsers[_currentlySelected] then
+        local template = fnutils.find(obj.templates, function(x) return not x.disabled and (x.label or x.type) == _currentlySelected end)
         _browsers[_currentlySelected] = bonjour.new()
-                                               :findServices(_currentlySelected, bonjourFindServicesCallback)
+                                               :findServices(template.type, bonjourFindServicesCallback)
         _services[_currentlySelected] = {}
     end
 end
@@ -236,14 +243,24 @@ local showChooserCallback = function()
     for i,v in ipairs(obj.templates) do
         if not v.disabled then
             if v.type and (v.url or v.cmd or v.fn) then
-                table.insert(items, {
-                    id         = v.type,
-                    image      = v.image or nil,
-                    label      = v.label or v.type,
-                    selectable = true,
-                    tooltip    = v.type,
-                    default    = not v.hidden,
-                })
+                local newLabel = v.label or v.type
+                local labelUnique = true
+                for i2,v2 in ipairs(items) do
+                    if v2.label == newLabel then
+                        labelUnique = false
+                        _log._wf("template entry at index %d requires a unique label; %s already in use -- skipping", i, newLabel)
+                    end
+                end
+                if labelUnique then
+                    table.insert(items, {
+                        id         = newLabel,
+                        image      = v.image or nil,
+                        label      = newLabel,
+                        selectable = true,
+                        tooltip    = v.type,
+                        default    = not v.hidden,
+                    })
+                end
             else
                 _log.wf("template entry at index %d requires a `type` key and one of `url`, `cmd`, or `fn` -- skipping", i)
             end
@@ -314,17 +331,18 @@ local updateChooserChoices = function()
 
     local choices = {}
     table.sort(_services[_currentlySelected], function(a,b) return a:name() < b:name() end)
-    local template = fnutils.find(obj.templates, function(x) return x.type == _currentlySelected end)
+    local template = fnutils.find(obj.templates, function(x) return not x.disabled and (x.label or x.type) == _currentlySelected end)
 
     _chooser:fgColor(template.textColor or obj.textColor or { list = "System", name = "secondaryLabelColor" })
             :subTextColor(template.subTextColor or obj.subTextColor or { list = "System", name = "tertiaryLabelColor" })
 
     for k,v in pairs(_services[_currentlySelected]) do
         local entry = {}
-        entry.type    = _currentlySelected
+        entry.type    = template.type
         entry.fn      = template.fn and true or false
         entry._name_  = v:name()
         entry._txt_   = v:txtRecord()
+        entry._label_ = template.label or template.type
 
         for k2, v2 in pairs(template) do
             if (k2 ~= "type" and not k2:match("^_%w+_$")) and type(v2) == "string" then
@@ -344,14 +362,14 @@ local chooserCompletionCallback = function(choice)
     if choice and next(choice) then
         if choice.fn then
             local svc, fn
-            for i,v in ipairs(_services[choice.type]) do
+            for i,v in ipairs(_services[choice._label_]) do
                 if v:name() == choice._name_ then
                     svc = v
                     break
                 end
             end
             for i,v in ipairs(obj.templates) do
-                if v.type == choice.type then
+                if not v.disabled and (v.label or v.type) == choice._label_ then
                     fn = v.fn
                     break
                 end
@@ -419,7 +437,7 @@ end
 ---
 ---  * Each service type table entry should contain one or more of the following keys:
 ---    * `type`         - a required string specifying the type of advertisement to search for with this entry. Example service types can be seen in `hs.bonjour.serviceTypes`.
----    * `label`        - an optional string, defaulting to the value for `type`, specifying the label for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties.
+---    * `label`        - an optional string, defaulting to the value for `type`, specifying the label for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties. Note that this field is used for internally identifying different template views, so it must be unique among the template entries where `disabled` is false or undefined.
 ---    * `image`        - an optional `hs.image` object specifying the image to display for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties.
 ---
 ---    * `text`         - an optional string, defaulting to "%name%", specifying the text to be displayed for each advertised service listed in this collection in the BonjourLauncher chooser window.
@@ -491,81 +509,6 @@ obj.templates[#obj.templates + 1] = {
 --     cmd     = "string passed to os.execute",
 --     fn      = function(svcObj) end,
 }
-
--- obj.templates[#obj.templates + 1] = {
---     image   = image.imageFromAppBundle("com.apple.Terminal"), -- optional
---     label   = "SSH",                                          -- optional
---     type    = "_ssh._tcp.",                                   -- required
---     text    = "%name%",                                       -- optional, defaults to "%name%"
---     subText = "%hostname%:%port% (%address4%/%address6%)",    -- optional
---     hidden  = true,
---     url     = "ssh://%hostname%:%port%",                      -- only one of url, cmd, fn required
--- --     cmd     = "string passed to os.execute",
--- --     fn      = function(svcObj) end,
--- }
-
--- obj.templates[#obj.templates + 1] = {
---     image   = image.imageFromName("NSNetwork"),
---     label   = "SMB",
---     type    = "_smb._tcp.",
---     text    = "%name%",
---     subText = "smb://%hostname%:%port%",
---     hidden  = true,
---     url     = "smb://%hostname%:%port%",
--- --     cmd     = "string passed to os.execute",
--- --     fn      = function(svcObj) end,
--- }
-
--- obj.templates[#obj.templates + 1] = {
---     image   = canvas.new{ h = 128, w = 128 }:appendElements(
---                               { type="image", image = image.imageFromName("NSNetwork") },
---                               { type="image", image = image.imageFromName("NSTouchBarColorPickerFont") }
---               ):imageFromCanvas(),
---     label   = "AFP",
---     type    = "_afpovertcp._tcp.",
---     text    = "%name%",
---     subText = "afp://%hostname%:%port%",
---     hidden  = true,
---     url     = "afp://%hostname%:%port%",
--- --     cmd     = "string passed to os.execute",
--- --     fn      = function(svcObj) end,
--- }
-
--- -- Raspberry PI machines running Raspbian linux have RealVNC server installed to
--- -- provide remote access to the desktop, but this uses an encryption scheme not
--- -- understood by Apples Screen Sharing app. To allow us to programtically determine
--- -- when to use the RealVNC viewer instead of the default, you will need to create the
--- -- file /etc/avahi/services/vnc.service on the Raspberry Pi with the following contents:
--- --
--- --     <?xml version="1.0" standalone='no'?>
--- --     <!DOCTYPE service-group SYSTEM "avahi-service.dtd">
--- --     <service-group>
--- --       <name replace-wildcards="yes">%h</name>
--- --       <service>
--- --         <type>_rfb._tcp</type>
--- --         <port>5900</port>
--- --         <txt-record>RealVNC=True</txt-record>
--- --       </service>
--- --     </service-group>
--- --
--- obj.templates[#obj.templates + 1] = {
---     image   = image.imageFromAppBundle("com.apple.ScreenSharing"),
---     label   = "VNC",
---     type    = "_rfb._tcp.",
---     text    = "%name%",
---     subText = "vnc://%hostname%:%port%",
---     hidden  = true,
---     url     = "vnc://%hostname%:%port%", -- used in fn when RealVNC not set ; see below
---     cmd     = "open -a \"VNC Viewer\" --args %hostname%:%port%", -- used in fn when RealVNC set; see below
---     fn      = function(svc, choice)
---         local tr = svc:txtRecord()
---         if tr and tr.RealVNC then
---             hs.execute(choice.cmd)
---         else
---             urlevent.openURL(choice.url)
---         end
---     end,
--- }
 
 -- spoon vars, except for templates, are stored here so we can validate and implement them immediately upon change with the modules __newindex matamethod (see end of file)
 
@@ -687,12 +630,12 @@ obj.stop = function(self)
     return self
 end
 
---- BonjourLauncher:show([serviceType]) -> self
+--- BonjourLauncher:show([label]) -> self
 --- Method
 --- Shows the BonjourLauncher chooser window and begins queries for the currently selected service type.
 ---
 --- Parameters:
----  * `serviceType` - an optional string specifying the service type to show in the chooser window. Defaults to the last selected service type previously viewed or the first one defined in [BonjourLauncher.templates](#templates) if this is the first invocation.
+---  * `label` - an optional string specifying the `label` field of a template defined in [BonjourLauncher.templates](#templates) for a specific service type to show in the chooser window. Defaults to the last selected service type previously viewed or the first one defined in [BonjourLauncher.templates](#templates) if this is the first invocation.
 ---
 --- Returns:
 ---  * the BonjourLauncher spoon object
@@ -713,7 +656,7 @@ obj.show = function(self, st)
         st = tostring(st)
         local found = false
         for i,v in ipairs(obj.templates) do
-            if not v.disabled and v.type == st then
+            if not v.disabled and (v.label or v.type) == st then
                 _currentlySelected = st
                 found = true
                 break
@@ -754,12 +697,12 @@ obj.hide = function(self)
     return self
 end
 
---- BonjourLauncher:toggle([serviceType]) -> self
+--- BonjourLauncher:toggle([label]) -> self
 --- Method
 --- Toggles the visibility of the BonjourLauncher chooser window.
 ---
 --- Parameters:
----  * `serviceType` - an optional string specifying the service type to show or switch to in the chooser window, if the window is already open and the service type currently on display differs.
+---  * `label` - an optional string specifying the `label` field of a template defined in [BonjourLauncher.templates](#templates) for a specific service type to show or switch to in the chooser window, if the window is already open and the label of the service type currently on display differs.
 ---
 --- Returns:
 ---  * the BonjourLauncher spoon object
@@ -771,7 +714,23 @@ obj.toggle = function(self, st)
     if self ~= obj then self, st = obj, self end
 
     if _chooser and _chooser:isVisible() then
-        if st and tostring(st) ~= _currentlySelected then
+        local chosenType = nil
+        if st then
+            st = tostring(st)
+            local found = false
+            for i,v in ipairs(obj.templates) do
+                if not v.disabled and (v.label or v.type) == st then
+                    chosenType = st
+                    found = true
+                    break
+                end
+            end
+            if not found then
+                _log.wf([[%s:toggle("%s") - type specification not found; ignoring]], obj.name, st)
+            end
+        end
+
+        if chosenType and chosenType ~= _currentlySelected then
             self:show(st)
         else
             self:hide()
@@ -802,16 +761,16 @@ end
 ---    * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`
 ---    * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`
 ---
----  * Psuedo keys for `show` and `toggle` are also supported which can be used to generate hotkeys which will take you to a specific list of services when the BonjourLauncher chooser is displayed. The format of these psuedo keys is "<function><serviceType>"; for example:
+---  * Psuedo keys for `show` and `toggle` are also supported which can be used to generate hotkeys which will take you to a specific list of services when the BonjourLauncher chooser is displayed. The format of these psuedo keys is `<function>_<label>` where `<label>` matches the `label` field of a specific entry in [BonjourLauncher.templates](#templates); for example:
 ---
 ---         BonjourLauncher:bindHotkeys({
 ---             -- create a general toggle hotkey
----             "toggle" = { { "cmd", "ctrl", "alt"}, "=" },
+---             toggle     = { { "cmd", "ctrl", "alt"}, "=" },
 ---             -- create a hotkey which will open the chooser to the SSH display, or
 ---             -- change to it if another service type is currently being viewed. If the
 ---             -- SSH display is currently being viewed, closes the chooser window (i.e.
 ---             -- "toggle")
----             ["toggle_ssh._tcp."] = { { "cmd", "ctrl", "alt" }, "s" }
+---             toggle_SSH = { { "cmd", "ctrl", "alt" }, "s" }
 ---         })
 ---
 obj.bindHotkeys = function(self, mapping)
@@ -825,7 +784,7 @@ obj.bindHotkeys = function(self, mapping)
     }
 
     for k,v in pairs(mapping) do
-        local fn, st = k:match("^(%w+)(_[%w%._]+)$")
+        local fn, st = k:match("^(%w+)_([%w%._ ]+)$")
         if fn and st then
             if fn == "toggle" then def[k] = function() obj:toggle(st) end end
             if fn == "show" then def[k] = function() obj:show(st) end end

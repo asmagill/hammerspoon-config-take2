@@ -86,7 +86,7 @@ module.SMB = {
 
 --- BonjourLauncher.recipes.AFP
 --- Variable
---- Display computers and servers advertising AppleShare file server services advertised with the `_afpovertcp._tcp.` service type. This was the default with earlier versions of MacOS and is still used by Apple AirPort file and Time Machine servers.
+--- Display computers and servers advertising AppleShare file server services advertised with the `_afpovertcp._tcp.` service type. This was the default with earlier versions of MacOS and is still used by Apple AirPort and Time Machine file servers.
 ---
 --- AppleShare connections are initiated by the URL `afp://%hostname%:%port%`, which usually opens up a dialog in the Finder which may prompt you for login credentials.
 ---

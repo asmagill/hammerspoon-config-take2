@@ -11,15 +11,15 @@
     ],
     "Variable" : [
       {
-        "doc" : "A table specifying the service types which the BonjourLauncher looks for on your network and defines how to display and launch discovered services.\n\nNotes:\n * This table should be an array of tables, which each table in the array specifying a service type.\n\n * Changes to this variable will be reflected the next time the BonjourLauncher chooser window is shown -- if it is currently visible when changes are made, the new changes will *NOT* be reflected in the currently open chooser.\n\n * Each service type table entry should contain one or more of the following keys:\n   * `type`         - a required string specifying the type of advertisement to search for with this entry. Example service types can be seen in `hs.bonjour.serviceTypes`.\n   * `label`        - an optional string, defaulting to the value for `type`, specifying the label for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties.\n   * `image`        - an optional `hs.image` object specifying the image to display for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties.\n\n   * `text`         - an optional string, defaulting to \"%name%\", specifying the text to be displayed for each advertised service listed in this collection in the BonjourLauncher chooser window.\n   * `subText`      - an optional string, specifying the sub-text to be displayed for each advertised service listed in this collection in the BonjourLauncher chooser window.\n   * `filter`       - an optional function which can be used to filter out advertised services which you do not wish to include in the chooser window. The function should expect two parameters, the `hs.bonjour.service` object for the discovered service and a table containing all of the key-value pairs of the service template with values expanded to describe what is known about this specific service. The filter function should return `true` if the service is to be included or `false` if the service is to be omitted.\n\n   * `fn`           - The function to invoke. This function should expect two arguments, the `hs.bonjour.service` object for the selected service and a table containing all of the key-value pairs of the service template with values expanded to describe what is known about this specific service. Any return value for the function is ignored. If this is present, `url` and `cmd` will be ignored by the default handler, though they may be accessed through the second argument to the function.\n   * `url`          - The url to open with `hs.urlevent.openURL`. If this is present, `cmd` is ignored.\n   * `cmd`          - The command to execute with `hs.execute`.\n\n   * `hidden`       - an optional boolean, default false, that can be used to specify that the service list should not be displayed in the toolbar by default. You can still access these service types by specifying them as arguments to the [BonjourLauncher:show](#show) or [BonjourLauncher:toggle](#toggle) methods, or by creating a psuedo-key for the service type with [BonjourLauncher:bindHotkeys](#bindHotkeys). If the user customizes the toolbar by right-clicking on it, they can add this service to the toolbar, but it won't be in the default list.\n   * `disabled`      - an optional boolean, default false, specifying that this service should be skipped entirely is not available for viewing by any means.\n\n   * `textColor`    - an optional color table as defined in the `hs.drawing.color` module documentation to be used for the text displayed for each discovered service when this template is being displayed in the BonjourLauncher chooser. If not present, the color specified for [BonjourLauncher.textColor](#textColor) will be used.\n   * `subTextColor` - an optional color table as defined in the `hs.drawing.color` module documentation to be used for the sub-text displayed for each discovered service when this template is being displayed in the BonjourLauncher chooser. If not present, the color specified for [BonjourLauncher.subTextColor](#subTextColor) will be used.\n\n   * Additional key-value pairs do not have special meaning for this spoon but kay-value pairs with a string for the value will be included in the second argument passwd to `fn`, if present.\n\n * Note that only `type` and one of `url`, `cmd`, or `fn` must be provided -- everything else is optional.\n\n * For all keys, except for `type` and `label`, in the template definition which have string values, the following substring patterns will be matched and replaced as described below:\n   * `%address%`   - Will be replaced with the first address discovered for the service when it is resolved.\n     * `%address4%` - Variant of `%address%` which is replaced with the first IPv4 address or \"n\/a\" if one cannot be found.\n     * `%address6%` - Variant of `%address%` which is replaced with the first IPv6 address or \"n\/a\" if one cannot be found.\n   * `%domain%`    - Will be replaced with the domain the service was found in, usually \"local.\"\n   * `%hostname%`  - Will be replaced with the hostname on which the service is being offered\n   * `%name%`      - Will be replaced with the name of the advertised service.\n   * `%port%`      - Will be replaced with the port number on the machine that the service is provided on.\n   * `%txt:<key>%` - Will be replaced with the value for the specified `<key>` of the text records associated with the service, or an empty string if no such key is present. To see the list of text record key-value pairs for a specific service, you can right click on it while it is being displayed in the BonjourLauncher chooser window (press the `escape` key to clear it).",
+        "doc" : "A table specifying the service types which the BonjourLauncher looks for on your network and defines how to display and launch discovered services.\n\nNotes:\n * This table should be an array of tables, which each table in the array specifying a service type.\n\n * Changes to this variable will be reflected the next time the BonjourLauncher chooser window is shown -- if it is currently visible when changes are made, the new changes will *NOT* be reflected in the currently open chooser.\n\n * Each service type table entry should contain one or more of the following keys:\n   * `type`         - a required string specifying the type of advertisement to search for with this entry. Example service types can be seen in `hs.bonjour.serviceTypes`.\n   * `label`        - an optional string, defaulting to the value for `type`, specifying the label for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties. Note that this field is used for internally identifying different template views, so it must be unique among the template entries where `disabled` is false or undefined.\n   * `image`        - an optional `hs.image` object specifying the image to display for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties.\n\n   * `text`         - an optional string, defaulting to \"%name%\", specifying the text to be displayed for each advertised service listed in this collection in the BonjourLauncher chooser window.\n   * `subText`      - an optional string, specifying the sub-text to be displayed for each advertised service listed in this collection in the BonjourLauncher chooser window.\n   * `filter`       - an optional function which can be used to filter out advertised services which you do not wish to include in the chooser window. The function should expect two parameters, the `hs.bonjour.service` object for the discovered service and a table containing all of the key-value pairs of the service template with values expanded to describe what is known about this specific service. The filter function should return `true` if the service is to be included or `false` if the service is to be omitted.\n\n   * `fn`           - The function to invoke. This function should expect two arguments, the `hs.bonjour.service` object for the selected service and a table containing all of the key-value pairs of the service template with values expanded to describe what is known about this specific service. Any return value for the function is ignored. If this is present, `url` and `cmd` will be ignored by the default handler, though they may be accessed through the second argument to the function.\n   * `url`          - The url to open with `hs.urlevent.openURL`. If this is present, `cmd` is ignored.\n   * `cmd`          - The command to execute with `hs.execute`.\n\n   * `hidden`       - an optional boolean, default false, that can be used to specify that the service list should not be displayed in the toolbar by default. You can still access these service types by specifying them as arguments to the [BonjourLauncher:show](#show) or [BonjourLauncher:toggle](#toggle) methods, or by creating a psuedo-key for the service type with [BonjourLauncher:bindHotkeys](#bindHotkeys). If the user customizes the toolbar by right-clicking on it, they can add this service to the toolbar, but it won't be in the default list.\n   * `disabled`      - an optional boolean, default false, specifying that this service should be skipped entirely is not available for viewing by any means.\n\n   * `textColor`    - an optional color table as defined in the `hs.drawing.color` module documentation to be used for the text displayed for each discovered service when this template is being displayed in the BonjourLauncher chooser. If not present, the color specified for [BonjourLauncher.textColor](#textColor) will be used.\n   * `subTextColor` - an optional color table as defined in the `hs.drawing.color` module documentation to be used for the sub-text displayed for each discovered service when this template is being displayed in the BonjourLauncher chooser. If not present, the color specified for [BonjourLauncher.subTextColor](#subTextColor) will be used.\n\n   * Additional key-value pairs do not have special meaning for this spoon but kay-value pairs with a string for the value will be included in the second argument passwd to `fn`, if present.\n\n * Note that only `type` and one of `url`, `cmd`, or `fn` must be provided -- everything else is optional.\n\n * For all keys, except for `type` and `label`, in the template definition which have string values, the following substring patterns will be matched and replaced as described below:\n   * `%address%`   - Will be replaced with the first address discovered for the service when it is resolved.\n     * `%address4%` - Variant of `%address%` which is replaced with the first IPv4 address or \"n\/a\" if one cannot be found.\n     * `%address6%` - Variant of `%address%` which is replaced with the first IPv6 address or \"n\/a\" if one cannot be found.\n   * `%domain%`    - Will be replaced with the domain the service was found in, usually \"local.\"\n   * `%hostname%`  - Will be replaced with the hostname on which the service is being offered\n   * `%name%`      - Will be replaced with the name of the advertised service.\n   * `%port%`      - Will be replaced with the port number on the machine that the service is provided on.\n   * `%txt:<key>%` - Will be replaced with the value for the specified `<key>` of the text records associated with the service, or an empty string if no such key is present. To see the list of text record key-value pairs for a specific service, you can right click on it while it is being displayed in the BonjourLauncher chooser window (press the `escape` key to clear it).",
         "stripped_doc" : [
           "A table specifying the service types which the BonjourLauncher looks for on your network and defines how to display and launch discovered services.",
           ""
         ],
+        "def" : "BonjourLauncher.templates",
         "parameters" : [
 
         ],
-        "desc" : "A table specifying the service types which the BonjourLauncher looks for on your network and defines how to display and launch discovered services.",
         "notes" : [
           " * This table should be an array of tables, which each table in the array specifying a service type.",
           "",
@@ -27,7 +27,7 @@
           "",
           " * Each service type table entry should contain one or more of the following keys:",
           "   * `type`         - a required string specifying the type of advertisement to search for with this entry. Example service types can be seen in `hs.bonjour.serviceTypes`.",
-          "   * `label`        - an optional string, defaulting to the value for `type`, specifying the label for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties.",
+          "   * `label`        - an optional string, defaulting to the value for `type`, specifying the label for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties. Note that this field is used for internally identifying different template views, so it must be unique among the template entries where `disabled` is false or undefined.",
           "   * `image`        - an optional `hs.image` object specifying the image to display for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties.",
           "",
           "   * `text`         - an optional string, defaulting to \"%name%\", specifying the text to be displayed for each advertised service listed in this collection in the BonjourLauncher chooser window.",
@@ -64,7 +64,7 @@
 
         ],
         "name" : "templates",
-        "def" : "BonjourLauncher.templates"
+        "desc" : "A table specifying the service types which the BonjourLauncher looks for on your network and defines how to display and launch discovered services."
       },
       {
         "doc" : "Whether or not to display a toolbar at the top of the BonjourLauncher chooser window. Defaults to true.\n\nThis boolean variable determines if the toolbar which allows changing the currently visible service type is displayed when the BonjourLauncher chooser window is presented. If you set this to `false` then you will only be able to change the currently visible services with the [BonjourLauncher:show(serviceType)](#show) and [BonjourLauncher:toggle(serviceType)](#toggle) methods.",
@@ -73,10 +73,10 @@
           "",
           "This boolean variable determines if the toolbar which allows changing the currently visible service type is displayed when the BonjourLauncher chooser window is presented. If you set this to `false` then you will only be able to change the currently visible services with the [BonjourLauncher:show(serviceType)](#show) and [BonjourLauncher:toggle(serviceType)](#toggle) methods."
         ],
+        "def" : "BonjourLauncher.displayToolbar",
         "parameters" : [
 
         ],
-        "desc" : "Whether or not to display a toolbar at the top of the BonjourLauncher chooser window. Defaults to true.",
         "notes" : [
 
         ],
@@ -86,7 +86,7 @@
 
         ],
         "name" : "displayToolbar",
-        "def" : "BonjourLauncher.displayToolbar"
+        "desc" : "Whether or not to display a toolbar at the top of the BonjourLauncher chooser window. Defaults to true."
       },
       {
         "doc" : "The number of rows to display when the chooser is visible. Defaults to 10.\n\nSet this variable to an integer to specify the number of rows of choices to display when the BonjourLauncher chooser window is visible. Set it to `nil` to revert to the default.",
@@ -95,10 +95,10 @@
           "",
           "Set this variable to an integer to specify the number of rows of choices to display when the BonjourLauncher chooser window is visible. Set it to `nil` to revert to the default."
         ],
+        "def" : "BonjourLauncher.rows",
         "parameters" : [
 
         ],
-        "desc" : "The number of rows to display when the chooser is visible. Defaults to 10.",
         "notes" : [
 
         ],
@@ -108,7 +108,7 @@
 
         ],
         "name" : "rows",
-        "def" : "BonjourLauncher.rows"
+        "desc" : "The number of rows to display when the chooser is visible. Defaults to 10."
       },
       {
         "doc" : "The width of the BonjourLauncher chooser window as a percentage of the screen size. Defaults to 40.\n\nSet this variable to a numeric value between 1 and 100 to specify the percentage of screen the screen's width the BonjourLauncher window should occupy when visible. Set it to `nil` to revert to the default.",
@@ -117,10 +117,10 @@
           "",
           "Set this variable to a numeric value between 1 and 100 to specify the percentage of screen the screen's width the BonjourLauncher window should occupy when visible. Set it to `nil` to revert to the default."
         ],
+        "def" : "BonjourLauncher.width",
         "parameters" : [
 
         ],
-        "desc" : "The width of the BonjourLauncher chooser window as a percentage of the screen size. Defaults to 40.",
         "notes" : [
 
         ],
@@ -130,7 +130,7 @@
 
         ],
         "name" : "width",
-        "def" : "BonjourLauncher.width"
+        "desc" : "The width of the BonjourLauncher chooser window as a percentage of the screen size. Defaults to 40."
       },
       {
         "doc" : "Sets the color of the primary text for each service listed in the BonjourLauncher chooser window. Defaults to nil.\n\nThis should be a table representing a color as defined by the `hs.drawing.color` module documentation, or nil to revert to the `hs.chooser` module default.\n\nYou can override this on a per template basis by including the `textColor` field in the service type definition. See [BonjourLauncher.templates](#templates).",
@@ -141,10 +141,10 @@
           "",
           "You can override this on a per template basis by including the `textColor` field in the service type definition. See [BonjourLauncher.templates](#templates)."
         ],
+        "def" : "BonjourLauncher.textColor",
         "parameters" : [
 
         ],
-        "desc" : "Sets the color of the primary text for each service listed in the BonjourLauncher chooser window. Defaults to nil.",
         "notes" : [
 
         ],
@@ -154,7 +154,7 @@
 
         ],
         "name" : "textColor",
-        "def" : "BonjourLauncher.textColor"
+        "desc" : "Sets the color of the primary text for each service listed in the BonjourLauncher chooser window. Defaults to nil."
       },
       {
         "doc" : "Sets the color of the subText for each service listed in the BonjourLauncher chooser window. Defaults to nil.\n\nThis should be a table representing a color as defined by the `hs.drawing.color` module documentation, or nil to revert to the `hs.chooser` module default.\n\nYou can override this on a per template basis by including the `subTextColor` field in the service type definition. See [BonjourLauncher.templates](#templates).",
@@ -165,10 +165,10 @@
           "",
           "You can override this on a per template basis by including the `subTextColor` field in the service type definition. See [BonjourLauncher.templates](#templates)."
         ],
+        "def" : "BonjourLauncher.subTextColor",
         "parameters" : [
 
         ],
-        "desc" : "Sets the color of the subText for each service listed in the BonjourLauncher chooser window. Defaults to nil.",
         "notes" : [
 
         ],
@@ -178,7 +178,7 @@
 
         ],
         "name" : "subTextColor",
-        "def" : "BonjourLauncher.subTextColor"
+        "desc" : "Sets the color of the subText for each service listed in the BonjourLauncher chooser window. Defaults to nil."
       },
       {
         "doc" : "Set whether the BonjourLauncher chooser window should apoear dark themed, aqua themed (light) or track the current system settings for Dark mode. Defaults to nil.\n\nThis should be a boolean specifying whether the BonjourLauncher chooser window should appear in dark mode (true) or not (false). If set to `nil`, the chooser will track the current system settings for Dark mode.",
@@ -187,10 +187,10 @@
           "",
           "This should be a boolean specifying whether the BonjourLauncher chooser window should appear in dark mode (true) or not (false). If set to `nil`, the chooser will track the current system settings for Dark mode."
         ],
+        "def" : "BonjourLauncher.darkMode",
         "parameters" : [
 
         ],
-        "desc" : "Set whether the BonjourLauncher chooser window should apoear dark themed, aqua themed (light) or track the current system settings for Dark mode. Defaults to nil.",
         "notes" : [
 
         ],
@@ -200,7 +200,7 @@
 
         ],
         "name" : "darkMode",
-        "def" : "BonjourLauncher.darkMode"
+        "desc" : "Set whether the BonjourLauncher chooser window should apoear dark themed, aqua themed (light) or track the current system settings for Dark mode. Defaults to nil."
       }
     ],
     "stripped_doc" : [
@@ -222,11 +222,11 @@
           "Readys the chooser interface for the BonjourLauncher spoon",
           ""
         ],
+        "def" : "BonjourLauncher:start() -> self",
         "parameters" : [
           " * None",
           ""
         ],
-        "desc" : "Readys the chooser interface for the BonjourLauncher spoon",
         "notes" : [
           " * This method is included to conform to the expected Spoon format; it will automatically be invoked by [BonjourLauncher:show](#show) if it hasn't been already."
         ],
@@ -237,7 +237,7 @@
           ""
         ],
         "name" : "start",
-        "def" : "BonjourLauncher:start() -> self"
+        "desc" : "Readys the chooser interface for the BonjourLauncher spoon"
       },
       {
         "doc" : "Removes the chooser interface for the NonjourLauncher spoon and any lingering service queries\n\nParameters:\n * None\n\nReturns:\n * the BonjourLauncher spoon object\n\nNotes:\n * This method is included to conform to the expected Spoon format; in general, it should be unnecessary to invoke this method directly as service queries are cleared any time an item is selected from the chooser winfow or the window closes.",
@@ -245,11 +245,11 @@
           "Removes the chooser interface for the NonjourLauncher spoon and any lingering service queries",
           ""
         ],
+        "def" : "BonjourLauncher:stop() -> self",
         "parameters" : [
           " * None",
           ""
         ],
-        "desc" : "Removes the chooser interface for the NonjourLauncher spoon and any lingering service queries",
         "notes" : [
           " * This method is included to conform to the expected Spoon format; in general, it should be unnecessary to invoke this method directly as service queries are cleared any time an item is selected from the chooser winfow or the window closes."
         ],
@@ -260,32 +260,32 @@
           ""
         ],
         "name" : "stop",
-        "def" : "BonjourLauncher:stop() -> self"
+        "desc" : "Removes the chooser interface for the NonjourLauncher spoon and any lingering service queries"
       },
       {
-        "doc" : "Shows the BonjourLauncher chooser window and begins queries for the currently selected service type.\n\nParameters:\n * `serviceType` - an optional string specifying the service type to show in the chooser window. Defaults to the last selected service type previously viewed or the first one defined in [BonjourLauncher.templates](#templates) if this is the first invocation.\n\nReturns:\n * the BonjourLauncher spoon object\n\nNotes:\n * Automatically invokes [BonjourLauncher:start()](#start) if this has not already been done.\n\n * Service queries are grouped by type and the currently visible items can be selected by clicking on the type icon or label in the chooser toolbar.",
+        "doc" : "Shows the BonjourLauncher chooser window and begins queries for the currently selected service type.\n\nParameters:\n * `label` - an optional string specifying the `label` field of a template defined in [BonjourLauncher.templates](#templates) for a specific service type to show in the chooser window. Defaults to the last selected service type previously viewed or the first one defined in [BonjourLauncher.templates](#templates) if this is the first invocation.\n\nReturns:\n * the BonjourLauncher spoon object\n\nNotes:\n * Automatically invokes [BonjourLauncher:start()](#start) if this has not already been done.\n\n * Service queries are grouped by type and the currently visible items can be selected by clicking on the type icon or label in the chooser toolbar.",
         "stripped_doc" : [
           "Shows the BonjourLauncher chooser window and begins queries for the currently selected service type.",
           ""
         ],
+        "def" : "BonjourLauncher:show([label]) -> self",
         "parameters" : [
-          " * `serviceType` - an optional string specifying the service type to show in the chooser window. Defaults to the last selected service type previously viewed or the first one defined in [BonjourLauncher.templates](#templates) if this is the first invocation.",
+          " * `label` - an optional string specifying the `label` field of a template defined in [BonjourLauncher.templates](#templates) for a specific service type to show in the chooser window. Defaults to the last selected service type previously viewed or the first one defined in [BonjourLauncher.templates](#templates) if this is the first invocation.",
           ""
         ],
-        "desc" : "Shows the BonjourLauncher chooser window and begins queries for the currently selected service type.",
         "notes" : [
           " * Automatically invokes [BonjourLauncher:start()](#start) if this has not already been done.",
           "",
           " * Service queries are grouped by type and the currently visible items can be selected by clicking on the type icon or label in the chooser toolbar."
         ],
-        "signature" : "BonjourLauncher:show([serviceType]) -> self",
+        "signature" : "BonjourLauncher:show([label]) -> self",
         "type" : "Method",
         "returns" : [
           " * the BonjourLauncher spoon object",
           ""
         ],
         "name" : "show",
-        "def" : "BonjourLauncher:show([serviceType]) -> self"
+        "desc" : "Shows the BonjourLauncher chooser window and begins queries for the currently selected service type."
       },
       {
         "doc" : "Hides the BonjourLauncher chooser window and clears any active service queries.\n\nParameters:\n * None\n\nReturns:\n * the BonjourLauncher spoon object",
@@ -293,11 +293,11 @@
           "Hides the BonjourLauncher chooser window and clears any active service queries.",
           ""
         ],
+        "def" : "BonjourLauncher:hide() -> self",
         "parameters" : [
           " * None",
           ""
         ],
-        "desc" : "Hides the BonjourLauncher chooser window and clears any active service queries.",
         "notes" : [
 
         ],
@@ -307,23 +307,23 @@
           " * the BonjourLauncher spoon object"
         ],
         "name" : "hide",
-        "def" : "BonjourLauncher:hide() -> self"
+        "desc" : "Hides the BonjourLauncher chooser window and clears any active service queries."
       },
       {
-        "doc" : "Toggles the visibility of the BonjourLauncher chooser window.\n\nParameters:\n * `serviceType` - an optional string specifying the service type to show or switch to in the chooser window, if the window is already open and the service type currently on display differs.\n\nReturns:\n * the BonjourLauncher spoon object\n\nNotes::\n * If the chooser window is currently visible, this method will invoke [BonjourLauncher:hide](#hide); otherwise invokes [BonjourLauncher:show](#show).",
+        "doc" : "Toggles the visibility of the BonjourLauncher chooser window.\n\nParameters:\n * `label` - an optional string specifying the `label` field of a template defined in [BonjourLauncher.templates](#templates) for a specific service type to show or switch to in the chooser window, if the window is already open and the label of the service type currently on display differs.\n\nReturns:\n * the BonjourLauncher spoon object\n\nNotes::\n * If the chooser window is currently visible, this method will invoke [BonjourLauncher:hide](#hide); otherwise invokes [BonjourLauncher:show](#show).",
         "stripped_doc" : [
           "Toggles the visibility of the BonjourLauncher chooser window.",
           ""
         ],
+        "def" : "BonjourLauncher:toggle([label]) -> self",
         "parameters" : [
-          " * `serviceType` - an optional string specifying the service type to show or switch to in the chooser window, if the window is already open and the service type currently on display differs.",
+          " * `label` - an optional string specifying the `label` field of a template defined in [BonjourLauncher.templates](#templates) for a specific service type to show or switch to in the chooser window, if the window is already open and the label of the service type currently on display differs.",
           ""
         ],
-        "desc" : "Toggles the visibility of the BonjourLauncher chooser window.",
         "notes" : [
 
         ],
-        "signature" : "BonjourLauncher:toggle([serviceType]) -> self",
+        "signature" : "BonjourLauncher:toggle([label]) -> self",
         "type" : "Method",
         "returns" : [
           " * the BonjourLauncher spoon object",
@@ -332,14 +332,15 @@
           " * If the chooser window is currently visible, this method will invoke [BonjourLauncher:hide](#hide); otherwise invokes [BonjourLauncher:show](#show)."
         ],
         "name" : "toggle",
-        "def" : "BonjourLauncher:toggle([serviceType]) -> self"
+        "desc" : "Toggles the visibility of the BonjourLauncher chooser window."
       },
       {
-        "doc" : "Binds hotkeys for the BonjourLauncher spoon\n\nParameters:\n * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:\n   * \"show\"   - Show the BonjourLauncher chooser window\n   * \"hide\"   - Hide the BonjourLauncher chooser window\n   * \"toggle\" - Toggles the visibility of the BonjourLauncher window\n\nReturns:\n * the BonjourLauncher spoon object\n\nNotes:\n * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:\n   * `command`   - is one of the commands listed above\n   * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`\n   * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`\n\n * Psuedo keys for `show` and `toggle` are also supported which can be used to generate hotkeys which will take you to a specific list of services when the BonjourLauncher chooser is displayed. The format of these psuedo keys is \"<function><serviceType>\"; for example:\n\n        BonjourLauncher:bindHotkeys({\n            -- create a general toggle hotkey\n            \"toggle\" = { { \"cmd\", \"ctrl\", \"alt\"}, \"=\" },\n            -- create a hotkey which will open the chooser to the SSH display, or\n            -- change to it if another service type is currently being viewed. If the\n            -- SSH display is currently being viewed, closes the chooser window (i.e.\n            -- \"toggle\")\n            [\"toggle_ssh._tcp.\"] = { { \"cmd\", \"ctrl\", \"alt\" }, \"s\" }\n        })",
+        "doc" : "Binds hotkeys for the BonjourLauncher spoon\n\nParameters:\n * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:\n   * \"show\"   - Show the BonjourLauncher chooser window\n   * \"hide\"   - Hide the BonjourLauncher chooser window\n   * \"toggle\" - Toggles the visibility of the BonjourLauncher window\n\nReturns:\n * the BonjourLauncher spoon object\n\nNotes:\n * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:\n   * `command`   - is one of the commands listed above\n   * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`\n   * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`\n\n * Psuedo keys for `show` and `toggle` are also supported which can be used to generate hotkeys which will take you to a specific list of services when the BonjourLauncher chooser is displayed. The format of these psuedo keys is `<function>_<label>` where `<label>` matches the `label` field of a specific entry in [BonjourLauncher.templates](#templates); for example:\n\n        BonjourLauncher:bindHotkeys({\n            -- create a general toggle hotkey\n            toggle     = { { \"cmd\", \"ctrl\", \"alt\"}, \"=\" },\n            -- create a hotkey which will open the chooser to the SSH display, or\n            -- change to it if another service type is currently being viewed. If the\n            -- SSH display is currently being viewed, closes the chooser window (i.e.\n            -- \"toggle\")\n            toggle_SSH = { { \"cmd\", \"ctrl\", \"alt\" }, \"s\" }\n        })",
         "stripped_doc" : [
           "Binds hotkeys for the BonjourLauncher spoon",
           ""
         ],
+        "def" : "BonjourLauncher:bindHotkeys(mapping) -> self",
         "parameters" : [
           " * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:",
           "   * \"show\"   - Show the BonjourLauncher chooser window",
@@ -347,23 +348,22 @@
           "   * \"toggle\" - Toggles the visibility of the BonjourLauncher window",
           ""
         ],
-        "desc" : "Binds hotkeys for the BonjourLauncher spoon",
         "notes" : [
           " * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:",
           "   * `command`   - is one of the commands listed above",
           "   * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`",
           "   * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`",
           "",
-          " * Psuedo keys for `show` and `toggle` are also supported which can be used to generate hotkeys which will take you to a specific list of services when the BonjourLauncher chooser is displayed. The format of these psuedo keys is \"<function><serviceType>\"; for example:",
+          " * Psuedo keys for `show` and `toggle` are also supported which can be used to generate hotkeys which will take you to a specific list of services when the BonjourLauncher chooser is displayed. The format of these psuedo keys is `<function>_<label>` where `<label>` matches the `label` field of a specific entry in [BonjourLauncher.templates](#templates); for example:",
           "",
           "        BonjourLauncher:bindHotkeys({",
           "            -- create a general toggle hotkey",
-          "            \"toggle\" = { { \"cmd\", \"ctrl\", \"alt\"}, \"=\" },",
+          "            toggle     = { { \"cmd\", \"ctrl\", \"alt\"}, \"=\" },",
           "            -- create a hotkey which will open the chooser to the SSH display, or",
           "            -- change to it if another service type is currently being viewed. If the",
           "            -- SSH display is currently being viewed, closes the chooser window (i.e.",
           "            -- \"toggle\")",
-          "            [\"toggle_ssh._tcp.\"] = { { \"cmd\", \"ctrl\", \"alt\" }, \"s\" }",
+          "            toggle_SSH = { { \"cmd\", \"ctrl\", \"alt\" }, \"s\" }",
           "        })"
         ],
         "signature" : "BonjourLauncher:bindHotkeys(mapping) -> self",
@@ -373,7 +373,7 @@
           ""
         ],
         "name" : "bindHotkeys",
-        "def" : "BonjourLauncher:bindHotkeys(mapping) -> self"
+        "desc" : "Binds hotkeys for the BonjourLauncher spoon"
       },
       {
         "doc" : "Add predefined recipes to [BonjourLauncher.templates](#templates) for display by the BonjourLauncher chooser.\n\nParamters:\n * `recipe`, ... - One or more string values matching a variable name in `BonjourLauncher.recipes` which define basic templates for common services which you may wish to add to your BonjourLauncer chooser window.\n\nReturns:\n * the BonjourLauncer object\n\nNotes:\n * This method is basically a wrapper which performs `table.insert(spoon.BonjourLauncher.templates, spoon.BonjourLauncher.recipes.*recipe*)` for each of the recipe names specified as a paraneter to this method. You may invoke this method multiple times or combine multiple recipes into one invocation by specifying more thane one string, each separated by a comma.",
@@ -384,10 +384,10 @@
           " * `recipe`, ... - One or more string values matching a variable name in `BonjourLauncher.recipes` which define basic templates for common services which you may wish to add to your BonjourLauncer chooser window.",
           ""
         ],
+        "def" : "BonjourLauncher:addRecipes(recipe, ...) -> self",
         "parameters" : [
 
         ],
-        "desc" : "Add predefined recipes to [BonjourLauncher.templates](#templates) for display by the BonjourLauncher chooser.",
         "notes" : [
           " * This method is basically a wrapper which performs `table.insert(spoon.BonjourLauncher.templates, spoon.BonjourLauncher.recipes.*recipe*)` for each of the recipe names specified as a paraneter to this method. You may invoke this method multiple times or combine multiple recipes into one invocation by specifying more thane one string, each separated by a comma."
         ],
@@ -398,7 +398,7 @@
           ""
         ],
         "name" : "addRecipes",
-        "def" : "BonjourLauncher:addRecipes(recipe, ...) -> self"
+        "desc" : "Add predefined recipes to [BonjourLauncher.templates](#templates) for display by the BonjourLauncher chooser."
       }
     ],
     "Command" : [
@@ -412,10 +412,10 @@
           "",
           "This should be a boolean specifying whether the BonjourLauncher chooser window should appear in dark mode (true) or not (false). If set to `nil`, the chooser will track the current system settings for Dark mode."
         ],
+        "def" : "BonjourLauncher.darkMode",
         "parameters" : [
 
         ],
-        "desc" : "Set whether the BonjourLauncher chooser window should apoear dark themed, aqua themed (light) or track the current system settings for Dark mode. Defaults to nil.",
         "notes" : [
 
         ],
@@ -425,7 +425,7 @@
 
         ],
         "name" : "darkMode",
-        "def" : "BonjourLauncher.darkMode"
+        "desc" : "Set whether the BonjourLauncher chooser window should apoear dark themed, aqua themed (light) or track the current system settings for Dark mode. Defaults to nil."
       },
       {
         "doc" : "Whether or not to display a toolbar at the top of the BonjourLauncher chooser window. Defaults to true.\n\nThis boolean variable determines if the toolbar which allows changing the currently visible service type is displayed when the BonjourLauncher chooser window is presented. If you set this to `false` then you will only be able to change the currently visible services with the [BonjourLauncher:show(serviceType)](#show) and [BonjourLauncher:toggle(serviceType)](#toggle) methods.",
@@ -434,10 +434,10 @@
           "",
           "This boolean variable determines if the toolbar which allows changing the currently visible service type is displayed when the BonjourLauncher chooser window is presented. If you set this to `false` then you will only be able to change the currently visible services with the [BonjourLauncher:show(serviceType)](#show) and [BonjourLauncher:toggle(serviceType)](#toggle) methods."
         ],
+        "def" : "BonjourLauncher.displayToolbar",
         "parameters" : [
 
         ],
-        "desc" : "Whether or not to display a toolbar at the top of the BonjourLauncher chooser window. Defaults to true.",
         "notes" : [
 
         ],
@@ -447,7 +447,7 @@
 
         ],
         "name" : "displayToolbar",
-        "def" : "BonjourLauncher.displayToolbar"
+        "desc" : "Whether or not to display a toolbar at the top of the BonjourLauncher chooser window. Defaults to true."
       },
       {
         "doc" : "The number of rows to display when the chooser is visible. Defaults to 10.\n\nSet this variable to an integer to specify the number of rows of choices to display when the BonjourLauncher chooser window is visible. Set it to `nil` to revert to the default.",
@@ -456,10 +456,10 @@
           "",
           "Set this variable to an integer to specify the number of rows of choices to display when the BonjourLauncher chooser window is visible. Set it to `nil` to revert to the default."
         ],
+        "def" : "BonjourLauncher.rows",
         "parameters" : [
 
         ],
-        "desc" : "The number of rows to display when the chooser is visible. Defaults to 10.",
         "notes" : [
 
         ],
@@ -469,7 +469,7 @@
 
         ],
         "name" : "rows",
-        "def" : "BonjourLauncher.rows"
+        "desc" : "The number of rows to display when the chooser is visible. Defaults to 10."
       },
       {
         "doc" : "Sets the color of the subText for each service listed in the BonjourLauncher chooser window. Defaults to nil.\n\nThis should be a table representing a color as defined by the `hs.drawing.color` module documentation, or nil to revert to the `hs.chooser` module default.\n\nYou can override this on a per template basis by including the `subTextColor` field in the service type definition. See [BonjourLauncher.templates](#templates).",
@@ -480,10 +480,10 @@
           "",
           "You can override this on a per template basis by including the `subTextColor` field in the service type definition. See [BonjourLauncher.templates](#templates)."
         ],
+        "def" : "BonjourLauncher.subTextColor",
         "parameters" : [
 
         ],
-        "desc" : "Sets the color of the subText for each service listed in the BonjourLauncher chooser window. Defaults to nil.",
         "notes" : [
 
         ],
@@ -493,18 +493,18 @@
 
         ],
         "name" : "subTextColor",
-        "def" : "BonjourLauncher.subTextColor"
+        "desc" : "Sets the color of the subText for each service listed in the BonjourLauncher chooser window. Defaults to nil."
       },
       {
-        "doc" : "A table specifying the service types which the BonjourLauncher looks for on your network and defines how to display and launch discovered services.\n\nNotes:\n * This table should be an array of tables, which each table in the array specifying a service type.\n\n * Changes to this variable will be reflected the next time the BonjourLauncher chooser window is shown -- if it is currently visible when changes are made, the new changes will *NOT* be reflected in the currently open chooser.\n\n * Each service type table entry should contain one or more of the following keys:\n   * `type`         - a required string specifying the type of advertisement to search for with this entry. Example service types can be seen in `hs.bonjour.serviceTypes`.\n   * `label`        - an optional string, defaulting to the value for `type`, specifying the label for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties.\n   * `image`        - an optional `hs.image` object specifying the image to display for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties.\n\n   * `text`         - an optional string, defaulting to \"%name%\", specifying the text to be displayed for each advertised service listed in this collection in the BonjourLauncher chooser window.\n   * `subText`      - an optional string, specifying the sub-text to be displayed for each advertised service listed in this collection in the BonjourLauncher chooser window.\n   * `filter`       - an optional function which can be used to filter out advertised services which you do not wish to include in the chooser window. The function should expect two parameters, the `hs.bonjour.service` object for the discovered service and a table containing all of the key-value pairs of the service template with values expanded to describe what is known about this specific service. The filter function should return `true` if the service is to be included or `false` if the service is to be omitted.\n\n   * `fn`           - The function to invoke. This function should expect two arguments, the `hs.bonjour.service` object for the selected service and a table containing all of the key-value pairs of the service template with values expanded to describe what is known about this specific service. Any return value for the function is ignored. If this is present, `url` and `cmd` will be ignored by the default handler, though they may be accessed through the second argument to the function.\n   * `url`          - The url to open with `hs.urlevent.openURL`. If this is present, `cmd` is ignored.\n   * `cmd`          - The command to execute with `hs.execute`.\n\n   * `hidden`       - an optional boolean, default false, that can be used to specify that the service list should not be displayed in the toolbar by default. You can still access these service types by specifying them as arguments to the [BonjourLauncher:show](#show) or [BonjourLauncher:toggle](#toggle) methods, or by creating a psuedo-key for the service type with [BonjourLauncher:bindHotkeys](#bindHotkeys). If the user customizes the toolbar by right-clicking on it, they can add this service to the toolbar, but it won't be in the default list.\n   * `disabled`      - an optional boolean, default false, specifying that this service should be skipped entirely is not available for viewing by any means.\n\n   * `textColor`    - an optional color table as defined in the `hs.drawing.color` module documentation to be used for the text displayed for each discovered service when this template is being displayed in the BonjourLauncher chooser. If not present, the color specified for [BonjourLauncher.textColor](#textColor) will be used.\n   * `subTextColor` - an optional color table as defined in the `hs.drawing.color` module documentation to be used for the sub-text displayed for each discovered service when this template is being displayed in the BonjourLauncher chooser. If not present, the color specified for [BonjourLauncher.subTextColor](#subTextColor) will be used.\n\n   * Additional key-value pairs do not have special meaning for this spoon but kay-value pairs with a string for the value will be included in the second argument passwd to `fn`, if present.\n\n * Note that only `type` and one of `url`, `cmd`, or `fn` must be provided -- everything else is optional.\n\n * For all keys, except for `type` and `label`, in the template definition which have string values, the following substring patterns will be matched and replaced as described below:\n   * `%address%`   - Will be replaced with the first address discovered for the service when it is resolved.\n     * `%address4%` - Variant of `%address%` which is replaced with the first IPv4 address or \"n\/a\" if one cannot be found.\n     * `%address6%` - Variant of `%address%` which is replaced with the first IPv6 address or \"n\/a\" if one cannot be found.\n   * `%domain%`    - Will be replaced with the domain the service was found in, usually \"local.\"\n   * `%hostname%`  - Will be replaced with the hostname on which the service is being offered\n   * `%name%`      - Will be replaced with the name of the advertised service.\n   * `%port%`      - Will be replaced with the port number on the machine that the service is provided on.\n   * `%txt:<key>%` - Will be replaced with the value for the specified `<key>` of the text records associated with the service, or an empty string if no such key is present. To see the list of text record key-value pairs for a specific service, you can right click on it while it is being displayed in the BonjourLauncher chooser window (press the `escape` key to clear it).",
+        "doc" : "A table specifying the service types which the BonjourLauncher looks for on your network and defines how to display and launch discovered services.\n\nNotes:\n * This table should be an array of tables, which each table in the array specifying a service type.\n\n * Changes to this variable will be reflected the next time the BonjourLauncher chooser window is shown -- if it is currently visible when changes are made, the new changes will *NOT* be reflected in the currently open chooser.\n\n * Each service type table entry should contain one or more of the following keys:\n   * `type`         - a required string specifying the type of advertisement to search for with this entry. Example service types can be seen in `hs.bonjour.serviceTypes`.\n   * `label`        - an optional string, defaulting to the value for `type`, specifying the label for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties. Note that this field is used for internally identifying different template views, so it must be unique among the template entries where `disabled` is false or undefined.\n   * `image`        - an optional `hs.image` object specifying the image to display for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties.\n\n   * `text`         - an optional string, defaulting to \"%name%\", specifying the text to be displayed for each advertised service listed in this collection in the BonjourLauncher chooser window.\n   * `subText`      - an optional string, specifying the sub-text to be displayed for each advertised service listed in this collection in the BonjourLauncher chooser window.\n   * `filter`       - an optional function which can be used to filter out advertised services which you do not wish to include in the chooser window. The function should expect two parameters, the `hs.bonjour.service` object for the discovered service and a table containing all of the key-value pairs of the service template with values expanded to describe what is known about this specific service. The filter function should return `true` if the service is to be included or `false` if the service is to be omitted.\n\n   * `fn`           - The function to invoke. This function should expect two arguments, the `hs.bonjour.service` object for the selected service and a table containing all of the key-value pairs of the service template with values expanded to describe what is known about this specific service. Any return value for the function is ignored. If this is present, `url` and `cmd` will be ignored by the default handler, though they may be accessed through the second argument to the function.\n   * `url`          - The url to open with `hs.urlevent.openURL`. If this is present, `cmd` is ignored.\n   * `cmd`          - The command to execute with `hs.execute`.\n\n   * `hidden`       - an optional boolean, default false, that can be used to specify that the service list should not be displayed in the toolbar by default. You can still access these service types by specifying them as arguments to the [BonjourLauncher:show](#show) or [BonjourLauncher:toggle](#toggle) methods, or by creating a psuedo-key for the service type with [BonjourLauncher:bindHotkeys](#bindHotkeys). If the user customizes the toolbar by right-clicking on it, they can add this service to the toolbar, but it won't be in the default list.\n   * `disabled`      - an optional boolean, default false, specifying that this service should be skipped entirely is not available for viewing by any means.\n\n   * `textColor`    - an optional color table as defined in the `hs.drawing.color` module documentation to be used for the text displayed for each discovered service when this template is being displayed in the BonjourLauncher chooser. If not present, the color specified for [BonjourLauncher.textColor](#textColor) will be used.\n   * `subTextColor` - an optional color table as defined in the `hs.drawing.color` module documentation to be used for the sub-text displayed for each discovered service when this template is being displayed in the BonjourLauncher chooser. If not present, the color specified for [BonjourLauncher.subTextColor](#subTextColor) will be used.\n\n   * Additional key-value pairs do not have special meaning for this spoon but kay-value pairs with a string for the value will be included in the second argument passwd to `fn`, if present.\n\n * Note that only `type` and one of `url`, `cmd`, or `fn` must be provided -- everything else is optional.\n\n * For all keys, except for `type` and `label`, in the template definition which have string values, the following substring patterns will be matched and replaced as described below:\n   * `%address%`   - Will be replaced with the first address discovered for the service when it is resolved.\n     * `%address4%` - Variant of `%address%` which is replaced with the first IPv4 address or \"n\/a\" if one cannot be found.\n     * `%address6%` - Variant of `%address%` which is replaced with the first IPv6 address or \"n\/a\" if one cannot be found.\n   * `%domain%`    - Will be replaced with the domain the service was found in, usually \"local.\"\n   * `%hostname%`  - Will be replaced with the hostname on which the service is being offered\n   * `%name%`      - Will be replaced with the name of the advertised service.\n   * `%port%`      - Will be replaced with the port number on the machine that the service is provided on.\n   * `%txt:<key>%` - Will be replaced with the value for the specified `<key>` of the text records associated with the service, or an empty string if no such key is present. To see the list of text record key-value pairs for a specific service, you can right click on it while it is being displayed in the BonjourLauncher chooser window (press the `escape` key to clear it).",
         "stripped_doc" : [
           "A table specifying the service types which the BonjourLauncher looks for on your network and defines how to display and launch discovered services.",
           ""
         ],
+        "def" : "BonjourLauncher.templates",
         "parameters" : [
 
         ],
-        "desc" : "A table specifying the service types which the BonjourLauncher looks for on your network and defines how to display and launch discovered services.",
         "notes" : [
           " * This table should be an array of tables, which each table in the array specifying a service type.",
           "",
@@ -512,7 +512,7 @@
           "",
           " * Each service type table entry should contain one or more of the following keys:",
           "   * `type`         - a required string specifying the type of advertisement to search for with this entry. Example service types can be seen in `hs.bonjour.serviceTypes`.",
-          "   * `label`        - an optional string, defaulting to the value for `type`, specifying the label for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties.",
+          "   * `label`        - an optional string, defaulting to the value for `type`, specifying the label for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties. Note that this field is used for internally identifying different template views, so it must be unique among the template entries where `disabled` is false or undefined.",
           "   * `image`        - an optional `hs.image` object specifying the image to display for the toolbar item under which these advertised services are collected in the BonjourLauncher chooser window. May or may not be displayed if you have customeized the toolbar's visual properties.",
           "",
           "   * `text`         - an optional string, defaulting to \"%name%\", specifying the text to be displayed for each advertised service listed in this collection in the BonjourLauncher chooser window.",
@@ -549,7 +549,7 @@
 
         ],
         "name" : "templates",
-        "def" : "BonjourLauncher.templates"
+        "desc" : "A table specifying the service types which the BonjourLauncher looks for on your network and defines how to display and launch discovered services."
       },
       {
         "doc" : "Sets the color of the primary text for each service listed in the BonjourLauncher chooser window. Defaults to nil.\n\nThis should be a table representing a color as defined by the `hs.drawing.color` module documentation, or nil to revert to the `hs.chooser` module default.\n\nYou can override this on a per template basis by including the `textColor` field in the service type definition. See [BonjourLauncher.templates](#templates).",
@@ -560,10 +560,10 @@
           "",
           "You can override this on a per template basis by including the `textColor` field in the service type definition. See [BonjourLauncher.templates](#templates)."
         ],
+        "def" : "BonjourLauncher.textColor",
         "parameters" : [
 
         ],
-        "desc" : "Sets the color of the primary text for each service listed in the BonjourLauncher chooser window. Defaults to nil.",
         "notes" : [
 
         ],
@@ -573,7 +573,7 @@
 
         ],
         "name" : "textColor",
-        "def" : "BonjourLauncher.textColor"
+        "desc" : "Sets the color of the primary text for each service listed in the BonjourLauncher chooser window. Defaults to nil."
       },
       {
         "doc" : "The width of the BonjourLauncher chooser window as a percentage of the screen size. Defaults to 40.\n\nSet this variable to a numeric value between 1 and 100 to specify the percentage of screen the screen's width the BonjourLauncher window should occupy when visible. Set it to `nil` to revert to the default.",
@@ -582,10 +582,10 @@
           "",
           "Set this variable to a numeric value between 1 and 100 to specify the percentage of screen the screen's width the BonjourLauncher window should occupy when visible. Set it to `nil` to revert to the default."
         ],
+        "def" : "BonjourLauncher.width",
         "parameters" : [
 
         ],
-        "desc" : "The width of the BonjourLauncher chooser window as a percentage of the screen size. Defaults to 40.",
         "notes" : [
 
         ],
@@ -595,7 +595,7 @@
 
         ],
         "name" : "width",
-        "def" : "BonjourLauncher.width"
+        "desc" : "The width of the BonjourLauncher chooser window as a percentage of the screen size. Defaults to 40."
       },
       {
         "doc" : "Add predefined recipes to [BonjourLauncher.templates](#templates) for display by the BonjourLauncher chooser.\n\nParamters:\n * `recipe`, ... - One or more string values matching a variable name in `BonjourLauncher.recipes` which define basic templates for common services which you may wish to add to your BonjourLauncer chooser window.\n\nReturns:\n * the BonjourLauncer object\n\nNotes:\n * This method is basically a wrapper which performs `table.insert(spoon.BonjourLauncher.templates, spoon.BonjourLauncher.recipes.*recipe*)` for each of the recipe names specified as a paraneter to this method. You may invoke this method multiple times or combine multiple recipes into one invocation by specifying more thane one string, each separated by a comma.",
@@ -606,10 +606,10 @@
           " * `recipe`, ... - One or more string values matching a variable name in `BonjourLauncher.recipes` which define basic templates for common services which you may wish to add to your BonjourLauncer chooser window.",
           ""
         ],
+        "def" : "BonjourLauncher:addRecipes(recipe, ...) -> self",
         "parameters" : [
 
         ],
-        "desc" : "Add predefined recipes to [BonjourLauncher.templates](#templates) for display by the BonjourLauncher chooser.",
         "notes" : [
           " * This method is basically a wrapper which performs `table.insert(spoon.BonjourLauncher.templates, spoon.BonjourLauncher.recipes.*recipe*)` for each of the recipe names specified as a paraneter to this method. You may invoke this method multiple times or combine multiple recipes into one invocation by specifying more thane one string, each separated by a comma."
         ],
@@ -620,14 +620,15 @@
           ""
         ],
         "name" : "addRecipes",
-        "def" : "BonjourLauncher:addRecipes(recipe, ...) -> self"
+        "desc" : "Add predefined recipes to [BonjourLauncher.templates](#templates) for display by the BonjourLauncher chooser."
       },
       {
-        "doc" : "Binds hotkeys for the BonjourLauncher spoon\n\nParameters:\n * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:\n   * \"show\"   - Show the BonjourLauncher chooser window\n   * \"hide\"   - Hide the BonjourLauncher chooser window\n   * \"toggle\" - Toggles the visibility of the BonjourLauncher window\n\nReturns:\n * the BonjourLauncher spoon object\n\nNotes:\n * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:\n   * `command`   - is one of the commands listed above\n   * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`\n   * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`\n\n * Psuedo keys for `show` and `toggle` are also supported which can be used to generate hotkeys which will take you to a specific list of services when the BonjourLauncher chooser is displayed. The format of these psuedo keys is \"<function><serviceType>\"; for example:\n\n        BonjourLauncher:bindHotkeys({\n            -- create a general toggle hotkey\n            \"toggle\" = { { \"cmd\", \"ctrl\", \"alt\"}, \"=\" },\n            -- create a hotkey which will open the chooser to the SSH display, or\n            -- change to it if another service type is currently being viewed. If the\n            -- SSH display is currently being viewed, closes the chooser window (i.e.\n            -- \"toggle\")\n            [\"toggle_ssh._tcp.\"] = { { \"cmd\", \"ctrl\", \"alt\" }, \"s\" }\n        })",
+        "doc" : "Binds hotkeys for the BonjourLauncher spoon\n\nParameters:\n * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:\n   * \"show\"   - Show the BonjourLauncher chooser window\n   * \"hide\"   - Hide the BonjourLauncher chooser window\n   * \"toggle\" - Toggles the visibility of the BonjourLauncher window\n\nReturns:\n * the BonjourLauncher spoon object\n\nNotes:\n * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:\n   * `command`   - is one of the commands listed above\n   * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`\n   * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`\n\n * Psuedo keys for `show` and `toggle` are also supported which can be used to generate hotkeys which will take you to a specific list of services when the BonjourLauncher chooser is displayed. The format of these psuedo keys is `<function>_<label>` where `<label>` matches the `label` field of a specific entry in [BonjourLauncher.templates](#templates); for example:\n\n        BonjourLauncher:bindHotkeys({\n            -- create a general toggle hotkey\n            toggle     = { { \"cmd\", \"ctrl\", \"alt\"}, \"=\" },\n            -- create a hotkey which will open the chooser to the SSH display, or\n            -- change to it if another service type is currently being viewed. If the\n            -- SSH display is currently being viewed, closes the chooser window (i.e.\n            -- \"toggle\")\n            toggle_SSH = { { \"cmd\", \"ctrl\", \"alt\" }, \"s\" }\n        })",
         "stripped_doc" : [
           "Binds hotkeys for the BonjourLauncher spoon",
           ""
         ],
+        "def" : "BonjourLauncher:bindHotkeys(mapping) -> self",
         "parameters" : [
           " * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:",
           "   * \"show\"   - Show the BonjourLauncher chooser window",
@@ -635,23 +636,22 @@
           "   * \"toggle\" - Toggles the visibility of the BonjourLauncher window",
           ""
         ],
-        "desc" : "Binds hotkeys for the BonjourLauncher spoon",
         "notes" : [
           " * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:",
           "   * `command`   - is one of the commands listed above",
           "   * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`",
           "   * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`",
           "",
-          " * Psuedo keys for `show` and `toggle` are also supported which can be used to generate hotkeys which will take you to a specific list of services when the BonjourLauncher chooser is displayed. The format of these psuedo keys is \"<function><serviceType>\"; for example:",
+          " * Psuedo keys for `show` and `toggle` are also supported which can be used to generate hotkeys which will take you to a specific list of services when the BonjourLauncher chooser is displayed. The format of these psuedo keys is `<function>_<label>` where `<label>` matches the `label` field of a specific entry in [BonjourLauncher.templates](#templates); for example:",
           "",
           "        BonjourLauncher:bindHotkeys({",
           "            -- create a general toggle hotkey",
-          "            \"toggle\" = { { \"cmd\", \"ctrl\", \"alt\"}, \"=\" },",
+          "            toggle     = { { \"cmd\", \"ctrl\", \"alt\"}, \"=\" },",
           "            -- create a hotkey which will open the chooser to the SSH display, or",
           "            -- change to it if another service type is currently being viewed. If the",
           "            -- SSH display is currently being viewed, closes the chooser window (i.e.",
           "            -- \"toggle\")",
-          "            [\"toggle_ssh._tcp.\"] = { { \"cmd\", \"ctrl\", \"alt\" }, \"s\" }",
+          "            toggle_SSH = { { \"cmd\", \"ctrl\", \"alt\" }, \"s\" }",
           "        })"
         ],
         "signature" : "BonjourLauncher:bindHotkeys(mapping) -> self",
@@ -661,7 +661,7 @@
           ""
         ],
         "name" : "bindHotkeys",
-        "def" : "BonjourLauncher:bindHotkeys(mapping) -> self"
+        "desc" : "Binds hotkeys for the BonjourLauncher spoon"
       },
       {
         "doc" : "Hides the BonjourLauncher chooser window and clears any active service queries.\n\nParameters:\n * None\n\nReturns:\n * the BonjourLauncher spoon object",
@@ -669,11 +669,11 @@
           "Hides the BonjourLauncher chooser window and clears any active service queries.",
           ""
         ],
+        "def" : "BonjourLauncher:hide() -> self",
         "parameters" : [
           " * None",
           ""
         ],
-        "desc" : "Hides the BonjourLauncher chooser window and clears any active service queries.",
         "notes" : [
 
         ],
@@ -683,32 +683,32 @@
           " * the BonjourLauncher spoon object"
         ],
         "name" : "hide",
-        "def" : "BonjourLauncher:hide() -> self"
+        "desc" : "Hides the BonjourLauncher chooser window and clears any active service queries."
       },
       {
-        "doc" : "Shows the BonjourLauncher chooser window and begins queries for the currently selected service type.\n\nParameters:\n * `serviceType` - an optional string specifying the service type to show in the chooser window. Defaults to the last selected service type previously viewed or the first one defined in [BonjourLauncher.templates](#templates) if this is the first invocation.\n\nReturns:\n * the BonjourLauncher spoon object\n\nNotes:\n * Automatically invokes [BonjourLauncher:start()](#start) if this has not already been done.\n\n * Service queries are grouped by type and the currently visible items can be selected by clicking on the type icon or label in the chooser toolbar.",
+        "doc" : "Shows the BonjourLauncher chooser window and begins queries for the currently selected service type.\n\nParameters:\n * `label` - an optional string specifying the `label` field of a template defined in [BonjourLauncher.templates](#templates) for a specific service type to show in the chooser window. Defaults to the last selected service type previously viewed or the first one defined in [BonjourLauncher.templates](#templates) if this is the first invocation.\n\nReturns:\n * the BonjourLauncher spoon object\n\nNotes:\n * Automatically invokes [BonjourLauncher:start()](#start) if this has not already been done.\n\n * Service queries are grouped by type and the currently visible items can be selected by clicking on the type icon or label in the chooser toolbar.",
         "stripped_doc" : [
           "Shows the BonjourLauncher chooser window and begins queries for the currently selected service type.",
           ""
         ],
+        "def" : "BonjourLauncher:show([label]) -> self",
         "parameters" : [
-          " * `serviceType` - an optional string specifying the service type to show in the chooser window. Defaults to the last selected service type previously viewed or the first one defined in [BonjourLauncher.templates](#templates) if this is the first invocation.",
+          " * `label` - an optional string specifying the `label` field of a template defined in [BonjourLauncher.templates](#templates) for a specific service type to show in the chooser window. Defaults to the last selected service type previously viewed or the first one defined in [BonjourLauncher.templates](#templates) if this is the first invocation.",
           ""
         ],
-        "desc" : "Shows the BonjourLauncher chooser window and begins queries for the currently selected service type.",
         "notes" : [
           " * Automatically invokes [BonjourLauncher:start()](#start) if this has not already been done.",
           "",
           " * Service queries are grouped by type and the currently visible items can be selected by clicking on the type icon or label in the chooser toolbar."
         ],
-        "signature" : "BonjourLauncher:show([serviceType]) -> self",
+        "signature" : "BonjourLauncher:show([label]) -> self",
         "type" : "Method",
         "returns" : [
           " * the BonjourLauncher spoon object",
           ""
         ],
         "name" : "show",
-        "def" : "BonjourLauncher:show([serviceType]) -> self"
+        "desc" : "Shows the BonjourLauncher chooser window and begins queries for the currently selected service type."
       },
       {
         "doc" : "Readys the chooser interface for the BonjourLauncher spoon\n\nParameters:\n * None\n\nReturns:\n * the BonjourLauncher spoon object\n\nNotes:\n * This method is included to conform to the expected Spoon format; it will automatically be invoked by [BonjourLauncher:show](#show) if it hasn't been already.",
@@ -716,11 +716,11 @@
           "Readys the chooser interface for the BonjourLauncher spoon",
           ""
         ],
+        "def" : "BonjourLauncher:start() -> self",
         "parameters" : [
           " * None",
           ""
         ],
-        "desc" : "Readys the chooser interface for the BonjourLauncher spoon",
         "notes" : [
           " * This method is included to conform to the expected Spoon format; it will automatically be invoked by [BonjourLauncher:show](#show) if it hasn't been already."
         ],
@@ -731,7 +731,7 @@
           ""
         ],
         "name" : "start",
-        "def" : "BonjourLauncher:start() -> self"
+        "desc" : "Readys the chooser interface for the BonjourLauncher spoon"
       },
       {
         "doc" : "Removes the chooser interface for the NonjourLauncher spoon and any lingering service queries\n\nParameters:\n * None\n\nReturns:\n * the BonjourLauncher spoon object\n\nNotes:\n * This method is included to conform to the expected Spoon format; in general, it should be unnecessary to invoke this method directly as service queries are cleared any time an item is selected from the chooser winfow or the window closes.",
@@ -739,11 +739,11 @@
           "Removes the chooser interface for the NonjourLauncher spoon and any lingering service queries",
           ""
         ],
+        "def" : "BonjourLauncher:stop() -> self",
         "parameters" : [
           " * None",
           ""
         ],
-        "desc" : "Removes the chooser interface for the NonjourLauncher spoon and any lingering service queries",
         "notes" : [
           " * This method is included to conform to the expected Spoon format; in general, it should be unnecessary to invoke this method directly as service queries are cleared any time an item is selected from the chooser winfow or the window closes."
         ],
@@ -754,23 +754,23 @@
           ""
         ],
         "name" : "stop",
-        "def" : "BonjourLauncher:stop() -> self"
+        "desc" : "Removes the chooser interface for the NonjourLauncher spoon and any lingering service queries"
       },
       {
-        "doc" : "Toggles the visibility of the BonjourLauncher chooser window.\n\nParameters:\n * `serviceType` - an optional string specifying the service type to show or switch to in the chooser window, if the window is already open and the service type currently on display differs.\n\nReturns:\n * the BonjourLauncher spoon object\n\nNotes::\n * If the chooser window is currently visible, this method will invoke [BonjourLauncher:hide](#hide); otherwise invokes [BonjourLauncher:show](#show).",
+        "doc" : "Toggles the visibility of the BonjourLauncher chooser window.\n\nParameters:\n * `label` - an optional string specifying the `label` field of a template defined in [BonjourLauncher.templates](#templates) for a specific service type to show or switch to in the chooser window, if the window is already open and the label of the service type currently on display differs.\n\nReturns:\n * the BonjourLauncher spoon object\n\nNotes::\n * If the chooser window is currently visible, this method will invoke [BonjourLauncher:hide](#hide); otherwise invokes [BonjourLauncher:show](#show).",
         "stripped_doc" : [
           "Toggles the visibility of the BonjourLauncher chooser window.",
           ""
         ],
+        "def" : "BonjourLauncher:toggle([label]) -> self",
         "parameters" : [
-          " * `serviceType` - an optional string specifying the service type to show or switch to in the chooser window, if the window is already open and the service type currently on display differs.",
+          " * `label` - an optional string specifying the `label` field of a template defined in [BonjourLauncher.templates](#templates) for a specific service type to show or switch to in the chooser window, if the window is already open and the label of the service type currently on display differs.",
           ""
         ],
-        "desc" : "Toggles the visibility of the BonjourLauncher chooser window.",
         "notes" : [
 
         ],
-        "signature" : "BonjourLauncher:toggle([serviceType]) -> self",
+        "signature" : "BonjourLauncher:toggle([label]) -> self",
         "type" : "Method",
         "returns" : [
           " * the BonjourLauncher spoon object",
@@ -779,7 +779,7 @@
           " * If the chooser window is currently visible, this method will invoke [BonjourLauncher:hide](#hide); otherwise invokes [BonjourLauncher:show](#show)."
         ],
         "name" : "toggle",
-        "def" : "BonjourLauncher:toggle([serviceType]) -> self"
+        "desc" : "Toggles the visibility of the BonjourLauncher chooser window."
       }
     ],
     "Field" : [
@@ -817,10 +817,10 @@
           "    }",
           ""
         ],
+        "def" : "BonjourLauncher.recipes.SSH",
         "parameters" : [
 
         ],
-        "desc" : "Display computers and servers advertising Secure Shell services advertised with the `_ssh._tcp.` service type. This is advertised by MacOS machines with Remote Login enabled in the Sharing panel of System Preferences.",
         "notes" : [
           " * On Linux servers, you can advertise this by installing Avahi and saving the following in `\/etc\/avahi\/services\/ssh.service`:",
           "",
@@ -842,7 +842,7 @@
 
         ],
         "name" : "SSH",
-        "def" : "BonjourLauncher.recipes.SSH"
+        "desc" : "Display computers and servers advertising Secure Shell services advertised with the `_ssh._tcp.` service type. This is advertised by MacOS machines with Remote Login enabled in the Sharing panel of System Preferences."
       },
       {
         "doc" : "Display computers and servers advertising Windows or Samba file server services advertised with the `_smb._tcp.` service type. Most Apple Macintosh computers and Laptops will also advertise file sharing with this service type.\n\nSMB connections are initiated by the URL `smb:\/\/%hostname%:%port%`, which usually opens up a dialog in the Finder which may prompt you for login credentials.\n\nThe template can be added to your BonjourLauncer with `spoon.BonjourLauncher:addRecipes(\"SMB\")` after the spoon has loaded, and is defined as follows:\n\n    {\n        image   = hs.image.imageFromName(\"NSNetwork\"),\n        label   = \"SMB\",\n        type    = \"_smb._tcp.\",\n        text    = \"%name%\",\n        subText = \"smb:\/\/%hostname%:%port%\",\n        url     = \"smb:\/\/%hostname%:%port%\",\n    }\n\nNotes:\n * On Linux servers, Samba advertises this by default if Avahi is installed.",
@@ -863,10 +863,10 @@
           "    }",
           ""
         ],
+        "def" : "BonjourLauncher.recipes.SMB",
         "parameters" : [
 
         ],
-        "desc" : "Display computers and servers advertising Windows or Samba file server services advertised with the `_smb._tcp.` service type. Most Apple Macintosh computers and Laptops will also advertise file sharing with this service type.",
         "notes" : [
           " * On Linux servers, Samba advertises this by default if Avahi is installed."
         ],
@@ -876,12 +876,12 @@
 
         ],
         "name" : "SMB",
-        "def" : "BonjourLauncher.recipes.SMB"
+        "desc" : "Display computers and servers advertising Windows or Samba file server services advertised with the `_smb._tcp.` service type. Most Apple Macintosh computers and Laptops will also advertise file sharing with this service type."
       },
       {
-        "doc" : "Display computers and servers advertising AppleShare file server services advertised with the `_afpovertcp._tcp.` service type. This was the default with earlier versions of MacOS and is still used by Apple AirPort file and Time Machine servers.\n\nAppleShare connections are initiated by the URL `afp:\/\/%hostname%:%port%`, which usually opens up a dialog in the Finder which may prompt you for login credentials.\n\nThe template can be added to your BonjourLauncer with `spoon.BonjourLauncher:addRecipes(\"AFP\")` after the spoon has loaded, and is defined as follows:\n\n    {\n        image   = hs.canvas.new{ h = 128, w = 128 }:appendElements(\n                      { type=\"image\", image = hs.image.imageFromName(\"NSNetwork\") },\n                      { type=\"image\", image = hs.image.imageFromName(\"NSTouchBarColorPickerFont\") }\n                  ):imageFromCanvas(),\n        label   = \"AFP\",\n        type    = \"_afpovertcp._tcp.\",\n        text    = \"%name%\",\n        subText = \"afp:\/\/%hostname%:%port%\",\n        url     = \"afp:\/\/%hostname%:%port%\",\n    }",
+        "doc" : "Display computers and servers advertising AppleShare file server services advertised with the `_afpovertcp._tcp.` service type. This was the default with earlier versions of MacOS and is still used by Apple AirPort and Time Machine file servers.\n\nAppleShare connections are initiated by the URL `afp:\/\/%hostname%:%port%`, which usually opens up a dialog in the Finder which may prompt you for login credentials.\n\nThe template can be added to your BonjourLauncer with `spoon.BonjourLauncher:addRecipes(\"AFP\")` after the spoon has loaded, and is defined as follows:\n\n    {\n        image   = hs.canvas.new{ h = 128, w = 128 }:appendElements(\n                      { type=\"image\", image = hs.image.imageFromName(\"NSNetwork\") },\n                      { type=\"image\", image = hs.image.imageFromName(\"NSTouchBarColorPickerFont\") }\n                  ):imageFromCanvas(),\n        label   = \"AFP\",\n        type    = \"_afpovertcp._tcp.\",\n        text    = \"%name%\",\n        subText = \"afp:\/\/%hostname%:%port%\",\n        url     = \"afp:\/\/%hostname%:%port%\",\n    }",
         "stripped_doc" : [
-          "Display computers and servers advertising AppleShare file server services advertised with the `_afpovertcp._tcp.` service type. This was the default with earlier versions of MacOS and is still used by Apple AirPort file and Time Machine servers.",
+          "Display computers and servers advertising AppleShare file server services advertised with the `_afpovertcp._tcp.` service type. This was the default with earlier versions of MacOS and is still used by Apple AirPort and Time Machine file servers.",
           "",
           "AppleShare connections are initiated by the URL `afp:\/\/%hostname%:%port%`, which usually opens up a dialog in the Finder which may prompt you for login credentials.",
           "",
@@ -899,10 +899,10 @@
           "        url     = \"afp:\/\/%hostname%:%port%\",",
           "    }"
         ],
+        "def" : "BonjourLauncher.recipes.AFP",
         "parameters" : [
 
         ],
-        "desc" : "Display computers and servers advertising AppleShare file server services advertised with the `_afpovertcp._tcp.` service type. This was the default with earlier versions of MacOS and is still used by Apple AirPort file and Time Machine servers.",
         "notes" : [
 
         ],
@@ -912,7 +912,7 @@
 
         ],
         "name" : "AFP",
-        "def" : "BonjourLauncher.recipes.AFP"
+        "desc" : "Display computers and servers advertising AppleShare file server services advertised with the `_afpovertcp._tcp.` service type. This was the default with earlier versions of MacOS and is still used by Apple AirPort and Time Machine file servers."
       },
       {
         "doc" : "Display computers and servers advertising screen sharing or VNC services advertised with the `_rfb._tcp.` service type. This is advertised by MacOS machines with Screen Sharing enabled in the Sharing panel of System Preferences.\n\nScreen Sharing connections are initiated by the URL `vnc:\/\/%hostname%:%port%`, which usually opens up Screen Sharing which will prompt you for login credentials.\n\nThe template can be added to your BonjourLauncer with `spoon.BonjourLauncher:addRecipes(\"VNC\")` after the spoon has loaded, and is defined as follows:\n\n    {\n        image   = hs.image.imageFromAppBundle(\"com.apple.ScreenSharing\"),\n        label   = \"VNC\",\n        type    = \"_rfb._tcp.\",\n        text    = \"%name%\",\n        subText = \"vnc:\/\/%hostname%:%port%\",\n        url     = \"vnc:\/\/%hostname%:%port%\",\n    }\n\nNotes:\n * The built in MacOS Screen Sharing application works with MacOS Screen Sharing clients as well as more traditional VNC implementations that do not implement encryption. This does *not* include the RealVNC implementation that is commonly included with Raspberry Pi's Raspbian installations.\n\n * See also [BonjourLauncher.recipes.VNC_RealVNC_Alternate](#VNC_RealVNC_Alternate) for an example that can use an alternate launcher for RealVNC clients. Note that you sould use only\n\n * On Linux servers, some X Windows installations provide built in VNC support while others require you to configure your own with third party software (e.g. RealVNC or TigerVNC to name just a couple). Determining how to set this up is beyond the scope of these instructions, but if you find that whatever solution you have available does *not* provide ZeroConf or Bonjour advertisements, you can do so yourself by installing Avahi and saving the following in `\/etc\/avahi\/services\/vnc.service` (change 5900 to match the port number your windowing environment uses for VNC, commonly a number between 5900 and 5910 inclusive, but theoretically any available port on the machine):\n\n    ~~~\n    <?xml version=\"1.0\" standalone='no'?>\n    <!DOCTYPE service-group SYSTEM \"avahi-service.dtd\">\n    <service-group>\n      <name replace-wildcards=\"yes\">%h<\/name>\n      <service>\n        <type>_rfb._tcp<\/type>\n        <port>5900<\/port>\n      <\/service>\n    <\/service-group>\n    ~~~",
@@ -933,10 +933,10 @@
           "    }",
           ""
         ],
+        "def" : "BonjourLauncher.recipes.VNC",
         "parameters" : [
 
         ],
-        "desc" : "Display computers and servers advertising screen sharing or VNC services advertised with the `_rfb._tcp.` service type. This is advertised by MacOS machines with Screen Sharing enabled in the Sharing panel of System Preferences.",
         "notes" : [
           " * The built in MacOS Screen Sharing application works with MacOS Screen Sharing clients as well as more traditional VNC implementations that do not implement encryption. This does *not* include the RealVNC implementation that is commonly included with Raspberry Pi's Raspbian installations.",
           "",
@@ -962,7 +962,7 @@
 
         ],
         "name" : "VNC",
-        "def" : "BonjourLauncher.recipes.VNC"
+        "desc" : "Display computers and servers advertising screen sharing or VNC services advertised with the `_rfb._tcp.` service type. This is advertised by MacOS machines with Screen Sharing enabled in the Sharing panel of System Preferences."
       },
       {
         "doc" : "Display computers and servers advertising screen sharing or VNC services advertised with the `_rfb._tcp.` service type. This is advertised by MacOS machines with Screen Sharing enabled in the Sharing panel of System Preferences.\n\nThis version of a template for `_rfb._tcp.` differs from [BonjourLauncher.recipes.VNC](#VNC) in that it uses a function which examines the text records for the service to determine which launcher to use for the chosen server: because RealVNC uses an encryption scheme that is not recognized by the macOS Screen Sharing application, if a text record indicating that RealVNC is in use is detected, an alternate launcher is used.\n\nThe template can be added to your BonjourLauncer with `spoon.BonjourLauncher:addRecipes(\"VNC_RealVNC_Alternate\")` after the spoon has loaded, and is defined as follows:\n\n    {\n        image   = hs.image.imageFromAppBundle(\"com.apple.ScreenSharing\"),\n        label   = \"VNC\",\n        type    = \"_rfb._tcp.\",\n        text    = \"%name%\",\n        subText = \"vnc:\/\/%hostname%:%port%\",\n        url     = \"vnc:\/\/%hostname%:%port%\", -- used in fn when RealVNC not set ; see below\n        cmd     = \"open -a \\\"VNC Viewer\\\" --args %hostname%:%port%\", -- used in fn when RealVNC set; see below\n        fn      = function(svc, choice)\n            local tr = svc:txtRecord()\n            if tr and tr.RealVNC then\n                hs.execute(choice.cmd)\n            else\n                hs.urlevent.openURL(choice.url)\n            end\n        end,\n    }\n\nNote that `fn` is defined, so it will be invoked in favor of `url` or `cmd` by the BonjourLauncer spoon when a VNC service is selected; however, the second argument to the function invoked will include all key-value pairs with string values from the template, so the function can utilizes the `url` and `cmd` keys based on its own logic to determine which applies.\n\nNotes:\n * This variant was developed to address the fact that the macOS Screen Sharing application does not recognize the encryption used by the RealVNC implemntataion found in the Raspbian distribution installed on most Raspberry Pi computers. By adding text record to the Avahi advertisement from the Raspberry Pi, we can determine whether or not to utilize the built in screen sharing app or launch the RealVNC client to view the specified service.\n\n * See also [BonjourLauncher.recipes.VNC](#VNC) for a simpler implementation if you are only connecting to other Mac computers or if none of your servers require RealVNC's specific viewer application.\n\n * To create the advertisement on the Raspbian installation which includes the text record entry we need to make this template work, install Avahi on your Raspbian machine and save the following as `\/etc\/avahi\/services\/vnc.service`:\n\n    ~~~\n    <?xml version=\"1.0\" standalone='no'?>\n    <!DOCTYPE service-group SYSTEM \"avahi-service.dtd\">\n    <service-group>\n      <name replace-wildcards=\"yes\">%h<\/name>\n      <service>\n        <type>_rfb._tcp<\/type>\n        <port>5900<\/port>\n        <txt-record>RealVNC=True<\/txt-record>\n      <\/service>\n    <\/service-group>\n    ~~~",
@@ -994,10 +994,10 @@
           "Note that `fn` is defined, so it will be invoked in favor of `url` or `cmd` by the BonjourLauncer spoon when a VNC service is selected; however, the second argument to the function invoked will include all key-value pairs with string values from the template, so the function can utilizes the `url` and `cmd` keys based on its own logic to determine which applies.",
           ""
         ],
+        "def" : "BonjourLauncher.recipes.VNC_RealVNC_Alternate",
         "parameters" : [
 
         ],
-        "desc" : "Display computers and servers advertising screen sharing or VNC services advertised with the `_rfb._tcp.` service type. This is advertised by MacOS machines with Screen Sharing enabled in the Sharing panel of System Preferences.",
         "notes" : [
           " * This variant was developed to address the fact that the macOS Screen Sharing application does not recognize the encryption used by the RealVNC implemntataion found in the Raspbian distribution installed on most Raspberry Pi computers. By adding text record to the Avahi advertisement from the Raspberry Pi, we can determine whether or not to utilize the built in screen sharing app or launch the RealVNC client to view the specified service.",
           "",
@@ -1024,7 +1024,7 @@
 
         ],
         "name" : "VNC_RealVNC_Alternate",
-        "def" : "BonjourLauncher.recipes.VNC_RealVNC_Alternate"
+        "desc" : "Display computers and servers advertising screen sharing or VNC services advertised with the `_rfb._tcp.` service type. This is advertised by MacOS machines with Screen Sharing enabled in the Sharing panel of System Preferences."
       }
     ],
     "stripped_doc" : [
@@ -1047,9 +1047,9 @@
     ],
     "items" : [
       {
-        "doc" : "Display computers and servers advertising AppleShare file server services advertised with the `_afpovertcp._tcp.` service type. This was the default with earlier versions of MacOS and is still used by Apple AirPort file and Time Machine servers.\n\nAppleShare connections are initiated by the URL `afp:\/\/%hostname%:%port%`, which usually opens up a dialog in the Finder which may prompt you for login credentials.\n\nThe template can be added to your BonjourLauncer with `spoon.BonjourLauncher:addRecipes(\"AFP\")` after the spoon has loaded, and is defined as follows:\n\n    {\n        image   = hs.canvas.new{ h = 128, w = 128 }:appendElements(\n                      { type=\"image\", image = hs.image.imageFromName(\"NSNetwork\") },\n                      { type=\"image\", image = hs.image.imageFromName(\"NSTouchBarColorPickerFont\") }\n                  ):imageFromCanvas(),\n        label   = \"AFP\",\n        type    = \"_afpovertcp._tcp.\",\n        text    = \"%name%\",\n        subText = \"afp:\/\/%hostname%:%port%\",\n        url     = \"afp:\/\/%hostname%:%port%\",\n    }",
+        "doc" : "Display computers and servers advertising AppleShare file server services advertised with the `_afpovertcp._tcp.` service type. This was the default with earlier versions of MacOS and is still used by Apple AirPort and Time Machine file servers.\n\nAppleShare connections are initiated by the URL `afp:\/\/%hostname%:%port%`, which usually opens up a dialog in the Finder which may prompt you for login credentials.\n\nThe template can be added to your BonjourLauncer with `spoon.BonjourLauncher:addRecipes(\"AFP\")` after the spoon has loaded, and is defined as follows:\n\n    {\n        image   = hs.canvas.new{ h = 128, w = 128 }:appendElements(\n                      { type=\"image\", image = hs.image.imageFromName(\"NSNetwork\") },\n                      { type=\"image\", image = hs.image.imageFromName(\"NSTouchBarColorPickerFont\") }\n                  ):imageFromCanvas(),\n        label   = \"AFP\",\n        type    = \"_afpovertcp._tcp.\",\n        text    = \"%name%\",\n        subText = \"afp:\/\/%hostname%:%port%\",\n        url     = \"afp:\/\/%hostname%:%port%\",\n    }",
         "stripped_doc" : [
-          "Display computers and servers advertising AppleShare file server services advertised with the `_afpovertcp._tcp.` service type. This was the default with earlier versions of MacOS and is still used by Apple AirPort file and Time Machine servers.",
+          "Display computers and servers advertising AppleShare file server services advertised with the `_afpovertcp._tcp.` service type. This was the default with earlier versions of MacOS and is still used by Apple AirPort and Time Machine file servers.",
           "",
           "AppleShare connections are initiated by the URL `afp:\/\/%hostname%:%port%`, which usually opens up a dialog in the Finder which may prompt you for login credentials.",
           "",
@@ -1067,10 +1067,10 @@
           "        url     = \"afp:\/\/%hostname%:%port%\",",
           "    }"
         ],
+        "def" : "BonjourLauncher.recipes.AFP",
         "parameters" : [
 
         ],
-        "desc" : "Display computers and servers advertising AppleShare file server services advertised with the `_afpovertcp._tcp.` service type. This was the default with earlier versions of MacOS and is still used by Apple AirPort file and Time Machine servers.",
         "notes" : [
 
         ],
@@ -1080,7 +1080,7 @@
 
         ],
         "name" : "AFP",
-        "def" : "BonjourLauncher.recipes.AFP"
+        "desc" : "Display computers and servers advertising AppleShare file server services advertised with the `_afpovertcp._tcp.` service type. This was the default with earlier versions of MacOS and is still used by Apple AirPort and Time Machine file servers."
       },
       {
         "doc" : "Display computers and servers advertising Windows or Samba file server services advertised with the `_smb._tcp.` service type. Most Apple Macintosh computers and Laptops will also advertise file sharing with this service type.\n\nSMB connections are initiated by the URL `smb:\/\/%hostname%:%port%`, which usually opens up a dialog in the Finder which may prompt you for login credentials.\n\nThe template can be added to your BonjourLauncer with `spoon.BonjourLauncher:addRecipes(\"SMB\")` after the spoon has loaded, and is defined as follows:\n\n    {\n        image   = hs.image.imageFromName(\"NSNetwork\"),\n        label   = \"SMB\",\n        type    = \"_smb._tcp.\",\n        text    = \"%name%\",\n        subText = \"smb:\/\/%hostname%:%port%\",\n        url     = \"smb:\/\/%hostname%:%port%\",\n    }\n\nNotes:\n * On Linux servers, Samba advertises this by default if Avahi is installed.",
@@ -1101,10 +1101,10 @@
           "    }",
           ""
         ],
+        "def" : "BonjourLauncher.recipes.SMB",
         "parameters" : [
 
         ],
-        "desc" : "Display computers and servers advertising Windows or Samba file server services advertised with the `_smb._tcp.` service type. Most Apple Macintosh computers and Laptops will also advertise file sharing with this service type.",
         "notes" : [
           " * On Linux servers, Samba advertises this by default if Avahi is installed."
         ],
@@ -1114,7 +1114,7 @@
 
         ],
         "name" : "SMB",
-        "def" : "BonjourLauncher.recipes.SMB"
+        "desc" : "Display computers and servers advertising Windows or Samba file server services advertised with the `_smb._tcp.` service type. Most Apple Macintosh computers and Laptops will also advertise file sharing with this service type."
       },
       {
         "doc" : "Display computers and servers advertising Secure Shell services advertised with the `_ssh._tcp.` service type. This is advertised by MacOS machines with Remote Login enabled in the Sharing panel of System Preferences.\n\nSSH connections are initiated by the URL `ssh:\/\/%hostname%:%port%`, which usually opens up a Terminal window with the SSH session, and assumes that the username matches your username on your Mac. At present there is no way to prompt for a different username at the time of connection -- you will need to modify your `~\/.ssh\/config` file if a different username is required for a specific host. See `man ssh_config` in a terminal window.\n\nThe template can be added to your BonjourLauncer with `spoon.BonjourLauncher:addRecipes(\"SSH\")` after the spoon has loaded, and is defined as follows:\n\n    {\n        image   = hs.image.imageFromAppBundle(\"com.apple.Terminal\"),\n        label   = \"SSH\",\n        type    = \"_ssh._tcp.\",\n        text    = \"%name%\",\n        subText = \"%hostname%:%port% (%address4%\/%address6%)\",\n        url     = \"ssh:\/\/%hostname%:%port%\",\n    }\n\nNotes:\n * On Linux servers, you can advertise this by installing Avahi and saving the following in `\/etc\/avahi\/services\/ssh.service`:\n\n    ~~~\n    <?xml version=\"1.0\" standalone='no'?>\n    <!DOCTYPE service-group SYSTEM \"avahi-service.dtd\">\n    <service-group>\n      <name replace-wildcards=\"yes\">%h<\/name>\n      <service>\n        <type>_ssh._tcp<\/type>\n        <port>22<\/port>\n      <\/service>\n    <\/service-group>\n    ~~~",
@@ -1135,10 +1135,10 @@
           "    }",
           ""
         ],
+        "def" : "BonjourLauncher.recipes.SSH",
         "parameters" : [
 
         ],
-        "desc" : "Display computers and servers advertising Secure Shell services advertised with the `_ssh._tcp.` service type. This is advertised by MacOS machines with Remote Login enabled in the Sharing panel of System Preferences.",
         "notes" : [
           " * On Linux servers, you can advertise this by installing Avahi and saving the following in `\/etc\/avahi\/services\/ssh.service`:",
           "",
@@ -1160,7 +1160,7 @@
 
         ],
         "name" : "SSH",
-        "def" : "BonjourLauncher.recipes.SSH"
+        "desc" : "Display computers and servers advertising Secure Shell services advertised with the `_ssh._tcp.` service type. This is advertised by MacOS machines with Remote Login enabled in the Sharing panel of System Preferences."
       },
       {
         "doc" : "Display computers and servers advertising screen sharing or VNC services advertised with the `_rfb._tcp.` service type. This is advertised by MacOS machines with Screen Sharing enabled in the Sharing panel of System Preferences.\n\nScreen Sharing connections are initiated by the URL `vnc:\/\/%hostname%:%port%`, which usually opens up Screen Sharing which will prompt you for login credentials.\n\nThe template can be added to your BonjourLauncer with `spoon.BonjourLauncher:addRecipes(\"VNC\")` after the spoon has loaded, and is defined as follows:\n\n    {\n        image   = hs.image.imageFromAppBundle(\"com.apple.ScreenSharing\"),\n        label   = \"VNC\",\n        type    = \"_rfb._tcp.\",\n        text    = \"%name%\",\n        subText = \"vnc:\/\/%hostname%:%port%\",\n        url     = \"vnc:\/\/%hostname%:%port%\",\n    }\n\nNotes:\n * The built in MacOS Screen Sharing application works with MacOS Screen Sharing clients as well as more traditional VNC implementations that do not implement encryption. This does *not* include the RealVNC implementation that is commonly included with Raspberry Pi's Raspbian installations.\n\n * See also [BonjourLauncher.recipes.VNC_RealVNC_Alternate](#VNC_RealVNC_Alternate) for an example that can use an alternate launcher for RealVNC clients. Note that you sould use only\n\n * On Linux servers, some X Windows installations provide built in VNC support while others require you to configure your own with third party software (e.g. RealVNC or TigerVNC to name just a couple). Determining how to set this up is beyond the scope of these instructions, but if you find that whatever solution you have available does *not* provide ZeroConf or Bonjour advertisements, you can do so yourself by installing Avahi and saving the following in `\/etc\/avahi\/services\/vnc.service` (change 5900 to match the port number your windowing environment uses for VNC, commonly a number between 5900 and 5910 inclusive, but theoretically any available port on the machine):\n\n    ~~~\n    <?xml version=\"1.0\" standalone='no'?>\n    <!DOCTYPE service-group SYSTEM \"avahi-service.dtd\">\n    <service-group>\n      <name replace-wildcards=\"yes\">%h<\/name>\n      <service>\n        <type>_rfb._tcp<\/type>\n        <port>5900<\/port>\n      <\/service>\n    <\/service-group>\n    ~~~",
@@ -1181,10 +1181,10 @@
           "    }",
           ""
         ],
+        "def" : "BonjourLauncher.recipes.VNC",
         "parameters" : [
 
         ],
-        "desc" : "Display computers and servers advertising screen sharing or VNC services advertised with the `_rfb._tcp.` service type. This is advertised by MacOS machines with Screen Sharing enabled in the Sharing panel of System Preferences.",
         "notes" : [
           " * The built in MacOS Screen Sharing application works with MacOS Screen Sharing clients as well as more traditional VNC implementations that do not implement encryption. This does *not* include the RealVNC implementation that is commonly included with Raspberry Pi's Raspbian installations.",
           "",
@@ -1210,7 +1210,7 @@
 
         ],
         "name" : "VNC",
-        "def" : "BonjourLauncher.recipes.VNC"
+        "desc" : "Display computers and servers advertising screen sharing or VNC services advertised with the `_rfb._tcp.` service type. This is advertised by MacOS machines with Screen Sharing enabled in the Sharing panel of System Preferences."
       },
       {
         "doc" : "Display computers and servers advertising screen sharing or VNC services advertised with the `_rfb._tcp.` service type. This is advertised by MacOS machines with Screen Sharing enabled in the Sharing panel of System Preferences.\n\nThis version of a template for `_rfb._tcp.` differs from [BonjourLauncher.recipes.VNC](#VNC) in that it uses a function which examines the text records for the service to determine which launcher to use for the chosen server: because RealVNC uses an encryption scheme that is not recognized by the macOS Screen Sharing application, if a text record indicating that RealVNC is in use is detected, an alternate launcher is used.\n\nThe template can be added to your BonjourLauncer with `spoon.BonjourLauncher:addRecipes(\"VNC_RealVNC_Alternate\")` after the spoon has loaded, and is defined as follows:\n\n    {\n        image   = hs.image.imageFromAppBundle(\"com.apple.ScreenSharing\"),\n        label   = \"VNC\",\n        type    = \"_rfb._tcp.\",\n        text    = \"%name%\",\n        subText = \"vnc:\/\/%hostname%:%port%\",\n        url     = \"vnc:\/\/%hostname%:%port%\", -- used in fn when RealVNC not set ; see below\n        cmd     = \"open -a \\\"VNC Viewer\\\" --args %hostname%:%port%\", -- used in fn when RealVNC set; see below\n        fn      = function(svc, choice)\n            local tr = svc:txtRecord()\n            if tr and tr.RealVNC then\n                hs.execute(choice.cmd)\n            else\n                hs.urlevent.openURL(choice.url)\n            end\n        end,\n    }\n\nNote that `fn` is defined, so it will be invoked in favor of `url` or `cmd` by the BonjourLauncer spoon when a VNC service is selected; however, the second argument to the function invoked will include all key-value pairs with string values from the template, so the function can utilizes the `url` and `cmd` keys based on its own logic to determine which applies.\n\nNotes:\n * This variant was developed to address the fact that the macOS Screen Sharing application does not recognize the encryption used by the RealVNC implemntataion found in the Raspbian distribution installed on most Raspberry Pi computers. By adding text record to the Avahi advertisement from the Raspberry Pi, we can determine whether or not to utilize the built in screen sharing app or launch the RealVNC client to view the specified service.\n\n * See also [BonjourLauncher.recipes.VNC](#VNC) for a simpler implementation if you are only connecting to other Mac computers or if none of your servers require RealVNC's specific viewer application.\n\n * To create the advertisement on the Raspbian installation which includes the text record entry we need to make this template work, install Avahi on your Raspbian machine and save the following as `\/etc\/avahi\/services\/vnc.service`:\n\n    ~~~\n    <?xml version=\"1.0\" standalone='no'?>\n    <!DOCTYPE service-group SYSTEM \"avahi-service.dtd\">\n    <service-group>\n      <name replace-wildcards=\"yes\">%h<\/name>\n      <service>\n        <type>_rfb._tcp<\/type>\n        <port>5900<\/port>\n        <txt-record>RealVNC=True<\/txt-record>\n      <\/service>\n    <\/service-group>\n    ~~~",
@@ -1242,10 +1242,10 @@
           "Note that `fn` is defined, so it will be invoked in favor of `url` or `cmd` by the BonjourLauncer spoon when a VNC service is selected; however, the second argument to the function invoked will include all key-value pairs with string values from the template, so the function can utilizes the `url` and `cmd` keys based on its own logic to determine which applies.",
           ""
         ],
+        "def" : "BonjourLauncher.recipes.VNC_RealVNC_Alternate",
         "parameters" : [
 
         ],
-        "desc" : "Display computers and servers advertising screen sharing or VNC services advertised with the `_rfb._tcp.` service type. This is advertised by MacOS machines with Screen Sharing enabled in the Sharing panel of System Preferences.",
         "notes" : [
           " * This variant was developed to address the fact that the macOS Screen Sharing application does not recognize the encryption used by the RealVNC implemntataion found in the Raspbian distribution installed on most Raspberry Pi computers. By adding text record to the Avahi advertisement from the Raspberry Pi, we can determine whether or not to utilize the built in screen sharing app or launch the RealVNC client to view the specified service.",
           "",
@@ -1272,7 +1272,7 @@
 
         ],
         "name" : "VNC_RealVNC_Alternate",
-        "def" : "BonjourLauncher.recipes.VNC_RealVNC_Alternate"
+        "desc" : "Display computers and servers advertising screen sharing or VNC services advertised with the `_rfb._tcp.` service type. This is advertised by MacOS machines with Screen Sharing enabled in the Sharing panel of System Preferences."
       }
     ],
     "Field" : [
