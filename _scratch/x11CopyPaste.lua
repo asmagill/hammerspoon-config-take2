@@ -60,6 +60,7 @@ end):start()
 module.start = function()
     module._copyWatcher:start()
     module._pasteWatcher:start()
+    return module
 end
 
 module.stop = function()
@@ -69,6 +70,7 @@ module.stop = function()
     end
     module._copyWatcher:stop()
     module._pasteWatcher:stop()
+    return module
 end
 
 return module
