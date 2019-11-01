@@ -1,6 +1,19 @@
 -- Inspired by https://github.com/Hammerspoon/hammerspoon/issues/2196 and the code found at
 -- https://github.com/lodestone/macpaste
 
+-- TODO:
+--     move to spoon
+--     monitor pasteboard changecount to detect when the copy is no longer ours
+--       flag to do/not do paste with third button?
+--     alternate paste methods for trackpad use?
+--
+--     monitor for shift down and arrow movements to get text selected this way?
+--       would have to wait until shift released to minimize extra copies to clipboard
+--
+--     update hs.pasteboard to "backup" and "restore" clipboard? would allow backup of existing item(s)
+--       while still using cmd-C ourselves to get as many types and promised types as offered then
+--       move to alternate clipboard and restore, so traditional use of cut/paste not interrupted
+
 local eventtap   = require("hs.eventtap")
 local eventTypes = eventtap.event.types
 local timer      = require("hs.timer")
