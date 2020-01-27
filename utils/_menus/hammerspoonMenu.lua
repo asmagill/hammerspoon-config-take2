@@ -70,7 +70,7 @@ watcherMenu:setIcon(image.imageFromName("statusicon"))
       :setMenu(function(_) return
           {
               { title = "Reload Config", fn = hs.reload },
-              { title = "Open Config", fn = function() os.execute("open ~/.hammerspoon/init.lua") end },
+              { title = "Open Config", fn = function() os.execute([[edit "]] .. hs.configdir .. [["]]) end },
               { title = "-" },
               { title = "Console...", fn = hs.openConsole, menu = {
                       { title = "Open", fn = hs.openConsole },

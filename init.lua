@@ -132,6 +132,8 @@ timer.doAfter(1, function()
     end
 end)
 
+require"hs.doc".preloadSpoonDocs()
+
 hs.loadSpoon("SleepCorners"):start()
 hs.loadSpoon("FadeLogo"):start(.5)
 hs.loadSpoon("BonjourLauncher"):start():addRecipes("SSH", "SMB", "AFP", "VNC_RealVNC_Alternate"):bindHotkeys{
