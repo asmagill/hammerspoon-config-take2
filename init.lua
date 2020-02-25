@@ -1,3 +1,9 @@
+require("hs._asm.coroutineshim")
+
+local logger = require("hs.logger")
+logger.historySize(1000)
+logger.truncateID = "head"
+logger.truncateIDWithEllipsis = true
 
 -- I do too much with developmental versions of HS -- I don't need
 -- extraneous info in the Console application for every require; very
@@ -24,7 +30,6 @@ local requirePlus = require("utils.require")
 local crash       = require("hs.crash")
 local window      = require("hs.window")
 local application = require("hs.application")
-local logger      = require("hs.logger")
 local timer       = require("hs.timer")
 local ipc         = require("hs.ipc")
 local alert       = require("hs.alert")
@@ -41,10 +46,6 @@ crash.crashLogToNSLog = true
 --     return coreCrashLog(message, passAlong)
 -- end
 crash.crashLog("Disabled require logging to make log file sane")
-
-logger.historySize(1000)
-logger.truncateID = "head"
-logger.truncateIDWithEllipsis = true
 
 window.animationDuration = 0 -- I'm a philistine, sue me
 ipc.cliInstall("/opt/amagill")
@@ -96,7 +97,7 @@ end
 
 history = _asm._actions.consoleHistory.history
 
-preview = _asm._actions.quickPreview.preview
+-- preview = _asm._actions.quickPreview.preview
 
 _asm.gc  = require("utils.gc")
 
@@ -123,19 +124,18 @@ print()
 timer.doAfter(1, function()
     if fmW then
         fmW:focus()
-    else
-        local finder = application("Finder")
-        if finder then
-            alert("Activating Finder")
-            finder:activate()
-        end
+--     else
+--         local finder = application("Finder")
+--         if finder then
+--             alert("Activating Finder")
+--             finder:activate()
+--         end
     end
 end)
 
 require"hs.doc".preloadSpoonDocs()
 
 hs.loadSpoon("SleepCorners"):start()
-hs.loadSpoon("FadeLogo"):start(.5)
 hs.loadSpoon("BonjourLauncher"):start():addRecipes("SSH", "SMB", "AFP", "VNC_RealVNC_Alternate"):bindHotkeys{
     toggle      = { { "cmd", "alt", "ctrl" }, "=" },
     toggle_SSH  = { { "cmd", "alt", "ctrl" }, "s" },
@@ -157,3 +157,4 @@ table.insert(spoon.BonjourLauncher.templates, {
     filter  = function(svc) local p = svc:port() ; return (p ~= 8266) and (p ~= -1) end,
     hidden  = true,
 })
+hs.loadSpoon("FadeLogo"):start(.5)
