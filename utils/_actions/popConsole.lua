@@ -81,8 +81,11 @@ end)
 local prevWindowHolder
 module.popFunctions[3] = function()
 -- this attempts to keep track of the previously focused window and return us to it
-    local conswin = window.get("Hammerspoon Console")
-    if conswin and application.get("Hammerspoon"):isFrontmost() then
+--     local conswin = window.get("Hammerspoon Console")
+--     if conswin and application.get("Hammerspoon"):isFrontmost() then
+    local hspoon = application.applicationsForBundleID(hs.processInfo.bundleID)[1]
+    local conswin = hspoon:mainWindow()
+    if conswin and hspoon:isFrontmost() then
         conswin:close()
         if prevWindowHolder and #prevWindowHolder:role() ~= 0 then
             prevWindowHolder:becomeMain():focus()
