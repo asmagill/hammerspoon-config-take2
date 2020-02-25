@@ -20,6 +20,10 @@ local events = eventtap.event.types
 
 local module = {}
 
+local menuGetter = package.loaded["hs._asm.coroutineshim"].shimRequired and
+                   hs.getObjectMetatable("hs.application").__index.getMenuItems or
+                   require("utils.getMenusIn").getMenuItems
+
 module.watchables = watchables.new("cheatsheet", true)
 
 module.autoDismiss     = true
@@ -227,7 +231,8 @@ end
 module.cs = hotkey.modal.new()
     function module.cs:entered()
         module.cs._waitingToBuild = true
-        application.frontmostApplication():getMenuItems(function(allMenuItems)
+--         application.frontmostApplication():getMenuItems(function(allMenuItems)
+        menuGetter(application.frontmostApplication(), function(allMenuItems)
             if module.cs._waitingToBuild then
                 module.cs._waitingToBuild = nil
                 local screenFrame = screen.mainScreen():frame()
