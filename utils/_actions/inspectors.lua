@@ -75,6 +75,8 @@ finspect2 = function(what, ...)
     return fn(what, opt)
 end
 
+cbinspect = function (...) print(timestamp() .. ":: " .. finspect(...)) end
+
 module.help = function(...)
     local output = [[
 
@@ -92,6 +94,9 @@ This module creates some shortcuts for inspecting Lua data:
     Note that a second argument to any of the `inspect*` shortcuts is appended to the
     default table described; i.e. if you specify the same key in your options table,
     your value will override the default.
+
+    cbinspect(...) - prints the results of `timestamp(), finspect(...)`. Useful as a
+                     single word shorthand when testing callbacks functions.
 
     finspect(...) - inspects the arguments, first combining them into a table if more
                     then one or if the one provided is not already a table. Flattens
