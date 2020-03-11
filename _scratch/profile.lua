@@ -15,9 +15,9 @@
 -- identify specific functions that are slow, the best way to use this is probably
 -- something like this:
 --
---      profiler = require("profile") -- assuming you save this in ~/.hammerspoon
+--      profile = require("profile") -- assuming you save this in ~/.hammerspoon
 --
---      profiler.start()
+--      profile.start()
 --      ... invoke the code you want to profile
 --      profile.stop()
 --
