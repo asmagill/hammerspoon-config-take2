@@ -1,18 +1,48 @@
 --
 -- Extremely crude and simple profiler for Hammerspoon
 --
--- Uses debug.sethook, so just the fact you're using this will slow things down
+-- Uses debug.sethook, so just the fact you're using this will slow things down some
 --
--- Probably gets some skew from our own function calls, (if you invoke dump before
---     stop, or from coroutine wrappers), but since _profiler *is* the hook, and it checks
---     debuginfo 2 up on stack, it should be minimal in most cases.
+-- Previous version didn't handle tail calls properly; this one should do better
 --
--- Only captures internals of coroutines created *after* `start` called
---      function which uses coroutines records full time from entry to end (i.e. even
---          though execution yielded to allow other stuff, the initiating function didn't
---          "return" until the final resume)
---      Total for `resume` + `yield` functions will be (effectively) the same as the sum
---          of functions which use coroutines.
+-- By default, dump only displays lua function calls. Add `true` as argument to see
+-- C function calls as well.
+--
+-- Decimal precision in dump report can be changed by setting `module.prec` and then
+-- (re)running dump function.
+--
+-- To minimize confusion from other things Hammerspoon may be doing while trying to
+-- identify specific functions that are slow, the best way to use this is probably
+-- something like this:
+--
+--      profiler = require("profile") -- assuming you save this in ~/.hammerspoon
+--
+--      profiler.start()
+--      ... invoke the code you want to profile
+--      profile.stop()
+--
+-- If done as a block (in a file, function, or as one multi-line entry in the console),
+-- this *should* prevent any timers or other Hammerspoon activity from being included
+-- in the report. To clear the data for another profile run, do profile.clear() before
+-- the next start.
+
+
+-- I think I've caught all of these now
+--     Probably gets some skew from our own function calls, (if you invoke dump before
+--         stop, or from coroutine wrappers), but since _profiler *is* the hook, and it checks
+--         debuginfo 2 up on stack, it should be minimal in most cases.
+--
+
+-- To clarify, this wraps the lua builtin coroutine library functions (which have always
+-- been available in Hammerspoon, just unused by anyone) and does *not* require the
+-- experimental coroutine friendly branch of Hammerspoon.
+--
+--         Only captures internals of coroutines created *after* `start` called
+--              function which uses coroutines records full time from entry to end (i.e. even
+--                  though execution yielded to allow other stuff, the initiating function didn't
+--                  "return" until the final resume)
+--              Total for `resume` + `yield` functions will be (effectively) the same as the sum
+--                  of functions which use coroutines.
 --
 
 --
@@ -24,74 +54,109 @@
 
 local module = {}
 
-local calls, total, this = {}, {}, {}
+local details = {}
+
+-- normally I think this kind of optimization is overkill on modern machines, but since
+-- we are attempting to profile with minimally impacting the actual run time...
+
+local debug_getinfo = debug.getinfo
+local debug_gethook = debug.gethook
+local debug_sethook = debug.sethook
+local table_insert  = table.insert
+local table_remove  = table.remove
+local table_sort    = table.sort
+local os_clock      = os.clock
+local math_max      = math.max
+local string_format = string.format
+local hs_printf     = hs.printf
+
+local _callStack = {}
+local _ourPath = debug_getinfo(1, "S").source
 
 local _otherHook = {} -- in case they have another debug hook, lets be nice and return it when we're done
 local _coroutine_create
 local _coroutine_wrap
 
-local _previousFunc
+local _inProfiler = false
 
 local _profiler = function(event)
-    local i = debug.getinfo(2, "Sln")
+    if _inProfiler then return end
+    local i = debug_getinfo(2, "Sln")
+    if i.source == _ourPath then return end -- don't include (lua) stuff from the profiler itself
+
     local func = i.source .. ":" .. i.linedefined .. " (" .. (i.name or "???") .. ")"
+    details[func] = details[func] or {
+        total  = 0,
+        calls  = 0,
+        line   = i.linedefined,
+        source = i.source,
+        name   = i.name or "????",
+    }
     if event == 'call' then
-        this[func] = os.clock()
-        _previousFunc = func
+        table_insert(_callStack, func)
+        details[func].curr = os_clock()
     elseif event == 'tail call' then
-        if _previousFunc then
-            local time = os.clock() - this[_previousFunc]
-            total[_previousFunc] = (total[_previousFunc] or 0) + time
-            calls[_previousFunc] = (calls[_previousFunc] or 0) + 1
+        if #_callStack > 0 then
+            local _prev = table_remove(_callStack)
+            local time = os_clock() - details[_prev].curr
+            details[_prev].total = details[_prev].total + time
+            details[_prev].calls = details[_prev].calls + 1
         end
-        this[func] = os.clock()
-        _previousFunc = func
-    else
-        if this[func] then
-            local time = os.clock() - this[func]
-            total[func] = (total[func] or 0) + time
-            calls[func] = (calls[func] or 0) + 1
--- testing shows this to only be the returns from invoking our start, so ignoring for now
---         else
---             print(event, func, finspect(i))
+        table_insert(_callStack, func)
+        details[func].curr  = os_clock()
+    else -- event == "return"
+        table_remove(_callStack)
+        if details[func].curr then
+            local time = os_clock() - details[func].curr
+            details[func].total = details[func].total + time
+            details[func].calls = details[func].calls + 1
+        else
+            -- don't keep record for a return without a corresponding call -- it's
+            -- probably from the profiler starting
+            details[func] = nil
         end
-        _previousFunc = nil
     end
 end
 
 module.clear = function()
-    calls, total, this = {}, {}, {}
+    _inProfiler = true
+    details = {}
+    _inProfiler = false
 end
 
 module.start = function()
-    local f, m, c = debug.gethook()
+    _inProfiler = true
+    local f, m, c = debug_gethook()
     if f ~= _profiler then
         _otherHook = { f, m, c }
-        debug.sethook(_profiler, "cr")
+        _callStack = {}
+        debug_sethook(_profiler, "cr")
         _coroutine_create = coroutine.create
         coroutine.create = function(f)
             local t = _coroutine_create(f)
-            debug.sethook(t, _profiler, "cr")
+            debug_sethook(t, _profiler, "cr")
             return t
         end
         _coroutine_wrap = coroutine.wrap
         coroutine.wrap = function(f)
             return _coroutine_wrap(function(...)
-                debug.sethook(_profiler, "cr")
+                debug_sethook(_profiler, "cr")
                 return f(...)
             end)
         end
     end
+    _inProfiler = false
 end
 
 module.stop = function()
-    local f, m, c = debug.gethook()
+    _inProfiler = true
+    local f, m, c = debug_gethook()
     if f == _profiler then
         if #_otherHook > 0 then
-            debug.sethook(_otherHook[1], _otherHook[2], _otherHook[3])
+            debug_sethook(_otherHook[1], _otherHook[2], _otherHook[3])
             _otherHook = {}
         else
-            debug.sethook(nil, "")
+            debug_sethook(nil, "")
         end
         if _coroutine_create then
             coroutine.create = _coroutine_create
@@ -101,24 +166,39 @@ module.stop = function()
             coroutine.wrap = _coroutine_wrap
             _coroutine_wrap = nil
         end
+
+        -- remove dangling entries, probably from the profiler itself
+        for k,v in pairs(details) do if v.calls == 0 then details[k] = nil end end
     end
+    _inProfiler = false
 end
 
-module.dump = function()
-    local tSz, cSz = 0, 0
+module.prec = 4
+
+module.dump = function(includeC)
+    _inProfiler = true
+    local tSz, cSz, fSz = 0, 0, 0
     local funcs = {}
 
-    for f,time in pairs(total) do
-        tSz = math.max(tSz, #tostring(string.format("%.3f", time)))
-        cSz = math.max(cSz, #tostring(calls[f]))
-        table.insert(funcs, f)
+    for k,v in pairs(details) do
+        if includeC or v.source ~= "=[C]" then
+            tSz = math_max(tSz, #tostring(string_format("%." .. tostring(module.prec) .. "f", v.total)))
+            cSz = math_max(cSz, #tostring(v.calls))
+            fSz = math_max(fSz, #v.name)
+            v.avg = v.total / v.calls
+            table_insert(funcs, k)
+        end
     end
-    table.sort(funcs, function(a,b) return total[a] > total[b] end)
+    table_sort(funcs, function(a,b) return details[a].total > details[b].total end)
 
-    local fmtString = "%" .. tostring(tSz) .. ".3fs for %" .. tostring(cSz) .. "d calls :: %s"
+    local fmtString = "%" .. tostring(tSz) .. "." .. tostring(module.prec) .. "fs / %-" .. tostring(cSz) .. "d (%" .. tostring(tSz) .. "." .. tostring(module.prec) .. "fs) :: %-" .. tostring(fSz) .. "s (%s:%d)"
     for i,v in ipairs(funcs) do
-      hs.printf(fmtString, total[v], calls[v], v)
+        local item = details[v]
+        if includeC or item.source ~= "=[C]" then
+            hs_printf(fmtString, item.total, item.calls, item.avg, item.name, item.source, item.line)
+        end
     end
+    _inProfiler = false
 end
 
 return module
