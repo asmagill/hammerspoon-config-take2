@@ -46,7 +46,7 @@ _getMenuStructure = function(item)
 end
 
 module.getMenuItems = function(appObject, callback)
-    local ax = require"hs._asm.axuielement"
+    local ax = require"hs.axuielement"
     hs.assert(getmetatable(appObject) == hs.getObjectMetatable("hs.application"), "expect hs.application for first parameter")
     hs.assert(type(callback) == "function" or (getmetatable(callback) or {}).__call, "expected function for second parameter")
 

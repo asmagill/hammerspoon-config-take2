@@ -165,7 +165,7 @@ local extraCommandsTime = 10
 -- lightsOnFunction = function()
 --     module.remove("Lights")
 --     module.add("Lights", function() end)
--- 
+--
 --     module.add("On", function()
 --         for i, v in ipairs(hue.default:paths("lights", { on = false })) do hue.default:put(v .. "/state", { on = true }) end
 --         hue.default:put(hue.default:paths("lights", { type = "color" }, true)[1] .. "/state", { effect="none" })
@@ -194,7 +194,7 @@ local extraCommandsTime = 10
 --         module._lightTimer = nil
 --         module.remove("Lights")
 --         module.add("Lights", lightsOnFunction)
--- 
+--
 --         module.remove("On")
 --         module.remove("Off")
 --         module.remove("Dimmer")
@@ -202,13 +202,13 @@ local extraCommandsTime = 10
 --         module.remove("Night Mode")
 --     end)
 -- end
--- 
+--
 -- module.add("Lights", lightsOnFunction)
 
 module.add("Re-Load Hammerspoon", hs.reload)
-module.add("Re-Launch Hammerspoon", _asm.relaunch)
+module.add("Re-Launch Hammerspoon", hs.relaunch)
 module.add("Toggle Command List", function()
-    local axuielement = require"hs._asm.axuielement"
+    local axuielement = require"hs.axuielement"
     local dictationWindows = fnutils.ifilter(window.allWindows(), function(_)
         return _:role() == "AXButton" and _:application():name() == "Dictation"
     end)

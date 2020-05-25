@@ -12,14 +12,14 @@
 
 local module = {}
 
-local axuielement = require("hs._asm.axuielement")
+local axuielement = require("hs.axuielement")
 local application = require("hs.application")
 local canvas      = require("hs.canvas")
 local hotkey      = require("hs.hotkey")
 local screen      = require("hs.screen")
 local timer       = require("hs.timer")
 
-local axmetatable = hs.getObjectMetatable("hs._asm.axuielement")
+local axmetatable = hs.getObjectMetatable("hs.axuielement")
 local apmetatable = hs.getObjectMetatable("hs.application")
 
 -- may look into alternative when coroutine friendly Hammerspoon lands
