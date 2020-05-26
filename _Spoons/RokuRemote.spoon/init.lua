@@ -39,13 +39,17 @@ local logger   = require("hs.logger")
 local obj    = {
 -- Metadata
     name      = "RokuRemote",
-    version   = "0.1",
     author    = "A-Ron",
     homepage  = "https://github.com/asmagill/hammerspoon-config/tree/master/_Spoons/RokuRemote.spoon",
     license   = "MIT - https://opensource.org/licenses/MIT",
-    spoonPath = debug.getinfo(1, "S").source:match("^@(.+/).+%.lua$"),
+    spoonPath = spoons.scriptPath(),
     spoonMeta = "placeholder for _coresetup metadata creation",
 }
+
+-- version is outside of obj table definition to facilitate its auto detection by
+-- external documentation generation scripts
+obj.version   = "0.1"
+
 local metadataKeys = {} ; for k, v in require("hs.fnutils").sortByKeys(obj) do table.insert(metadataKeys, k) end
 
 obj.__index = obj
@@ -387,24 +391,38 @@ local remoteMouseCallback = function(c, m, id, x, y)
                         -- they should get restarted during update for mouseUp or upon re-entry if mouse outside
                         doDelayedUpdate(.1) -- in case they release outside of the menu
                     else
-                        __internals._mouseMoveTracker = eventtap.new(
-                            { events.leftMouseDragged, events.leftMouseUp },
-                            function(e)
-                                if e:getType() == events.leftMouseUp then
-                                    __internals._mouseMoveTracker:stop()
-                                    __internals._mouseMoveTracker = nil
-                                else
-                                    local mousePosition = mouse.getAbsolutePosition()
-                                    __spoonVariables.position = {
-                                        x = mousePosition.x - x,
-                                        y = mousePosition.y - y,
-                                    }
-                                    __internals._rCanvas:topLeft(__spoonVariables.position)
-
-                                end
+--                         __internals._mouseMoveTracker = eventtap.new(
+--                             { events.leftMouseDragged, events.leftMouseUp },
+--                             function(e)
+--                                 if e:getType() == events.leftMouseUp then
+--                                     __internals._mouseMoveTracker:stop()
+--                                     __internals._mouseMoveTracker = nil
+--                                 else
+--                                     local mousePosition = mouse.getAbsolutePosition()
+--                                     __spoonVariables.position = {
+--                                         x = mousePosition.x - x,
+--                                         y = mousePosition.y - y,
+--                                     }
+--                                     __internals._rCanvas:topLeft(__spoonVariables.position)
+--
+--                                 end
+--                             end
+--                         ):start()
+                        __internals._mouseMoveTracker = coroutine.wrap(function()
+                            while __internals._mouseMoveTracker do
+                                local pos = mouse.getAbsolutePosition()
+                                __spoonVariables.position = {
+                                    x = pos.x - x,
+                                    y = pos.y - y,
+                                }
+                                c:topLeft(__spoonVariables.position)
+                                coroutine.applicationYield()
                             end
-                        ):start()
+                        end)
+                        __internals._mouseMoveTracker()
                     end
+                elseif m == "mouseUp" then
+                    __internals._mouseMoveTracker = nil
                 end
 --             elseif id == "_Keyboard" then
             else
@@ -715,7 +733,6 @@ obj.hide = function(self)
             __internals._sleepWatcher = nil
 
             if __internals._mouseMoveTracker then
-                __internals._mouseMoveTracker:stop()
                 __internals._mouseMoveTracker = nil
             end
         end

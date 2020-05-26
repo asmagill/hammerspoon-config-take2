@@ -36,13 +36,17 @@ local logger   = require("hs.logger")
 local obj    = {
 -- Metadata
     name      = "RokuControl",
-    version   = "0.1",
     author    = "A-Ron",
     homepage  = "https://github.com/asmagill/hammerspoon-config/tree/master/_Spoons/RokuControl.spoon",
     license   = "MIT - https://opensource.org/licenses/MIT",
-    spoonPath = debug.getinfo(1, "S").source:match("^@(.+/).+%.lua$"),
+    spoonPath = spoons.scriptPath(),
     spoonMeta = "placeholder for _coresetup metadata creation",
 }
+
+-- version is outside of obj table definition to facilitate its auto detection by
+-- external documentation generation scripts
+obj.version   = "0.1"
+
 local metadataKeys = {} ; for k, v in require("hs.fnutils").sortByKeys(obj) do table.insert(metadataKeys, k) end
 
 local xml     = dofile(obj.spoonPath .. "qduXML.lua")
@@ -542,11 +546,6 @@ obj.addDevice = function(self, host, port, headers)
             local entry = self.__devices[serialNumber]
             entry.host = host
             entry.port = port
---             local name = b:match("<user%-device%-name>(.+)</user%-device%-name>")
---             if not name then name = b:match("<friendly%-device%-name>(.+)</friendly%-device%-name>") end
---             if not name then name = b:match("<friendly%-model%-name>(.+)</friendly%-model%-name>") end
---             if not name then name = b:match("<default%-device%-name>(.+)</default%-device%-name>") end
---             if not name then name = serialNumber end
 
             local name = xml.entityValue(data("user-device-name")[1])     or
                          xml.entityValue(data("friendly-device-name")[1]) or
