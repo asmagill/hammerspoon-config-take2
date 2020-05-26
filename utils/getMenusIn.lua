@@ -6,7 +6,7 @@ local kAXMenuItemModifierOption = (1 << 1)
 local kAXMenuItemModifierShift = (1 << 0)
 
 local _getMenuStructure
-_getMenuStructure = function(item)
+_getMenuStructure = function(item, incApp)
     local values = item:allAttributeValues()
     local thisMenuItem = {
         AXTitle                = values["AXTitle"] or "",
@@ -18,9 +18,9 @@ _getMenuStructure = function(item)
         AXMenuItemCmdGlyph     = values["AXMenuItemCmdGlyph"] or "",
     }
 
---     if thisMenuItem["AXTitle"] == "Apple" then
---         thisMenuItem = nil
---     else
+    if thisMenuItem["AXTitle"] == "Apple" and not incApp then
+        thisMenuItem = nil
+    else
         local role = thisMenuItem["AXRole"]
 
         local modsDst = nil
@@ -34,33 +34,40 @@ _getMenuStructure = function(item)
         thisMenuItem["AXMenuItemCmdModifiers"] = modsDst
 
         local children = {}
-        for i = 1, #item, 1 do table.insert(children, _getMenuStructure(item[i])) end
+        for i = 1, #item, 1 do table.insert(children, _getMenuStructure(item[i], incApp)) end
         if #children > 0 then thisMenuItem["AXChildren"] = children end
 
         if not (role == "AXMenuItem" or role == "AXMenuBarItem") then
             thisMenuItem = (#children > 0) and children or nil
         end
---     end
-    coroutine.applicationYield()
+    end
+    if coroutine.isyieldable() then coroutine.applicationYield() end
     return thisMenuItem
 end
 
-module.getMenuItems = function(appObject, callback)
+module.getMenuItems = function(appObject, callback, includeApple)
     local ax = require"hs.axuielement"
-    hs.assert(getmetatable(appObject) == hs.getObjectMetatable("hs.application"), "expect hs.application for first parameter")
-    hs.assert(type(callback) == "function" or (getmetatable(callback) or {}).__call, "expected function for second parameter")
+    if type(callback) == "boolean" and type(includeApple) == "nil" then callback, includeApple = nil, callback end
+
+    assert(getmetatable(appObject) == hs.getObjectMetatable("hs.application"), "expect hs.application for first parameter")
+    if callback then
+        assert(type(callback) == "function" or (getmetatable(callback) or {}).__call, "expected function for second parameter")
+    end
 
     local app = ax.applicationElement(appObject)
-    local menus
 
     local menuBar = app("menuBar")
     if menuBar then
-        coroutine.wrap(function(m, c)
-            local menus = _getMenuStructure(m)
-            c(menus)
-        end)(menuBar, callback)
+        if callback then
+            coroutine.wrap(function(m, c)
+                local menus = _getMenuStructure(m, includeApple)
+                c(menus)
+            end)(menuBar, callback)
+        else
+            return _getMenuStructure(menuBar, includeApple)
+        end
     else
-        callback(menus)
+        if callback then callback(nil) else return nil end
     end
 end
 
