@@ -20,9 +20,7 @@ local events = eventtap.event.types
 
 local module = {}
 
-local menuGetter = package.loaded["hs._asm.coroutineshim"].shimRequired and
-                   hs.getObjectMetatable("hs.application").__index.getMenuItems or
-                   require("utils.getMenusIn").getMenuItems
+local menuGetter = require("utils.getMenusIn").getMenuItems
 
 module.watchables = watchables.new("cheatsheet", true)
 
@@ -127,7 +125,7 @@ local generateHtml = function(allMenuItems)
               color:#000;
               font-size: ]]..module.fontSize..[[px;
             }
-            li.title{ text-align:center;}
+            li.title{ text-align:left;}
             ul, li{list-style: inside none; padding: 0 0 5px;}
             footer{
               position: fixed;
@@ -163,7 +161,7 @@ local generateHtml = function(allMenuItems)
               overflow:hidden;
             }
             .content.maincontent{
-            position: relative;
+              position: relative;
               height: 577px;
               margin-top: 46px;
             }
@@ -266,7 +264,7 @@ module.cs = hotkey.modal.new()
             else
                 module.cs:exit()
             end
-        end)
+        end, true)
     end
     function module.cs:exited()
         if module.myView then
