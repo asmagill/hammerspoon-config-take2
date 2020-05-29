@@ -2,7 +2,7 @@
 -- Tool for identifying elements in an application that might be of interest...
 --
 -- example use -- install this file in your ~/.hammerspoon directorym then, in the
--- Hammerspoon console type: dofile("axtypeMarker.lua").markApp("Finder", "AXButton")
+-- Hammerspoon console type: dofile("axtypeMarker.lua").markApplication("Finder", "AXButton")
 --
 -- The finder will be brought forward and a few seconds later red rectangles will be drawn
 -- around all the identified elements of the type specified.
@@ -14,6 +14,7 @@ local module = {}
 
 local axuielement = require("hs.axuielement")
 local application = require("hs.application")
+local window      = require("hs.window")
 local canvas      = require("hs.canvas")
 local hotkey      = require("hs.hotkey")
 local screen      = require("hs.screen")
@@ -21,24 +22,52 @@ local timer       = require("hs.timer")
 
 local axmetatable = hs.getObjectMetatable("hs.axuielement")
 local apmetatable = hs.getObjectMetatable("hs.application")
+local wnmetatable = hs.getObjectMetatable("hs.window")
 
--- may look into alternative when coroutine friendly Hammerspoon lands
--- local useCoroutines = coroutine.applicationYield and true or false
+module.markWindow = function(win, axtype, pattern)
+    local axwin
+    if type(win) == "string" then
+        axwin = axuielement.windowElement(window(win))
+    elseif getmetatable(win) == wnmetatable then
+        axwin = axuielement.windowElement(win)
+    elseif getmetatable(win) == axmetatable then
+        if win("role") == "AXWindow" then
+            axwin = win
+        else
+            axwin = win("window")
+        end
+    end
 
-module.markApp = function(app, axtype)
+    assert(axwin, "unable to identify window from '" .. tostring(win) .. "'")
+    return module.markElement(axwin, axtype, pattern)
+end
+
+module.markApplication = function(app, axtype, pattern)
     local axapp
     if type(app) == "string" then
         axapp = axuielement.applicationElement(application(app))
     elseif getmetatable(app) == apmetatable then
         axapp = axuielement.applicationElement(app)
     elseif getmetatable(app) == axmetatable then
-        axapp = app
+        if app("role") == "AXApplication" then
+            axapp = app
+        else
+            axapp = axuielement.applicationElementForPID(app:pid())
+        end
     end
+
     hs.assert(axapp, "unable to identify application from '" .. tostring(app) .. "'")
+    return module.markElement(axapp, axtype, pattern)
+end
+
+module.markElement = function(element, axtype, pattern)
+    assert(getmetatable(element) == axmetatable, "element is not an hs.axuielement object")
+    if type(pattern) == "nil" then pattern = true end
+    pattern = pattern and true or false
     axtype = tostring(axtype)
 
-    if axapp("role") == "AXApplication" then axapp:asHSApplication():activate(true) end
-    if axapp("role") == "AXWindow"      then axapp:asHSWindow():focus() end
+    if element("role") == "AXApplication" then element:asHSApplication():activate(true) end
+    if element("role") == "AXWindow"      then element:asHSWindow():focus() end
 
     local sframe  = screen.mainScreen():fullFrame()
     local markers = {}
@@ -50,11 +79,13 @@ module.markApp = function(app, axtype)
         h = 54
     }:appendElements{
         {
+            id          = "box",
             type        = "rectangle",
             fillColor   = { red = 0.5, alpha = 0.5 },
             strokeColor = { white = 1.0, alpha = 0.5 }
         },
         {
+            id            = "text",
             type          = "text",
             text          = "Please wait...",
             textColor     = { white = 1 },
@@ -63,12 +94,12 @@ module.markApp = function(app, axtype)
         }
     }:show()
 
-    axapp:getAllChildElements(function(items)
-        local elements = items:elementSearch({ role = axtype }, true)
+    return element:elementSearch(function(msg, elements)
         if #elements > 0 then
             local escapeClause
             escapeClause = hotkey.bind({}, "escape", nil, function()
-                pleaseWait:show()[2].text = "Clearing frames..."
+                pleaseWait["box"].fillColor = { red = 0.5, alpha = 0.5 }
+                pleaseWait["text"].text = "Clearing frames..."
                 local clearing
                 clearing = timer.doAfter(0.001, function()
                     for i,v in ipairs(markers) do v:delete() end
@@ -95,24 +126,25 @@ module.markApp = function(app, axtype)
                             }, {
                                 type          = "text",
                                 text          = tostring(i),
-                                textSize      = math.min(cf.h, cf.w) - 4,
+                                textSize      = math.min(cf.h, cf.w) - 8,
                                 textColor     = { white = 1.0 },
                                 textAlignment = "center",
                             }
                         }:show()
                     )
-                    -- no easy way to vertically align text, so move it's box instead
+                    -- no easy way to vertically align text, so move its box instead
                     local mc = markers[#markers]
                     mc[2].frame.y = (cf.h - mc:minimumTextSize(2, tostring(i)).h) / 2
                 end
             end
-            pleaseWait:hide()
+            pleaseWait["box"].fillColor = { green = 0.5, alpha = 0.5 }
+            pleaseWait["text"].text = "Press ESC to clear."
         else
             hs.printf("** no elements of type %s found for %s", axtype, tostring(app))
             pleaseWait:delete()
         end
 
-    end)
+    end, { role = axtype }, { isPattern = pattern })
 end
 
 
