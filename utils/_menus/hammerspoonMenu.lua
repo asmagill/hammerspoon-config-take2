@@ -125,10 +125,7 @@ watcherMenu:setIcon(image.imageFromName("statusicon"))
                   fn = hs.checkForUpdates,
               },
               { title = "-" },
-              { title = "Relaunch Hammerspoon", fn = function()
-                      os.execute([[ (while ps -p ]]..hs.processInfo.processID..[[ > /dev/null ; do sleep 1 ; done ; open -a "]]..hs.processInfo.bundlePath..[[" ) & ]])
-                      hs._exit(true, true)
-                  end,
+              { title = "Relaunch Hammerspoon", fn = hs.relaunch,
               },
               { title = "Quit Hammerspoon", fn = function() hs._exit(true, true) end },
           }

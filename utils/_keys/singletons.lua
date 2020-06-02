@@ -67,7 +67,7 @@ hotkey.bind(mods.CAsC, "r", function()
     end
 end, nil)
 
-hotkey.bind(mods.CASC, "r", function() _asm.relaunch() end, nil)
+hotkey.bind(mods.CASC, "r", hs.relaunch)
 
 hotkey.bind(mods.CAsC, "space", function() hints.windowHints() end, nil)
 

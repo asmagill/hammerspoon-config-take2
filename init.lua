@@ -1,4 +1,8 @@
-require("hs._asm.coroutineshim")
+local lVer = _VERSION:match("Lua (.+)$")
+package.path  = package.path  .. ";" .. os.getenv("HOME") .. "/.luarocks/share/lua/" .. lVer .. "/?.lua"
+                              .. ";" .. os.getenv("HOME") .. "/.luarocks/share/lua/" .. lVer .. "/?/init.lua"
+package.cpath = package.cpath .. ";" .. os.getenv("HOME") .. "/.luarocks/lib/lua/" .. lVer .. "/?.so"
+
 
 local logger = require("hs.logger")
 logger.historySize(1000)
