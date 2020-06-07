@@ -10,6 +10,8 @@ local hints       = require("hs.hints")
 local window      = require("hs.window")
 local doc         = require("hs.doc")
 local timer       = require("hs.timer")
+local axuielement = require("hs.axuielement")
+local axbrowse    = require("_scratch.axbrowse")
 
 hotkey.bind(mods.CAsC, "f12", function()
     local listener = require("utils.speech")
@@ -73,6 +75,19 @@ hotkey.bind(mods.CAsC, "space", function() hints.windowHints() end, nil)
 
 hotkey.bind(mods.CASC, "space", function()
     hints.windowHints(window.focusedWindow():application():allWindows())
+end)
+
+local lastApp
+hotkey.bind(mods.CAsC, "b", function()
+    local currentApp = axuielement.systemWideElement()("AXFocusedApplication") or
+                       axuielement.applicationElement(application.frontmostApplication())
+
+    if currentApp == lastApp then
+        axbrowse.browse()
+    else
+        lastApp = currentApp
+        axbrowse.browse(currentApp)
+    end
 end)
 
 return module
