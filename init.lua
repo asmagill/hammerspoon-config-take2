@@ -38,6 +38,7 @@ local timer       = require("hs.timer")
 local ipc         = require("hs.ipc")
 local alert       = require("hs.alert")
 local image       = require("hs.image")
+local math        = require("hs.math")
 
 -- something steals focus from an application which was focused before HS starts; capture that
 -- window and then we'll switch back to it at the end
@@ -101,6 +102,11 @@ end
 
 history = _asm._actions.consoleHistory.history
 
+minimalHS = function()
+    require("hs.settings").set("MJConfigFile", "~/.config/hammerspoon/_minimal/init.lua")
+    hs.relaunch()
+end
+
 -- preview = _asm._actions.quickPreview.preview
 
 _asm.gc  = require("utils.gc")
@@ -125,7 +131,7 @@ end
 print()
 
 -- refocus captured window from begining
-timer.doAfter(1, function()
+timer.doAfter(math.minFloat, function()
     if fmW then
         fmW:focus()
 --     else
