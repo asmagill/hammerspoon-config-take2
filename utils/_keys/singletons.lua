@@ -53,8 +53,6 @@ end)
 
 local windowHolder
 hotkey.bind(mods.CAsC, "r", function()
---     local conswin = window.get("Hammerspoon Console")
---     if conswin and application.get("Hammerspoon"):isFrontmost() then
     local hspoon = application.applicationsForBundleID(hs.processInfo.bundleID)[1]
     local conswin = hspoon:mainWindow()
     if conswin and hspoon:isFrontmost() then

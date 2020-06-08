@@ -20,16 +20,6 @@ inspecta = function(what, how) return inspectWrapper(what, how, {
     process = function(i,p) if p[#p] ~= "n" then return i end end
 }) end
 
--- finspect = function(...)
---     local args = table.pack(...)
---     if args.n == 1 and type(args[1]) == "table" then
---         args = args[1]
---     else
---         args.n = nil -- supress the count from table.pack
---     end
---     return (inspect(args):gsub("%s+", " "))
--- end
-
 finspect = function(...)
     local args = table.pack(...)
     if args.n == 1 and type(args[1]) == "table" then
@@ -78,8 +68,7 @@ end
 cbinspect = function (...) print(timestamp() .. ":: " .. finspect(...)) end
 
 module.help = function(...)
-    local output = [[
-
+    return [[
 This module creates some shortcuts for inspecting Lua data:
 
     inspect   - equivalent to `hs.inspect`
@@ -111,10 +100,7 @@ This module creates some shortcuts for inspecting Lua data:
 
     timestamp([number]) - returns the current or specified time as a string in the format
                           of 'YYYY-MM-DD hh:mm:ss.nnnn'
-
-
 ]]
-    return output
 end
 
 module = setmetatable(module, {
@@ -122,4 +108,4 @@ module = setmetatable(module, {
     __call     = function(self, ...) return self.help(...) end,
 })
 
-return module
+return setmetatable(module, { __tostring = module.help })
