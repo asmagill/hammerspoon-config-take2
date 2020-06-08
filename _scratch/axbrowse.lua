@@ -10,19 +10,17 @@
 -- When you select an end node, or escape out, you can return to the last place you were
 -- at with `axbrowse.browse()`
 --
--- axbrowse.browse(nil) will browse the frontmost application as determined by
--- `hs.axuielement.systemWideElement()("AXFocusedApplication")` -- which will be
+-- axbrowse.browse(nil) will browse the frontmost application -- which will be
 -- Hammerspoon if you're doing this from the console.
 --
 --      -- add the following to your `init.lua` file to make a hotkey to pull up the
 --      -- browser in the frontmost application:
+--
+--       -- adjust require to where you install this relative to ~/.hammerspoon
 --      local axbrowse = require("axbrowse")
 --      local lastApp
 --      hs.hotkey.bind({"cmd", "alt", "ctrl"}, "b", function()
---          -- some apps (Skype) aren't registered by the systemWideElement, so fallback
---          -- by getting the application element through it's hs.application object
---          local currentApp = hs.axuielement.systemWideElement()("AXFocusedApplication") or
---                             hs.axuielement.applicationElement(hs.application.frontmostApplication())
+--          local currentApp = hs.axuielement.applicationElement(hs.application.frontmostApplication())
 --          if currentApp == lastApp then
 --              axbrowse.browse() -- try to continue from where we left off
 --          else
@@ -33,7 +31,7 @@
 --
 -- As you select elements in the chooser window, a line will be printed to the console
 -- which shows the path to the end node or action you finally select. These lines can
--- be copied into your own scripts and only the initial text "object" needs to be
+-- be copied into your own scripts and only the initial text "obj" needs to be
 -- replaced with the actual element you started browsing from.
 --
 
@@ -46,28 +44,31 @@ local eventtap    = require("hs.eventtap")
 local application = require("hs.application")
 local canvas      = require("hs.canvas")
 
+-- Used for debugging
+    local cbinspect = function(...)
+        local args = table.pack(...)
+        if args.n == 1 and type(args[1]) == "table" then
+            args = args[1]
+        else
+            args.n = nil -- supress the count from table.pack
+        end
+
+        local date = timer.secondsSinceEpoch()
+        local timestamp = os.date("%F %T" .. string.format("%-5s", ((tostring(date):match("(%.%d+)$")) or "")), math.floor(date))
+
+        print(timestamp .. ":: " .. inspect(args, { newline = " ", indent = "" }))
+    end
+
+-- if Hamemrspoon goes away, the fact that this becomes invalid is kind of irrelevant because we disappear, too
+local _hammerspoon = ax.applicationElement(hs.application.applicationsForBundleID(hs.processInfo.bundleID)[1])
 local axmetatable = hs.getObjectMetatable("hs.axuielement")
 
 local module = {}
 
--- Useful as a single word shorthand when testing callbacks functions.
-local cbinspect = function(...)
-    local args = table.pack(...)
-    if args.n == 1 and type(args[1]) == "table" then
-        args = args[1]
-    else
-        args.n = nil -- supress the count from table.pack
-    end
-
-    local date = timer.secondsSinceEpoch()
-    local timestamp = os.date("%F %T" .. string.format("%-5s", ((tostring(date):match("(%.%d+)$")) or "")), math.floor(date))
-
-    print(timestamp .. ":: " .. inspect(args, { newline = " ", indent = "" }))
-end
-
 local storage
 local _chooser
-
+local _canvas
+local _errMsg
 
 local buildChoicesForObject = function(obj)
     local aav        = {}
@@ -172,7 +173,7 @@ local buildChoicesForObject = function(obj)
 end
 
 local chooserCallback = function(item)
-    if module.debugCallback then
+    if module.debug then
         cbinspect(item)
         cbinspect(storage)
     end
@@ -195,14 +196,8 @@ local chooserCallback = function(item)
     end
 
     if item.attribute then
-        if item.settable and eventtap.checkKeyboardModifiers().cmd then
-            obj = nil
-            item.cmdAddition = item.altCmd
-            item.cmdNoAdd = true
-        else
-            obj = objDetails.element(item.attribute)
-            if type(obj) == "table" then objDetails.tableAttribute = item.attribute end
-        end
+        obj = objDetails.element(item.attribute)
+        if type(obj) == "table" then objDetails.tableAttribute = item.attribute end
     end
 
     if item.index then
@@ -212,47 +207,69 @@ local chooserCallback = function(item)
         local quote = (type(item.label) == "number") and "" or '"'
     end
 
-    if obj then
-        _chooser:choices(buildChoicesForObject(obj)):show()
-    else
-        if item.action and eventtap.checkKeyboardModifiers().cmd then
-            objDetails.element("do" .. item.action)
-        end
+    if item.settable and eventtap.checkKeyboardModifiers().cmd then
+        obj = nil
+        item.cmdAddition = item.altCmd
+        item.cmdNoAdd = true
     end
 
     -- to simplify removal when going back (see above), every step is bracket by parens or
     -- brackets; however I prefer using `.key` to `["key"]` when accessing tables
     print(((storage._path .. (item.cmdAddition or "")):gsub("%[\"(%w+)\"%]", ".%1")))
     if not item.cmdNoAdd then storage._path = storage._path .. (item.cmdAddition or "") end
+
+    if obj then
+        _chooser:choices(buildChoicesForObject(obj)):show():query(nil):selectedRow(1)
+    else
+        if item.action and eventtap.checkKeyboardModifiers().cmd then
+            objDetails.element("do" .. item.action)
+        end
+    end
 end
 
-local _canvas
-
--- if Hamemrspoon goes away, the fact that this becomes invalid is kind of irrelevant because we won't either
-local _hammerspoon = ax.applicationElement(hs.application.applicationsForBundleID(hs.processInfo.bundleID)[1])
-
 local showingChooser = function()
+    -- it seems if the chooser is double triggered, it never calls the callback or hide for the initial one
+    if _canvas then
+        _canvas:delete()
+        _canvas = nil
+    end
     -- chooser window attribute doesn't exist until after it's showing, so we can't get the frame until
     -- after it's visible
     for i,v in ipairs(_hammerspoon) do
         if v("AXTitle") == "Chooser" then
+            -- because of window shadow for chooser, can't perfectly match up lines, so draw canvas slightly larger
+            -- and make it look like the chooser is part of the canvas
             local chooserFrame = v("AXFrame")
-            _canvas = canvas.new{ x = chooserFrame.x, y = chooserFrame.y - 22, h = 22, w = chooserFrame.w }:show()
+            _canvas = canvas.new{
+                x = chooserFrame.x - 5,
+                y = chooserFrame.y - 44,
+                h = chooserFrame.h + 49,
+                w = chooserFrame.w + 10
+            }:show():level(canvas.windowLevels.mainMenu + 3):orderBelow()
             _canvas[#_canvas + 1] = {
                 type        = "rectangle",
                 action      = "strokeAndFill",
-                strokeColor = { list = "System", name = "gridColor" },
+                strokeColor = { list = "System", name = "controlBackgroundColor" },
                 strokeWidth = 1.5,
                 fillColor   = { list = "System", name = "windowBackgroundColor" },
             }
             _canvas[#_canvas + 1] = {
                 type          = "text",
+                frame         = { x = 0, y = 0, h = 22, w = chooserFrame.w + 10  },
                 text          = storage._appElement("AXTitle"),
                 textColor     = { list="System", name = "textColor" },
                 textSize      = 16,
                 textAlignment = "center",
             }
-
+            _canvas[#_canvas + 1] = {
+                type          = "text",
+                frame         = { x = 5, y = 22, h = 22, w = chooserFrame.w },
+                text          = _errMsg or (storage._path:gsub("%[\"(%w+)\"%]", ".%1")),
+                textColor     = { red = (_errMsg and 1 or 0), green = (_errMsg and 0 or 1) },
+                textSize      = 14,
+                textLineBreak = "truncateHead",
+            }
+            _errMsg = nil
             return
         end
     end
@@ -270,29 +287,49 @@ end
 _chooser = chooser.new(chooserCallback):searchSubText(true):showCallback(showingChooser):hideCallback(hidingChooser)
 -- module._chooser = _chooser
 
-module.debugCallback = false
+module.debug = false
 
 module.browse = function(...)
     local args = table.pack(...)
     if (args.n > 0) then
         obj = args[1]
-        storage = { _path = "object" }
+        storage = { _path = "obj" }
         if obj then
             local appElement = obj
             while appElement("AXRole") ~= "AXApplication" do appElement = appElement("AXParent") end
             storage._appElement = appElement
-            _chooser:choices(buildChoicesForObject(obj))
+            _chooser:choices(buildChoicesForObject(obj)):query(nil):selectedRow(1)
+        end
+    else
+        if _chooser:isVisible() then -- called with no value but visible, so assume it's a toggle
+            _chooser:cancel()
+            return
+        else -- called with no value -- make sure obj is still valid
+            if storage and #storage > 0 then
+                if not storage[#storage].element:isValid() then
+                    _errMsg = "** recently visited element no longer valid; resetting to application root"
+                    print(_errMsg)
+                    if not storage._appElement:isValid() then
+                        _errMsg = "** recently visited application no longer valid; resetting to frontmost application"
+                        print(_errMsg)
+
+                        storage = nil
+                        return module.browse()
+                    else
+                        return module.browse(storage._appElement)
+                    end
+                end
+            end
         end
     end
 
     if not storage or #storage == 0 then
-        local currentApp = ax.systemWideElement()("AXFocusedApplication") or
-                           ax.applicationElement(application.frontmostApplication())
-        storage = { _path = "object", _appElement = currentApp }
-        _chooser:choices(buildChoicesForObject(currentApp))
+        local currentApp = ax.applicationElement(application.frontmostApplication())
+        storage = { _path = "obj", _appElement = currentApp }
+        _chooser:choices(buildChoicesForObject(currentApp)):query(nil):selectedRow(1)
     end
 
-    _chooser:show()
+    _chooser:show():query(nil):selectedRow(1)
 end
 
 return module

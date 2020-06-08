@@ -79,8 +79,7 @@ end)
 
 local lastApp
 hotkey.bind(mods.CAsC, "b", function()
-    local currentApp = axuielement.systemWideElement()("AXFocusedApplication") or
-                       axuielement.applicationElement(application.frontmostApplication())
+    local currentApp = axuielement.applicationElement(application.frontmostApplication())
 
     if currentApp == lastApp then
         axbrowse.browse()
