@@ -29,7 +29,7 @@ local host       = require("hs.host")
 local image      = require("hs.image")
 local caffeinate = require("hs.caffeinate")
 local eventtap   = require("hs.eventtap")
-
+local spoons     = require("hs.spoons")
 local events     = eventtap.event.types
 
 local roku     = hs.loadSpoon("RokuControl")

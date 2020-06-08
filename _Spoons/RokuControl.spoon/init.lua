@@ -30,6 +30,7 @@ local fnutils  = require("hs.fnutils")
 local settings = require("hs.settings")
 local utf8     = require("hs.utf8")
 local image    = require("hs.image")
+local spoons   = require("hs.spoons")
 
 local logger   = require("hs.logger")
 
