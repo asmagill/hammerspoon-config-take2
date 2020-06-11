@@ -36,21 +36,28 @@ module.chooser:fgColor{ list = "x11", name = "lightskyblue" }
                       if module.apps[i] then
                           local bid  = module.apps[i].kMDItemCFBundleIdentifier or "< not available >"
                           local path = module.apps[i].kMDItemPath
+
+                          local usedDate = module.apps[i].kMDItemLastUsedDate or -1
+                          local usedDateStr = string.format("%-19s", (usedDate ~= -1) and os.date("%F %T", usedDate) or "never")
+
 --                          if not path then
 --                              print("~~ null path for " .. finspect(module.apps[i]) .. " " .. (lookat(module.apps[i]):gsub("%s+", " ")))
 --                          else
                           if path then
                               table.insert(results, {
                                   text       = module.apps[i].kMDItemDisplayName,
-                                  subText    = path .. " (" .. bid .. ")",
+                                  subText    = "Opened: " .. usedDateStr .. "\t(" .. bid .. " @ " .. path .. ")",
+--                                   subText    = path .. " (" .. bid .. "), Last Used: " .. os.date("%c", usedDate),
                                   image      = bid and image.imageFromAppBundle(bid) or image.imageFromName(image.systemImageNames.StopProgressFreestandingTemplate),
                                   index      = i,
                                   path       = path,
+                                  lastOpened = usedDate,
                               })
                           end
                       end
                   end
-                  table.sort(results, function(a, b) return tostring(a.text) < tostring(b.text) end)
+--                   table.sort(results, function(a, b) return tostring(a.text) < tostring(b.text) end)
+                  table.sort(results, function(a, b) return tostring(a.lastOpened) > tostring(b.lastOpened) end)
                   return results
               end):rightClickCallback(function(row)
                   if row == 0 then print("no row") ; return end
