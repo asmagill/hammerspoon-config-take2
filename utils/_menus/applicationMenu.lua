@@ -27,7 +27,10 @@ local appMenu = FLM.new("Apps") ;
 --appMenu:folderFunction(function(x) os.execute([[open -a Finder "]]..x..[["]]) end)
 
 -- Specify the root directory to start from.
---appMenu:rootDirectory("/Applications")
+appMenu:rootDirectory({
+    OS   = "/System/Applications",
+    User = "/Applications",
+})
 
 -- The maximum folder depth that we will search for files or folders which match the
 -- criteria.  This prevents potential loops, which would ultimately crash HS.
