@@ -1,6 +1,18 @@
 --
 -- Uses hs.chooser to browse an objects attributes and children
 --
+
+-- TODO:
+--      add flag so output is formal (uses method names) or informal (uses __call metamethod helpers)
+--      option to copy final path into clipboard?
+--      can we replace "obj" with something better?
+--          if application object could use `hs.application(AXTitle)`
+--          if windoe object could do same with hs.window and window title
+--          if other, *then* use obj since we'll assume since they passed it in, they know how to get it...
+--
+--      what more before making this a spoon (after axuielement in core, of course)?
+
+
 -- Example use:
 --
 --      -- Copy this file into your Hammerspoon config dir, usually ~/.hammerspoon. Then:
@@ -83,29 +95,13 @@ local buildChoicesForObject = function(obj)
         table.insert(choices, { text = "<-- Go back" })
     end
 
-    if objIsAXUIElement then
-        local actions = obj:actionNames()
-        if actions then
-            table.sort(actions)
-            for i,v in ipairs(actions) do
-                table.insert(choices, {
-                    text        = "Action: " .. v,
-                    subText     = (obj:actionDescription(v) or "no description") .. ", hold down ⌘ when selecting to perform",
-                    action      = v,
-                    cmdAddition = [[("do]] .. v .. [[")]],
-                    cmdNoAdd = true,
-                })
-            end
-        end
-    end
-
     table.insert(storage, {
         element = obj,
     })
 
     if objIsAXUIElement then
-        aav = obj:allAttributeValues()
-        textPrefix = "Attribute: "
+        aav = obj:allAttributeValues(true)
+--         textPrefix = "Attribute: "
     end
 
     if objIsTable then
@@ -118,14 +114,26 @@ local buildChoicesForObject = function(obj)
 
     for k,v in fnutils.sortByKeys(aav) do
         local entry = {}
-        if type(v) == "table" then
-            entry.text = textPrefix .. k .. " { ... }   -->"
+        if type(v) == "table" and v._code == -25212 then
+            entry.text     = textPrefix .. k .. " = nil"
+            entry.subText  = ""
+--             entry.subText  = "Value: nil"
+            entry.cmdNoAdd = true
+        elseif type(v) == "table" then
+            entry.text = textPrefix .. k .. " = { ... }"
             if #v == 0 and next(v) then
                 entry.subText = "key-value table"
+                entry.text = entry.text .. "   -->"
             else
-                entry.subText = tostring(#v) .. " entries"
+                if #v > 0 then
+                    entry.text = entry.text .. "   -->"
+                    entry.subText = (#v > 1) and (tostring(#v) .. " entries") or "1 entry"
+                else
+                    entry.cmdNoAdd = true
+                    entry.subText = "0 entries"
+                end
             end
-            entry[(objIsTable and "index" or "attribute")] = k
+            if not entry.cmdNoAdd then entry[(objIsTable and "index" or "attribute")] = k end
         elseif getmetatable(v) == axmetatable then
             if objIsTable then
                 entry.text = tostring(k) .. ": " .. tostring(v("role"))
@@ -137,12 +145,13 @@ local buildChoicesForObject = function(obj)
             entry.text = entry.text .. "   -->"
             entry.subText = "Role: " .. tostring(v("role")) .. ", Subrole: " .. tostring(v("subrole")) .. ", Description: " .. tostring(v("valueDescription") or v("description") or v("roleDescription"))
         else
-            entry.text     = textPrefix .. k
-            entry.subText  = "Value: " .. tostring(v)
+            entry.text     = textPrefix .. k .. " = " .. inspect(v)
+            entry.subText  = ""
+--             entry.subText  = "Value: " .. inspect(v)
             entry.cmdNoAdd = true
         end
         if objIsAXUIElement and obj:isAttributeSettable(k) then
-            entry.subText = entry.subText .. ", is settable (hold down ⌘ when selecting to see format)"
+            entry.subText = entry.subText .. ((#entry.subText > 0) and ", s" or "S") .. "ettable (hold down ⌘ when selecting to show setter form)"
             entry.settable = true
         end
 
@@ -157,6 +166,20 @@ local buildChoicesForObject = function(obj)
     end
 
     if objIsAXUIElement then
+        local actions = obj:actionNames()
+        if actions then
+            table.sort(actions)
+            for i,v in ipairs(actions) do
+                table.insert(choices, {
+                    text        = "Action: " .. v,
+                    subText     = (obj:actionDescription(v) or "no description") .. ", hold down ⌘ when selecting to perform",
+                    action      = v,
+                    cmdAddition = [[("do]] .. v .. [[")]],
+                    cmdNoAdd = true,
+                })
+            end
+        end
+
         local pAttributes = obj:parameterizedAttributeNames()
         if pAttributes then
             table.sort(pAttributes)
