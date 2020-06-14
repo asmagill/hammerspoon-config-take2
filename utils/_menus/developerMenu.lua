@@ -78,7 +78,7 @@ devMenu:rootDirectory({
                         ["HS Config"]   = hs.configdir,
                         ["Arduino"]     = os.getenv("HOME").."/Documents/Arduino",
                         ["Modules-WIP"]  = "/opt/amagill/src/hammerspoon/_asm/wip",
-                        ["Modules-Core"]  = "/opt/amagill/src/hammerspoon/_asm/core",
+--                         ["Modules-Core"]  = "/opt/amagill/src/hammerspoon/_asm/core",
                       })
 
 devMenu:subFolderDepth(15)
