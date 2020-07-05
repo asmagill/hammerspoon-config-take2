@@ -13,29 +13,23 @@
 local module = {}
 
 local axuielement = require("hs.axuielement")
-local application = require("hs.application")
-local window      = require("hs.window")
 local canvas      = require("hs.canvas")
 local hotkey      = require("hs.hotkey")
 local screen      = require("hs.screen")
 local timer       = require("hs.timer")
 
 local axmetatable = hs.getObjectMetatable("hs.axuielement")
-local apmetatable = hs.getObjectMetatable("hs.application")
-local wnmetatable = hs.getObjectMetatable("hs.window")
 
 module.markWindow = function(win, axtype, pattern)
     local axwin
-    if type(win) == "string" then
-        axwin = axuielement.windowElement(window(win))
-    elseif getmetatable(win) == wnmetatable then
-        axwin = axuielement.windowElement(win)
-    elseif getmetatable(win) == axmetatable then
-        if win("role") == "AXWindow" then
+    if getmetatable(win) == axmetatable then
+        if win.AXRole == "AXWindow" then
             axwin = win
         else
-            axwin = win("window")
+            axwin = win.AXWindow
         end
+    else
+        axwin = axuielement.windowElement(win)
     end
 
     assert(axwin, "unable to identify window from '" .. tostring(win) .. "'")
@@ -44,16 +38,14 @@ end
 
 module.markApplication = function(app, axtype, pattern)
     local axapp
-    if type(app) == "string" then
-        axapp = axuielement.applicationElement(application(app))
-    elseif getmetatable(app) == apmetatable then
-        axapp = axuielement.applicationElement(app)
-    elseif getmetatable(app) == axmetatable then
-        if app("role") == "AXApplication" then
+    if getmetatable(app) == axmetatable then
+        if app.AXRole == "AXApplication" then
             axapp = app
         else
             axapp = axuielement.applicationElementForPID(app:pid())
         end
+    else
+        axapp = axuielement.applicationElement(app)
     end
 
     hs.assert(axapp, "unable to identify application from '" .. tostring(app) .. "'")
@@ -66,8 +58,8 @@ module.markElement = function(element, axtype, pattern)
     pattern = pattern and true or false
     axtype = tostring(axtype)
 
-    if element("role") == "AXApplication" then element:asHSApplication():activate(true) end
-    if element("role") == "AXWindow"      then element:asHSWindow():focus() end
+    if element.AXRole == "AXApplication" then element:asHSApplication():activate(true) end
+    if element.AXRole == "AXWindow"      then element:asHSWindow():focus() end
 
     local sframe  = screen.mainScreen():fullFrame()
     local markers = {}
@@ -113,8 +105,8 @@ module.markElement = function(element, axtype, pattern)
             local noFrameLabel = "~f"
 
             for i,v in ipairs(elements) do
-                local cf = v:attributeValue("AXFrame")
-                hs.printf("%4d. %" .. tostring(#noFrameLabel) .. "s - %s", i, (cf and "" or noFrameLabel), tostring(v:attributeValue("AXTitle")))
+                local cf = v.AXFrame
+                hs.printf("%4d. %" .. tostring(#noFrameLabel) .. "s - %s", i, (cf and "" or noFrameLabel), tostring(v.AXTitle or v.AXValueDescription or v.AXDescription or v.AXRoleDescription))
                 if (cf) then
                     table.insert(markers,
                         canvas.new(cf):appendElements{
@@ -144,7 +136,7 @@ module.markElement = function(element, axtype, pattern)
             pleaseWait:delete()
         end
 
-    end, { role = axtype }, { isPattern = pattern })
+    end, axuielement.searchCriteriaFunction{ attribute = "AXRole", value = axtype, pattern = true })
 end
 
 

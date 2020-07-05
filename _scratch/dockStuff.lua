@@ -8,27 +8,39 @@
 --
 -- Most of this has been gleaned by viewing the details captured with:
 --
--- f = hs.axuielement.applicationElement(hs.application("Dock")):elementSearch(function(m, r) f2 = r ; print("Done", #r) end, { objectOnly = false })
+--       f = hs.axuielement.applicationElement("Dock"):elementSearch(function(m, r, c)
+--          print(m, c, r:runTime())
+--       end, { objectOnly = false })
 --
--- Note expose group only exists in Docks elements when expose is actually active, so it was captured with:
---
--- hs.axuielement.applicationElement(hs.application("Dock")):elementSearch(function(msg, e) if #e > 0 then e[1]("doShowExpose") else hs.alert("Couldn't find application!") end end, { title = "Finder" }, { isPattern = true }) ; hs.timer.doAfter(1, function() local s = os.time() ; f = hs.axuielement.applicationElement(hs.application("Dock")):elementSearch(function(m, r) f2 = r ; print(os.time() - s, #r) end, { objectOnly = false }) end)
---
+-- Expose group only exists in Dock's elements when expose is actually active, so it was captured with:
 -- (Note the timer to do the query after first invoking "doShowExpose" on the Finder)
+--
+--       hs.axuielement.applicationElement("Dock"):elementSearch(function(msg, e)
+--           if #e > 0 then e[1]:doAXShowExpose() else hs.alert("Couldn't find application!") end
+--       end, hs.axuielement.searchCriteriaFunction{ attribute = "AXTitle", value = "Finder", pattern = true })
+--       t = hs.timer.doAfter(1, function()
+--           f = hs.axuielement.applicationElement("Dock"):elementSearch(function(m, r, c)
+--               print(m, c, r:runTime())
+--           end, { objectOnly = false })
+--           t = nil
+--       end)
 --
 -- Similar for Mission Control, though I entered it manually... haven't found a way to do so programatically yet
 --
--- hs.timer.doAfter(2, function() local s = os.time() ; f = hs.axuielement.applicationElement(hs.application("Dock")):elementSearch(function(m, r) f2 = r ; print(os.time() - s, #r) end, { objectOnly = false }) end)
+--       t = hs.timer.doAfter(2, function()
+--           f = hs.axuielement.applicationElement("Dock"):elementSearch(function(m, r, c)
+--               print(m, c, r:runTime())
+--           end, { objectOnly = false })
+--       end)
 --
 
 local module = {}
 
-local application = require("hs.application")
 local axuielement = require("hs.axuielement")
 local inspect     = require("hs.inspect")
 
 local getDock = function()
-    local dockElement = axuielement.applicationElement(application("Dock"))
+    local dockElement = axuielement.applicationElement("Dock")
     assert(dockElement, "Unable to aquire Dock accessibility element")
     return dockElement
 end
@@ -37,8 +49,8 @@ local getItemListFromDock = function()
     local dockElement = getDock()
     local axlist
     for i,v in ipairs(dockElement) do
-        if v("role") == "AXList" and v("roleDescription") == "list" then
-            axlist = v("children")
+        if v.AXRole == "AXList" and v.AXRoleDescription == "list" then
+            axlist = v.AXChildren
             break
         end
     end
@@ -53,7 +65,7 @@ module.appsInDock = function()
     local axlist = getItemListFromDock()
 
     for i,v in ipairs(axlist) do
-        if v("subrole") == "AXApplicationDockItem" then results[v("title")] = v("isApplicationRunning") end
+        if v.AXSubrole == "AXApplicationDockItem" then results[v.AXTitle] = v.AXIsApplicationRunning end
     end
 
     local asString = inspect(results)
@@ -64,11 +76,11 @@ end
 module.enterExposeFor = function(name)
     local axlist = getItemListFromDock()
     for i,v in ipairs(axlist) do
-        if v("subrole") == "AXApplicationDockItem" and v("title") == name then
+        if v.AXSubrole == "AXApplicationDockItem" and v.AXTitle == name then
             -- do it again to exit -- we setup a hotkey with the spacebar to exit expose
             local vk
-            vk = hs.hotkey.bind({}, "space", nil, function() v:doShowExpose() ; vk:disable() ; vk = nil end)
-            v:doShowExpose()
+            vk = hs.hotkey.bind({}, "space", nil, function() v:doAXShowExpose() ; vk:disable() ; vk = nil end)
+            v:doAXShowExpose()
             return
         end
     end
@@ -83,7 +95,7 @@ module.isInAppExpose = function()
 
     local answer = false
     for i,v in ipairs(dockElement) do
-        if v("identifier") == "appexpose" then
+        if v.AXIdentifier == "appexpose" then
             answer = true
             break
         end
@@ -98,7 +110,7 @@ module.isInMissionControl = function()
 
     local answer = false
     for i,v in ipairs(dockElement) do
-        if v("identifier") == "mc" then
+        if v.AXIdentifier == "mc" then
             answer = true
             break
         end
@@ -111,15 +123,15 @@ end
 module.doMenuItem = function(app, item)
     local axlist = getItemListFromDock()
     for i,v in ipairs(axlist) do
-        if v("subrole") == "AXApplicationDockItem" and v("title") == app then
-            v:doShowMenu()
+        if v.AXSubrole == "AXApplicationDockItem" and v.AXTitle == app then
+            v:doAXShowMenu()
             for i2,v2 in ipairs(v[1]) do -- first child of application will be "AXMenu" and its children, the items in it.
-                if v2("title") == item then
-                    v2:doPress()
+                if v2.AXTitle == item then
+                    v2:doAXPress()
                     return
                 end
             end
-            v:doShowMenu() -- close menu so we can error
+            v:doAXShowMenu() -- close menu so we can error
             error(tostring(item) .. " not found in " .. tostring(app) .. " menu list")
         end
     end

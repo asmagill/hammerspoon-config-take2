@@ -136,14 +136,14 @@ local buildChoicesForObject = function(obj)
             if not entry.cmdNoAdd then entry[(objIsTable and "index" or "attribute")] = k end
         elseif getmetatable(v) == axmetatable then
             if objIsTable then
-                entry.text = tostring(k) .. ": " .. tostring(v("role"))
+                entry.text = tostring(k) .. ": " .. tostring(v.AXRole)
                 entry.index = k
             else
                 entry.text = textPrefix .. k
                 entry.attribute = k
             end
             entry.text = entry.text .. "   -->"
-            entry.subText = "Role: " .. tostring(v("role")) .. ", Subrole: " .. tostring(v("subrole")) .. ", Description: " .. tostring(v("valueDescription") or v("description") or v("roleDescription"))
+            entry.subText = "Role: " .. tostring(v.AXRole) .. ", Subrole: " .. tostring(v.AXSubrole) .. ", Description: " .. tostring(v.AXValueDescription or v.AXDescription or v.AXRoleDescription)
         else
             entry.text     = textPrefix .. k .. " = " .. inspect(v)
             entry.subText  = ""
@@ -157,10 +157,10 @@ local buildChoicesForObject = function(obj)
 
         if objIsTable then
             local quote = (type(k) == "number") and "" or '"'
-            entry.cmdAddition = "[" .. quote .. tostring(k) .. quote .. "]"
+            entry.cmdAddition = (type(k) == "number") and ("[" .. tostring(k) .. "]") or ("." .. k)
         else
-            entry.cmdAddition = [[("]] .. k .. [[")]]
-            if entry.settable then entry.altCmd = [[("set]] .. k .. [[", ...)]] end
+            entry.cmdAddition = "." .. k
+            if entry.settable then entry.altCmd = entry.cmdAddition .. " = ..." end
         end
         table.insert(choices, entry)
     end
@@ -174,7 +174,7 @@ local buildChoicesForObject = function(obj)
                     text        = "Action: " .. v,
                     subText     = (obj:actionDescription(v) or "no description") .. ", hold down ⌘ when selecting to perform",
                     action      = v,
-                    cmdAddition = [[("do]] .. v .. [[")]],
+                    cmdAddition = ":do" .. v .. "()",
                     cmdNoAdd = true,
                 })
             end
@@ -187,7 +187,7 @@ local buildChoicesForObject = function(obj)
                 table.insert(choices, {
                     text        = "Parameterized Attribute: " .. v,
                     subText     = "",
-                    cmdAddition = [[("]] .. v .. [[", ...)]],
+                    cmdAddition = ":" .. v .. "WithParameter(...)",
                     cmdNoAdd = true,
                 })
             end
@@ -212,22 +212,22 @@ local chooserCallback = function(item)
         table.remove(storage)              -- remove the one we displayed
         objDetails = table.remove(storage) -- remove the one we're now at because it will be recreated
         obj = objDetails.element
-        if objDetails.attribute then obj = obj(objDetails.attribute) end
+        if objDetails.attribute then obj = obj[objDetails.attribute] end
         if objDetails.path then
             table.remove(objDetails.path)
             for i,v in ipairs(objDetails.path) do obj = obj[v] end
         end
-        storage._path = storage._path:match("^(.+)[%[%(].+[%)%]]$")
+        storage._path = storage._path:match("^(.*)[%.%[]%w+%]?$")
     end
 
     if item.attribute then
-        obj = objDetails.element(item.attribute)
+        obj = objDetails.element[item.attribute]
         if type(obj) == "table" then objDetails.tableAttribute = item.attribute end
     end
 
     if item.index then
         table.insert(objDetails.path, item.index)
-        obj = objDetails.element(objDetails.attribute)
+        obj = objDetails.element[objDetails.attribute]
         for i,v in ipairs(objDetails.path) do obj = obj[v] end
         local quote = (type(item.label) == "number") and "" or '"'
     end
@@ -238,16 +238,14 @@ local chooserCallback = function(item)
         item.cmdNoAdd = true
     end
 
-    -- to simplify removal when going back (see above), every step is bracket by parens or
-    -- brackets; however I prefer using `.key` to `["key"]` when accessing tables
-    print(((storage._path .. (item.cmdAddition or "")):gsub("%[\"(%w+)\"%]", ".%1")))
+    print(((storage._path .. (item.cmdAddition or ""))))
     if not item.cmdNoAdd then storage._path = storage._path .. (item.cmdAddition or "") end
 
     if obj then
         _chooser:choices(buildChoicesForObject(obj)):query(nil):selectedRow(1):show()
     else
         if item.action and eventtap.checkKeyboardModifiers().cmd then
-            objDetails.element("do" .. item.action)
+            print(objDetails.element:performAction(item.action))
         end
     end
 end
@@ -261,10 +259,10 @@ local showingChooser = function()
     -- chooser window attribute doesn't exist until after it's showing, so we can't get the frame until
     -- after it's visible
     for i,v in ipairs(_hammerspoon) do
-        if v("AXTitle") == "Chooser" then
+        if v.AXTitle == "Chooser" then
             -- because of window shadow for chooser, can't perfectly match up lines, so draw canvas slightly larger
             -- and make it look like the chooser is part of the canvas
-            local chooserFrame = v("AXFrame")
+            local chooserFrame = v.AXFrame
             _canvas = canvas.new{
                 x = chooserFrame.x - 5,
                 y = chooserFrame.y - 44,
@@ -281,7 +279,7 @@ local showingChooser = function()
             _canvas[#_canvas + 1] = {
                 type          = "text",
                 frame         = { x = 0, y = 0, h = 22, w = chooserFrame.w + 10  },
-                text          = storage._appElement("AXTitle"),
+                text          = storage._appElement.AXTitle,
                 textColor     = { list="System", name = "textColor" },
                 textSize      = 16,
                 textAlignment = "center",
@@ -289,7 +287,7 @@ local showingChooser = function()
             _canvas[#_canvas + 1] = {
                 type          = "text",
                 frame         = { x = 5, y = 22, h = 22, w = chooserFrame.w },
-                text          = _errMsg or (storage._path:gsub("%[\"(%w+)\"%]", ".%1")),
+                text          = _errMsg or (storage._path),
                 textColor     = { red = (_errMsg and 1 or 0), green = (_errMsg and 0 or 1) },
                 textSize      = 14,
                 textLineBreak = "truncateHead",
@@ -321,22 +319,7 @@ module.browse = function(...)
         storage = { _path = "obj" }
         if obj then
             local appElement = obj
-            if type(obj) == "string" or type(obj) == "number" then
-                local interimObj = window.find(obj)
-                if interimObj then
-                    appElement = ax.windowElement(interimObj)
-                    obj = appElement
-                else
-                    interimObj = application.find(obj)
-                    if interimObj then
-                        appElement = ax.applicationElement(interimObj)
-                        obj = appElement
-                    else
-                        error("requires hs.axuielement or string/number corresponding to an application or window as per hs.application.find or hs.window.find", 2)
-                    end
-                end
-            end
-            while appElement("AXRole") ~= "AXApplication" do appElement = appElement("AXParent") end
+            while appElement.AXRole ~= "AXApplication" do appElement = appElement.AXParent end
             storage._appElement = appElement
             _chooser:choices(buildChoicesForObject(obj)):query(nil):selectedRow(1)
         end
@@ -370,6 +353,25 @@ module.browse = function(...)
     end
 
     _chooser:show()
+end
+
+module.browseApplication = function(app)
+    -- hs.application.find currently returns window objs as well and may not put apps first
+    for i,v in ipairs(table.pack(application.find(app))) do
+        if getmetatable(v) == hs.getObjectMetatable("hs.application") then
+            return module.browse(v)
+        end
+    end
+    error("requires string/number corresponding to an application as per hs.application.find", 2)
+end
+
+module.browseWindow = function(win)
+    local obj = window.find(win)
+    if obj then
+        return module.browse(obj)
+    else
+        error("requires string/number corresponding to a window as per hs.window.find", 2)
+    end
 end
 
 return module
