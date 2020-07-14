@@ -13,7 +13,8 @@ Download `init.lua` and `docs.json` and do the following:
 ~~~sh
 cd ~/.hammerspoon/Spoons
 mkdir AnyComplete.spoon
-mv <where ever you downloaded the files to>/{init.lua,docs.json} .
+cd AnyComplete.spoon
+mv ~/Downloads/{init.lua,docs.json} . -- or wherever you downloaded the files
 ~~~
 
 ### Usage
