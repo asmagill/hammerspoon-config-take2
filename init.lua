@@ -145,6 +145,9 @@ end)
 
 require"hs.doc".preloadSpoonDocs()
 
+hs.loadSpoon("AnyComplete")
+spoon.AnyComplete:bindHotkeys{ toggle = { { "cmd", "alt", "ctrl" }, "g" } }
+
 hs.loadSpoon("SleepCorners"):start()
 hs.loadSpoon("BonjourLauncher"):start():addRecipes("SSH", "SMB", "AFP", "VNC_RealVNC_Alternate"):bindHotkeys{
     toggle      = { { "cmd", "alt", "ctrl" }, "=" },

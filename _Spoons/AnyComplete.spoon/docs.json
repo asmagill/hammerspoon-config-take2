@@ -1,0 +1,466 @@
+[
+  {
+    "Constant" : [
+
+    ],
+    "submodules" : [
+
+    ],
+    "Function" : [
+
+    ],
+    "Variable" : [
+      {
+        "doc" : "A string specifying the key for the site definition to use when performing web queries for autocompletion possibilities. Defaults to \"duckduckgo\"\n\nNotes:\n * the string must match the key of a definition in [AnyComplete.queryDefinitions](#queryDefinitions) and assiging a new value will generate an error if the definition does not exist -- make sure to add your customizations to `AnyComplete.queryDefinitions` before setting this to a value other than one of the built in defaults.",
+        "stripped_doc" : [
+          "A string specifying the key for the site definition to use when performing web queries for autocompletion possibilities. Defaults to \"duckduckgo\"",
+          ""
+        ],
+        "desc" : "A string specifying the key for the site definition to use when performing web queries for autocompletion possibilities. Defaults to \"duckduckgo\"",
+        "parameters" : [
+
+        ],
+        "notes" : [
+          " * the string must match the key of a definition in [AnyComplete.queryDefinitions](#queryDefinitions) and assiging a new value will generate an error if the definition does not exist -- make sure to add your customizations to `AnyComplete.queryDefinitions` before setting this to a value other than one of the built in defaults."
+        ],
+        "signature" : "AnyComplete.querySite",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "def" : "AnyComplete.querySite",
+        "name" : "querySite"
+      },
+      {
+        "doc" : "A number specifying the amount of time in seconds that the keyboard must be idle before performing a new query for possibilit completions. Set to 0 to perform a query after every keystroke. Defaults to 0.3.\n\nNotes:\n * it has been suggested by some of the issues posted at https:\/\/github.com\/nathancahill\/Anycomplete that Google may rate limit or even block your IP address if it detects too many queries in a short period of time. This has not been confirmed in any terms of service, nor is there any detail as to how may queries over what period of time is considered \"too many\", but this variable is provided as a way of reducing the number of queries performed.",
+        "stripped_doc" : [
+          "A number specifying the amount of time in seconds that the keyboard must be idle before performing a new query for possibilit completions. Set to 0 to perform a query after every keystroke. Defaults to 0.3.",
+          ""
+        ],
+        "desc" : "A number specifying the amount of time in seconds that the keyboard must be idle before performing a new query for possibilit completions. Set to 0 to perform a query after every keystroke. Defaults to 0.3.",
+        "parameters" : [
+
+        ],
+        "notes" : [
+          " * it has been suggested by some of the issues posted at https:\/\/github.com\/nathancahill\/Anycomplete that Google may rate limit or even block your IP address if it detects too many queries in a short period of time. This has not been confirmed in any terms of service, nor is there any detail as to how may queries over what period of time is considered \"too many\", but this variable is provided as a way of reducing the number of queries performed."
+        ],
+        "signature" : "AnyComplete.queryDebounce",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "def" : "AnyComplete.queryDebounce",
+        "name" : "queryDebounce"
+      },
+      {
+        "doc" : "A table containing site definitions for completion queries.\n\nThis table contains key-value pairs defining the site defintions for completion queries. Each key is a string specifying the shorthand name for a completion site, and each value is a table containing the following key-value pairs:\n * `title`       - a string specifying the title to display at the top of the choosers during completion lookup\n * `acQuery`     - a string specifying the URL for perfoming the actual completion query. Use `%s` as a placeholder to specify where the current value in the chooser query field should be inserted.\n * `searchQuery` - a string specifying the URL to use when the user wants to open a web page with the search results for the entry specified, triggered by holding down the shift key when making your selection.\n * `acParser`    - a function which takes as its sole argument the results from the http query and returns a chooser table where each entry is a table of the form `{ text = \"possibility\" }`.\n\nNotes:\n * definitions for Google (\"google\") and DuckDuckGo (\"duckduckgo\") are already defined.",
+        "stripped_doc" : [
+          "A table containing site definitions for completion queries.",
+          "",
+          "This table contains key-value pairs defining the site defintions for completion queries. Each key is a string specifying the shorthand name for a completion site, and each value is a table containing the following key-value pairs:",
+          " * `title`       - a string specifying the title to display at the top of the choosers during completion lookup",
+          " * `acQuery`     - a string specifying the URL for perfoming the actual completion query. Use `%s` as a placeholder to specify where the current value in the chooser query field should be inserted.",
+          " * `searchQuery` - a string specifying the URL to use when the user wants to open a web page with the search results for the entry specified, triggered by holding down the shift key when making your selection.",
+          " * `acParser`    - a function which takes as its sole argument the results from the http query and returns a chooser table where each entry is a table of the form `{ text = \"possibility\" }`.",
+          ""
+        ],
+        "desc" : "A table containing site definitions for completion queries.",
+        "parameters" : [
+
+        ],
+        "notes" : [
+          " * definitions for Google (\"google\") and DuckDuckGo (\"duckduckgo\") are already defined."
+        ],
+        "signature" : "AnyComplete.queryDefinitions[]",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "def" : "AnyComplete.queryDefinitions[]",
+        "name" : "queryDefinitions"
+      }
+    ],
+    "stripped_doc" : [
+
+    ],
+    "Deprecated" : [
+
+    ],
+    "type" : "Module",
+    "desc" : "Provides autocomplete functionality anywhere you can type in text.",
+    "Constructor" : [
+
+    ],
+    "doc" : "Provides autocomplete functionality anywhere you can type in text.\n\nBased heavily on Nathan Cahill's code at https:\/\/github.com\/nathancahill\/Anycomplete and some of the enhancement requests.",
+    "Method" : [
+      {
+        "doc" : "Readys the chooser interface for the AnyComplete spoon\n\nParameters:\n * None\n\nReturns:\n * the AnyComplete spoon object\n\nNotes:\n * This method is included to conform to the expected Spoon format; it will automatically be invoked by [AnyComplete:show](#show) if necessary.",
+        "stripped_doc" : [
+          "Readys the chooser interface for the AnyComplete spoon",
+          ""
+        ],
+        "desc" : "Readys the chooser interface for the AnyComplete spoon",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+          " * This method is included to conform to the expected Spoon format; it will automatically be invoked by [AnyComplete:show](#show) if necessary."
+        ],
+        "signature" : "AnyComplete:start() -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the AnyComplete spoon object",
+          ""
+        ],
+        "def" : "AnyComplete:start() -> self",
+        "name" : "start"
+      },
+      {
+        "doc" : "Removes the chooser interface for the NonjourLauncher spoon and any lingering service queries\n\nParameters:\n * None\n\nReturns:\n * the AnyComplete spoon object\n\nNotes:\n * This method is included to conform to the expected Spoon format; in general, it should be unnecessary to invoke this method directly.",
+        "stripped_doc" : [
+          "Removes the chooser interface for the NonjourLauncher spoon and any lingering service queries",
+          ""
+        ],
+        "desc" : "Removes the chooser interface for the NonjourLauncher spoon and any lingering service queries",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+          " * This method is included to conform to the expected Spoon format; in general, it should be unnecessary to invoke this method directly."
+        ],
+        "signature" : "AnyComplete:stop() -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the AnyComplete spoon object",
+          ""
+        ],
+        "def" : "AnyComplete:stop() -> self",
+        "name" : "stop"
+      },
+      {
+        "doc" : "Shows the AnyComplete chooser window.\n\nParameters:\n * None\n\nReturns:\n * the AnyComplete spoon object\n\nNotes:\n * Automatically invokes [AnyComplete:start()](#start) if this has not already been done.",
+        "stripped_doc" : [
+          "Shows the AnyComplete chooser window.",
+          ""
+        ],
+        "desc" : "Shows the AnyComplete chooser window.",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+          " * Automatically invokes [AnyComplete:start()](#start) if this has not already been done."
+        ],
+        "signature" : "AnyComplete:show() -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the AnyComplete spoon object",
+          ""
+        ],
+        "def" : "AnyComplete:show() -> self",
+        "name" : "show"
+      },
+      {
+        "doc" : "Hides the AnyComplete chooser window.\n\nParameters:\n * None\n\nReturns:\n * the AnyComplete spoon object",
+        "stripped_doc" : [
+          "Hides the AnyComplete chooser window.",
+          ""
+        ],
+        "desc" : "Hides the AnyComplete chooser window.",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+
+        ],
+        "signature" : "AnyComplete:hide() -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the AnyComplete spoon object"
+        ],
+        "def" : "AnyComplete:hide() -> self",
+        "name" : "hide"
+      },
+      {
+        "doc" : "Toggles the visibility of the AnyComplete chooser window.\n\nParameters:\n * None\n\nReturns:\n * the AnyComplete spoon object\n\nNotes::\n * If the chooser window is currently visible, this method will invoke [AnyComplete:hide](#hide); otherwise invokes [AnyComplete:show](#show).",
+        "stripped_doc" : [
+          "Toggles the visibility of the AnyComplete chooser window.",
+          ""
+        ],
+        "desc" : "Toggles the visibility of the AnyComplete chooser window.",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+
+        ],
+        "signature" : "AnyComplete:toggle() -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the AnyComplete spoon object",
+          "",
+          "Notes::",
+          " * If the chooser window is currently visible, this method will invoke [AnyComplete:hide](#hide); otherwise invokes [AnyComplete:show](#show)."
+        ],
+        "def" : "AnyComplete:toggle() -> self",
+        "name" : "toggle"
+      },
+      {
+        "doc" : "Binds hotkeys for the AnyComplete spoon\n\nParameters:\n * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:\n   * \"show\"   - Show the AnyComplete chooser window\n   * \"hide\"   - Hide the AnyComplete chooser window\n   * \"toggle\" - Toggles the visibility of the AnyComplete window\n\nReturns:\n * the AnyComplete spoon object\n\nNotes:\n * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:\n   * `command`   - is one of the commands listed above\n   * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`\n   * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`",
+        "stripped_doc" : [
+          "Binds hotkeys for the AnyComplete spoon",
+          ""
+        ],
+        "desc" : "Binds hotkeys for the AnyComplete spoon",
+        "parameters" : [
+          " * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:",
+          "   * \"show\"   - Show the AnyComplete chooser window",
+          "   * \"hide\"   - Hide the AnyComplete chooser window",
+          "   * \"toggle\" - Toggles the visibility of the AnyComplete window",
+          ""
+        ],
+        "notes" : [
+          " * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:",
+          "   * `command`   - is one of the commands listed above",
+          "   * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`",
+          "   * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`"
+        ],
+        "signature" : "AnyComplete:bindHotkeys(mapping) -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the AnyComplete spoon object",
+          ""
+        ],
+        "def" : "AnyComplete:bindHotkeys(mapping) -> self",
+        "name" : "bindHotkeys"
+      }
+    ],
+    "items" : [
+      {
+        "doc" : "A number specifying the amount of time in seconds that the keyboard must be idle before performing a new query for possibilit completions. Set to 0 to perform a query after every keystroke. Defaults to 0.3.\n\nNotes:\n * it has been suggested by some of the issues posted at https:\/\/github.com\/nathancahill\/Anycomplete that Google may rate limit or even block your IP address if it detects too many queries in a short period of time. This has not been confirmed in any terms of service, nor is there any detail as to how may queries over what period of time is considered \"too many\", but this variable is provided as a way of reducing the number of queries performed.",
+        "stripped_doc" : [
+          "A number specifying the amount of time in seconds that the keyboard must be idle before performing a new query for possibilit completions. Set to 0 to perform a query after every keystroke. Defaults to 0.3.",
+          ""
+        ],
+        "desc" : "A number specifying the amount of time in seconds that the keyboard must be idle before performing a new query for possibilit completions. Set to 0 to perform a query after every keystroke. Defaults to 0.3.",
+        "parameters" : [
+
+        ],
+        "notes" : [
+          " * it has been suggested by some of the issues posted at https:\/\/github.com\/nathancahill\/Anycomplete that Google may rate limit or even block your IP address if it detects too many queries in a short period of time. This has not been confirmed in any terms of service, nor is there any detail as to how may queries over what period of time is considered \"too many\", but this variable is provided as a way of reducing the number of queries performed."
+        ],
+        "signature" : "AnyComplete.queryDebounce",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "def" : "AnyComplete.queryDebounce",
+        "name" : "queryDebounce"
+      },
+      {
+        "doc" : "A table containing site definitions for completion queries.\n\nThis table contains key-value pairs defining the site defintions for completion queries. Each key is a string specifying the shorthand name for a completion site, and each value is a table containing the following key-value pairs:\n * `title`       - a string specifying the title to display at the top of the choosers during completion lookup\n * `acQuery`     - a string specifying the URL for perfoming the actual completion query. Use `%s` as a placeholder to specify where the current value in the chooser query field should be inserted.\n * `searchQuery` - a string specifying the URL to use when the user wants to open a web page with the search results for the entry specified, triggered by holding down the shift key when making your selection.\n * `acParser`    - a function which takes as its sole argument the results from the http query and returns a chooser table where each entry is a table of the form `{ text = \"possibility\" }`.\n\nNotes:\n * definitions for Google (\"google\") and DuckDuckGo (\"duckduckgo\") are already defined.",
+        "stripped_doc" : [
+          "A table containing site definitions for completion queries.",
+          "",
+          "This table contains key-value pairs defining the site defintions for completion queries. Each key is a string specifying the shorthand name for a completion site, and each value is a table containing the following key-value pairs:",
+          " * `title`       - a string specifying the title to display at the top of the choosers during completion lookup",
+          " * `acQuery`     - a string specifying the URL for perfoming the actual completion query. Use `%s` as a placeholder to specify where the current value in the chooser query field should be inserted.",
+          " * `searchQuery` - a string specifying the URL to use when the user wants to open a web page with the search results for the entry specified, triggered by holding down the shift key when making your selection.",
+          " * `acParser`    - a function which takes as its sole argument the results from the http query and returns a chooser table where each entry is a table of the form `{ text = \"possibility\" }`.",
+          ""
+        ],
+        "desc" : "A table containing site definitions for completion queries.",
+        "parameters" : [
+
+        ],
+        "notes" : [
+          " * definitions for Google (\"google\") and DuckDuckGo (\"duckduckgo\") are already defined."
+        ],
+        "signature" : "AnyComplete.queryDefinitions[]",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "def" : "AnyComplete.queryDefinitions[]",
+        "name" : "queryDefinitions"
+      },
+      {
+        "doc" : "A string specifying the key for the site definition to use when performing web queries for autocompletion possibilities. Defaults to \"duckduckgo\"\n\nNotes:\n * the string must match the key of a definition in [AnyComplete.queryDefinitions](#queryDefinitions) and assiging a new value will generate an error if the definition does not exist -- make sure to add your customizations to `AnyComplete.queryDefinitions` before setting this to a value other than one of the built in defaults.",
+        "stripped_doc" : [
+          "A string specifying the key for the site definition to use when performing web queries for autocompletion possibilities. Defaults to \"duckduckgo\"",
+          ""
+        ],
+        "desc" : "A string specifying the key for the site definition to use when performing web queries for autocompletion possibilities. Defaults to \"duckduckgo\"",
+        "parameters" : [
+
+        ],
+        "notes" : [
+          " * the string must match the key of a definition in [AnyComplete.queryDefinitions](#queryDefinitions) and assiging a new value will generate an error if the definition does not exist -- make sure to add your customizations to `AnyComplete.queryDefinitions` before setting this to a value other than one of the built in defaults."
+        ],
+        "signature" : "AnyComplete.querySite",
+        "type" : "Variable",
+        "returns" : [
+
+        ],
+        "def" : "AnyComplete.querySite",
+        "name" : "querySite"
+      },
+      {
+        "doc" : "Binds hotkeys for the AnyComplete spoon\n\nParameters:\n * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:\n   * \"show\"   - Show the AnyComplete chooser window\n   * \"hide\"   - Hide the AnyComplete chooser window\n   * \"toggle\" - Toggles the visibility of the AnyComplete window\n\nReturns:\n * the AnyComplete spoon object\n\nNotes:\n * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:\n   * `command`   - is one of the commands listed above\n   * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`\n   * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`",
+        "stripped_doc" : [
+          "Binds hotkeys for the AnyComplete spoon",
+          ""
+        ],
+        "desc" : "Binds hotkeys for the AnyComplete spoon",
+        "parameters" : [
+          " * `mapping` - A table containing hotkey modifier\/key details for one or more of the following commands:",
+          "   * \"show\"   - Show the AnyComplete chooser window",
+          "   * \"hide\"   - Hide the AnyComplete chooser window",
+          "   * \"toggle\" - Toggles the visibility of the AnyComplete window",
+          ""
+        ],
+        "notes" : [
+          " * the `mapping` table is a table of one or more key-value pairs of the format `command = { { modifiers }, key }` where:",
+          "   * `command`   - is one of the commands listed above",
+          "   * `modifiers` - is a table containing keyboard modifiers, as specified in `hs.hotkey.bind()`",
+          "   * `key`       - is a string containing the name of a keyboard key, as specified in `hs.hotkey.bind()`"
+        ],
+        "signature" : "AnyComplete:bindHotkeys(mapping) -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the AnyComplete spoon object",
+          ""
+        ],
+        "def" : "AnyComplete:bindHotkeys(mapping) -> self",
+        "name" : "bindHotkeys"
+      },
+      {
+        "doc" : "Hides the AnyComplete chooser window.\n\nParameters:\n * None\n\nReturns:\n * the AnyComplete spoon object",
+        "stripped_doc" : [
+          "Hides the AnyComplete chooser window.",
+          ""
+        ],
+        "desc" : "Hides the AnyComplete chooser window.",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+
+        ],
+        "signature" : "AnyComplete:hide() -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the AnyComplete spoon object"
+        ],
+        "def" : "AnyComplete:hide() -> self",
+        "name" : "hide"
+      },
+      {
+        "doc" : "Shows the AnyComplete chooser window.\n\nParameters:\n * None\n\nReturns:\n * the AnyComplete spoon object\n\nNotes:\n * Automatically invokes [AnyComplete:start()](#start) if this has not already been done.",
+        "stripped_doc" : [
+          "Shows the AnyComplete chooser window.",
+          ""
+        ],
+        "desc" : "Shows the AnyComplete chooser window.",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+          " * Automatically invokes [AnyComplete:start()](#start) if this has not already been done."
+        ],
+        "signature" : "AnyComplete:show() -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the AnyComplete spoon object",
+          ""
+        ],
+        "def" : "AnyComplete:show() -> self",
+        "name" : "show"
+      },
+      {
+        "doc" : "Readys the chooser interface for the AnyComplete spoon\n\nParameters:\n * None\n\nReturns:\n * the AnyComplete spoon object\n\nNotes:\n * This method is included to conform to the expected Spoon format; it will automatically be invoked by [AnyComplete:show](#show) if necessary.",
+        "stripped_doc" : [
+          "Readys the chooser interface for the AnyComplete spoon",
+          ""
+        ],
+        "desc" : "Readys the chooser interface for the AnyComplete spoon",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+          " * This method is included to conform to the expected Spoon format; it will automatically be invoked by [AnyComplete:show](#show) if necessary."
+        ],
+        "signature" : "AnyComplete:start() -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the AnyComplete spoon object",
+          ""
+        ],
+        "def" : "AnyComplete:start() -> self",
+        "name" : "start"
+      },
+      {
+        "doc" : "Removes the chooser interface for the NonjourLauncher spoon and any lingering service queries\n\nParameters:\n * None\n\nReturns:\n * the AnyComplete spoon object\n\nNotes:\n * This method is included to conform to the expected Spoon format; in general, it should be unnecessary to invoke this method directly.",
+        "stripped_doc" : [
+          "Removes the chooser interface for the NonjourLauncher spoon and any lingering service queries",
+          ""
+        ],
+        "desc" : "Removes the chooser interface for the NonjourLauncher spoon and any lingering service queries",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+          " * This method is included to conform to the expected Spoon format; in general, it should be unnecessary to invoke this method directly."
+        ],
+        "signature" : "AnyComplete:stop() -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the AnyComplete spoon object",
+          ""
+        ],
+        "def" : "AnyComplete:stop() -> self",
+        "name" : "stop"
+      },
+      {
+        "doc" : "Toggles the visibility of the AnyComplete chooser window.\n\nParameters:\n * None\n\nReturns:\n * the AnyComplete spoon object\n\nNotes::\n * If the chooser window is currently visible, this method will invoke [AnyComplete:hide](#hide); otherwise invokes [AnyComplete:show](#show).",
+        "stripped_doc" : [
+          "Toggles the visibility of the AnyComplete chooser window.",
+          ""
+        ],
+        "desc" : "Toggles the visibility of the AnyComplete chooser window.",
+        "parameters" : [
+          " * None",
+          ""
+        ],
+        "notes" : [
+
+        ],
+        "signature" : "AnyComplete:toggle() -> self",
+        "type" : "Method",
+        "returns" : [
+          " * the AnyComplete spoon object",
+          "",
+          "Notes::",
+          " * If the chooser window is currently visible, this method will invoke [AnyComplete:hide](#hide); otherwise invokes [AnyComplete:show](#show)."
+        ],
+        "def" : "AnyComplete:toggle() -> self",
+        "name" : "toggle"
+      }
+    ],
+    "Field" : [
+
+    ],
+    "Command" : [
+
+    ],
+    "name" : "AnyComplete"
+  }
+]
