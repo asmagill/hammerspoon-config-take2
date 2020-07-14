@@ -11,10 +11,10 @@ Based heavily on Nathan Cahill's code at https://github.com/nathancahill/Anycomp
 Download `init.lua` and `docs.json` and do the following:
 
 ~~~sh
-cd ~/.hammerspoon/Spoons
-mkdir AnyComplete.spoon
-cd AnyComplete.spoon
-mv ~/Downloads/{init.lua,docs.json} . -- or wherever you downloaded the files
+$ cd ~/.hammerspoon/Spoons
+$ mkdir AnyComplete.spoon
+$ cd AnyComplete.spoon
+$ mv ~/Downloads/{init.lua,docs.json} . # or wherever you downloaded the files
 ~~~
 
 ### Usage
