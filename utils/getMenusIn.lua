@@ -56,7 +56,7 @@ module.getMenuItems = function(appObject, callback, includeApple)
 
     local app = ax.applicationElement(appObject)
 
-    local menuBar = app("menuBar")
+    local menuBar = app.AXMenuBar
     if menuBar then
         if callback then
             coroutine.wrap(function(m, c)
