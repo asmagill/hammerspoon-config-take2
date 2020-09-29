@@ -49,6 +49,11 @@ local showNormalState = function()
                    :movable(false)
                    :acceptsMouseEvents(true)
                    :inactiveAlpha(module.inactiveAlpha) -- in case it changed
+    if hs.execute("defaults read com.apple.dock autohide") == "1\n" then
+        module.touchbar:level(20)
+    else
+        module.touchbar:level(1500)
+    end
 end
 
 local mouseInside = false
