@@ -1,8 +1,14 @@
 local lVer = _VERSION:match("Lua (.+)$")
-package.path  = package.path  .. ";" .. os.getenv("HOME") .. "/.luarocks/share/lua/" .. lVer .. "/?.lua"
-                              .. ";" .. os.getenv("HOME") .. "/.luarocks/share/lua/" .. lVer .. "/?/init.lua"
-package.cpath = package.cpath .. ";" .. os.getenv("HOME") .. "/.luarocks/lib/lua/" .. lVer .. "/?.so"
-
+-- or specify luarocks path yourself if this doesn't find it in the normal places
+local luarocks = hs.execute("which luarocks"):gsub("\n", "")
+if #luarocks > 0 then
+    package.path = package.path .. ";" .. hs.execute(
+            luarocks .. " --lua-version " .. lVer .. " path --lr-path"
+        ):gsub("\n", "")
+    package.cpath = package.cpath .. ";" .. hs.execute(
+            luarocks .. " --lua-version " .. lVer .. " path --lr-cpath"
+        ):gsub("\n", "")
+end
 
 local logger = require("hs.logger")
 logger.historySize(1000)
