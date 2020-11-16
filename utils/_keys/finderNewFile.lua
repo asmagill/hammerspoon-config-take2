@@ -20,7 +20,7 @@ local createNewEmptyFile = function()
 
     -- make sure a window is focused
     local win = axuielement.applicationElement("Finder").AXFocusedWindow
-    if not (win or win.AXTitle) then
+    if not (win and win.AXTitle) then
         dialog.blockAlert("No window is currently focused in the Finder", "")
         focusedApp:activate() -- return focus from whence we came
         return

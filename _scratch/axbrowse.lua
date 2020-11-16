@@ -119,6 +119,10 @@ local buildChoicesForObject = function(obj)
             entry.subText  = ""
 --             entry.subText  = "Value: nil"
             entry.cmdNoAdd = true
+        elseif type(v) == "table" and v._code and v.error then
+            entry.text     = textPrefix .. k .. " (unable to query)"
+            entry.subText  = "Error message: " .. tostring(v.error)
+            entry.cmdNoAdd = true
         elseif type(v) == "table" then
             entry.text = textPrefix .. k .. " = { ... }"
             if #v == 0 and next(v) then

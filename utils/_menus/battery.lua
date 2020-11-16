@@ -31,6 +31,7 @@ local speech     = require("hs.speech")
 local styledtext = require("hs.styledtext")
 local timer      = require("hs.timer")
 local host       = require("hs.host")
+local canvas     = require("hs.canvas")
 
 local onAC       = utf8.codepointToUTF8(0x1F50C) -- plug
 local onBattery  = utf8.codepointToUTF8(0x1F50B) -- battery
@@ -141,7 +142,15 @@ local updateMenuTitle = function()
             })
         end
 
-        menuUserData:setTitle(titleText)
+        -- Big Sur forces a common text baseline for titles which
+        -- causes multi-line text to push upper liness off top of
+        -- menubar; this converts it to an image which is allowed
+        -- the full menubar height for display
+        local c = canvas.new{ x = 0, y = 0, h = 0, w = 0 }
+        c:frame(c:minimumTextSize(titleText))
+        c[1] = { type = "text", text = titleText }
+        menuUserData:setIcon(c:imageFromCanvas())
+--         menuUserData:setTitle(titleText)
     end
 end
 

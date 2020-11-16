@@ -45,6 +45,7 @@ local ipc         = require("hs.ipc")
 local alert       = require("hs.alert")
 local image       = require("hs.image")
 local math        = require("hs.math")
+local settings    = require("hs.settings")
 
 -- something steals focus from an application which was focused before HS starts; capture that
 -- window and then we'll switch back to it at the end
@@ -95,6 +96,15 @@ end
 
 -- hs.drawing.windowBehaviors.moveToActiveSpace
 console.behavior(2)
+console.titleVisibility("hidden")
+console.toolbar():addItems{
+    id = "clear",
+    image = hs.image.imageFromName("NSTrashFull"),
+    fn = function(...) console.clearConsole() end,
+    label = "clear",
+    tooltip = "Clear Console"
+}:insertItem("clear", #console.toolbar():visibleItems() + 1)
+
 console.smartInsertDeleteEnabled(false)
 if console.darkMode() then
     console.outputBackgroundColor{ white = 0 }
@@ -109,7 +119,7 @@ end
 history = _asm._actions.consoleHistory.history
 
 minimalHS = function()
-    require("hs.settings").set("MJConfigFile", "~/.config/hammerspoon/_minimal/init.lua")
+    settings.set("MJConfigFile", "~/.config/hammerspoon/_minimal/init.lua")
     hs.relaunch()
 end
 
@@ -135,19 +145,6 @@ else
     print("++  Release Version: " .. hs.processInfo.version)
 end
 print()
-
--- refocus captured window from begining
-timer.doAfter(math.minFloat, function()
-    if fmW then
-        fmW:focus()
---     else
---         local finder = application("Finder")
---         if finder then
---             alert("Activating Finder")
---             finder:activate()
---         end
-    end
-end)
 
 require"hs.doc".preloadSpoonDocs()
 
@@ -177,3 +174,19 @@ table.insert(spoon.BonjourLauncher.templates, {
     hidden  = true,
 })
 hs.loadSpoon("FadeLogo"):start(.5)
+
+if settings.get("openConsoleOnLoad") then
+    hs.openConsole()
+else
+    -- refocus captured window from begining
+    timer.doAfter(math.minFloat, function() if fmW then fmW:focus() end end)
+end
+settings.clear("openConsoleOnLoad")
+
+local _hsrelaunch = hs.relaunch
+hs.relaunch = function(...)
+    settings.set("openConsoleOnLoad", true)
+    return _hsrelaunch(...)
+end
+
+_oc = require("hs._asm.objc")
