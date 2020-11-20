@@ -2,6 +2,11 @@
 -- Based heavily on MiddleClick, https://github.com/artginzburg/MiddleClick-Catalina
 --
 
+--
+-- leaving here because linked to in https://github.com/Hammerspoon/hammerspoon/issues/2057
+-- further work, cleanup, etc. being done at https://github.com/asmagill/hs._asm.undocumented.touchdevice/blob/master/Examples/middleButton.lua
+--
+
 local touchdevice = require("hs._asm.undocumented.touchdevice")
 local menubar     = require("hs.menubar")
 local eventtap    = require("hs.eventtap")

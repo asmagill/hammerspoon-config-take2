@@ -1,1 +1,0 @@
-../../_scratch/threeFingers.lua
