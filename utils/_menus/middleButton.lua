@@ -23,6 +23,11 @@ local settings_needToClickLabel = USERDATA_TAG .. "_needToClick"
 local settings_showMenuLabel    = USERDATA_TAG .. "_showMenu"
 local settings_tapDeltaLabel    = USERDATA_TAG .. "_tapDelta"
 
+-- convert functions apparently haven't caught up with Big Sur because italicizing the default
+-- menu font gives ".SFNS-RegularItalic" which is now reported as "unknown". This seems to work
+-- for now, but will need to see if there is a new "preferred" way to "convert" fonts.
+local _italicMenuFontName = stext.defaultFonts.menu.name .. "Italic"
+
 local _menu        = nil
 local _fingers     = settings.get(settings_fingersLabel) or 3
 local _tapDelta    = settings.get(settings_tapDeltaLabel) or 0.4
@@ -71,14 +76,14 @@ local _menuFunction = function(_)
     local menuItems = {
         {
             title = stext.new(USERDATA_TAG .. " for Hammerspoon", {
-                font  = { name = "Arial-BoldItalicMT", size = 13 },
+                font  = { name = _italicMenuFontName, size = 13 },
                 color = { list = "x11", name = "royalblue" },
             }),
             disabled = true
         }, {
             title = stext.new(
                 string.format("%d finger %s", _fingers, _needToClick and "click" or "tap"), {
-                font  = { name = "Arial-BoldItalicMT", size = 13 },
+                font  = { name = _italicMenuFontName, size = 13 },
                 color = { list = "x11", name = "magenta" },
                 paragraphStyle = { alignment = "center" },
             }),
@@ -115,7 +120,7 @@ local _menuFunction = function(_)
         }, {
             title = stext.new(
                 string.format("%d devices detected", #_attachedDeviceCallbacks), {
-                font  = { name = "Arial-BoldItalicMT", size = 10 },
+                font  = { name = _italicMenuFontName, size = 10 },
                 paragraphStyle = { alignment = "right" },
             }),
             disabled = true

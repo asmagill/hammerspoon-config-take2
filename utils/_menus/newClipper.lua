@@ -185,12 +185,20 @@ local renderNewClipperMenu = function(mods)
                           ..utf8.registeredKeys.leftDoubleQuote.."type"
                           ..utf8.registeredKeys.rightDoubleQuote..
                           " selection immediately", {
-                                font = stext.convertFont(stext.defaultFonts.menu, stext.fontTraits.italicFont),
+--                                 font = stext.convertFont(stext.defaultFonts.menu, stext.fontTraits.italicFont),
+-- convert functions apparently haven't caught up with Big Sur because italicizing the default
+-- menu font gives ".SFNS-RegularItalic" which is now reported as "unknown". This seems to work
+-- for now, but will need to see if there is a new "preferred" way to "convert" fonts.
+                                font = { name = stext.defaultFonts.menu.name .. "Italic", size = stext.defaultFonts.menu.size },
                                 color = { list="x11", name="royalblue"},
                           }), disabled = true
                       })
             table.insert(results, { title = stext.new("Hold down "..utf8.registeredKeys.ctrl.." to remove selection from history", {
-                                font = stext.convertFont(stext.defaultFonts.menu, stext.fontTraits.italicFont),
+--                                 font = stext.convertFont(stext.defaultFonts.menu, stext.fontTraits.italicFont),
+-- convert functions apparently haven't caught up with Big Sur because italicizing the default
+-- menu font gives ".SFNS-RegularItalic" which is now reported as "unknown". This seems to work
+-- for now, but will need to see if there is a new "preferred" way to "convert" fonts.
+                                font = { name = stext.defaultFonts.menu.name .. "Italic", size = stext.defaultFonts.menu.size },
                                 color = { list="x11", name="royalblue"},
                           }), disabled = true
                       })
@@ -211,7 +219,11 @@ local renderNewClipperMenu = function(mods)
 
 -- do special menu
         table.insert(results, { title = stext.new("newClipper Options", {
-                            font = stext.convertFont(stext.defaultFonts.menu, stext.fontTraits.italicFont),
+--                             font = stext.convertFont(stext.defaultFonts.menu, stext.fontTraits.italicFont),
+-- convert functions apparently haven't caught up with Big Sur because italicizing the default
+-- menu font gives ".SFNS-RegularItalic" which is now reported as "unknown". This seems to work
+-- for now, but will need to see if there is a new "preferred" way to "convert" fonts.
+                            font = { name = stext.defaultFonts.menu.name .. "Italic", size = stext.defaultFonts.menu.size },
                             color = { list="x11", name="royalblue"},
                       }), disabled = true
                   })
@@ -296,7 +308,11 @@ local renderNewClipperMenu = function(mods)
 
     table.insert(results, { title = "-" })
     table.insert(results, { title = stext.new("newClipper for Hammerspoon", {
-                                font = stext.convertFont(stext.defaultFonts.menu, stext.fontTraits.italicFont),
+--                                 font = stext.convertFont(stext.defaultFonts.menu, stext.fontTraits.italicFont),
+-- convert functions apparently haven't caught up with Big Sur because italicizing the default
+-- menu font gives ".SFNS-RegularItalic" which is now reported as "unknown". This seems to work
+-- for now, but will need to see if there is a new "preferred" way to "convert" fonts.
+                                font = { name = stext.defaultFonts.menu.name .. "Italic", size = stext.defaultFonts.menu.size },
                                 color = { list="x11", name="royalblue"},
                                 paragraphStyle = { alignment = "right" },
                               }), disabled = true
