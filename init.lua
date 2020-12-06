@@ -47,6 +47,35 @@ local image       = require("hs.image")
 local math        = require("hs.math")
 local settings    = require("hs.settings")
 
+-- wrap these here so my personal modules see the wrapped versions
+local _hsrelaunch = hs.relaunch
+hs.relaunch = function(...)
+    local hspoon = application.applicationsForBundleID(hs.processInfo.bundleID)[1]
+    local conswin = hspoon:mainWindow()
+    if conswin then
+        settings.set("openConsoleOnLoad", true)
+
+        local fr = conswin:frame()
+        -- stupid hs.geometry doesn't allow settings to serialize this properly
+        fr = { x = fr.x, y = fr.y, h = fr.h, w = fr.w }
+        settings.set("positionConsoleOnLoad", fr)
+    end
+    return _hsrelaunch(...)
+end
+
+local _hsreload = hs.reload
+hs.reload = function(...)
+    local hspoon = application.applicationsForBundleID(hs.processInfo.bundleID)[1]
+    local conswin = hspoon:mainWindow()
+    if conswin then
+        local fr = conswin:frame()
+        -- stupid hs.geometry doesn't allow settings to serialize this properly
+        fr = { x = fr.x, y = fr.y, h = fr.h, w = fr.w }
+        settings.set("positionConsoleOnLoad", fr)
+    end
+    return _hsreload(...)
+end
+
 -- something steals focus from an application which was focused before HS starts; capture that
 -- window and then we'll switch back to it at the end
 local fmW = window.frontmostWindow()
@@ -68,10 +97,10 @@ require("hs.hotkey").setLogLevel("warning")
 -- If something grows into usefulness, I'll modularize it.
 _xtras = require("hs._asm.extras")
 
-_asm.relaunch = function()
-    os.execute([[ (while ps -p ]]..hs.processInfo.processID..[[ > /dev/null ; do sleep 1 ; done ; open -a "]]..hs.processInfo.bundlePath..[[" ) & ]])
-    hs._exit(true, true)
-end
+-- _asm.relaunch = function()
+--     os.execute([[ (while ps -p ]]..hs.processInfo.processID..[[ > /dev/null ; do sleep 1 ; done ; open -a "]]..hs.processInfo.bundlePath..[[" ) & ]])
+--     hs._exit(true, true)
+-- end
 
 _asm.hexstring2ascii = function(stuff)
     stuff = stuff:lower():gsub("[<>\n\r ]+", ""):gsub("0x", "")
@@ -175,18 +204,25 @@ table.insert(spoon.BonjourLauncher.templates, {
 })
 hs.loadSpoon("FadeLogo"):start(.5)
 
+-- now restore console and its position, if it was open when we relaunched/loaded
 if settings.get("openConsoleOnLoad") then
     hs.openConsole()
 else
     -- refocus captured window from begining
-    timer.doAfter(math.minFloat, function() if fmW then fmW:focus() end end)
+    local restoreFMWTimer = timer.doAfter(math.minFloat, function()
+        if fmW then fmW:focus() end
+        restoreFMWTimer = nil
+    end)
 end
-settings.clear("openConsoleOnLoad")
 
-local _hsrelaunch = hs.relaunch
-hs.relaunch = function(...)
-    settings.set("openConsoleOnLoad", true)
-    return _hsrelaunch(...)
+local prevFrame = settings.get("positionConsoleOnLoad")
+if prevFrame then
+    local hspoon = application.applicationsForBundleID(hs.processInfo.bundleID)[1]
+    local conswin = hspoon:mainWindow()
+    if conswin then conswin:setFrame(prevFrame) end
 end
+
+settings.clear("openConsoleOnLoad")
+settings.clear("positionConsoleOnLoad")
 
 _oc = require("hs._asm.objc")
