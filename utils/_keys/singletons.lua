@@ -67,10 +67,7 @@ hotkey.bind(mods.CAsC, "r", function()
     end
 end, nil)
 
-hotkey.bind(mods.CASC, "r", function()
-    -- done this way so override in init.lua for hs.relaunch can be used
-    hs.relaunch()
-end)
+hotkey.bind(mods.CASC, "r", hs.relaunch)
 
 hotkey.bind(mods.CAsC, "space", function() hints.windowHints() end, nil)
 
