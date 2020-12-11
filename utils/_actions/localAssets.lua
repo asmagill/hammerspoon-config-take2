@@ -4,6 +4,7 @@
 
 local module = {}
 
+local settings = require("hs.settings")
 local hsminweb = require("hs.httpserver.hsminweb")
 local serverPort = 7734
 local documentRoot = hs.configdir.."/_localAssets"
@@ -22,12 +23,13 @@ module.server = hsminweb.new(documentRoot):port(serverPort)
                                             -- technically optional, but I like being explicit
                                               {"*",              "*",         false,   false},
                                           }
-                                          :start()
-
 module.server._logBadTranslations       = true
 module.server._logPageErrorTranslations = true
 module.server._allowRenderTranslations  = true
 
-module.hsdocs = require"hs.doc.hsdocs".start()
+if settings.get("_localAssetsWebServer") then
+    module.server:start()
+    module.hsdocs = require"hs.doc.hsdocs".start()
+end
 
 return module
