@@ -2,8 +2,8 @@ local slidingPanels = hs.loadSpoon("SlidingPanels")
 
 slidingPanels:addPanel("infoPanel", {
     side              = "top",
---     size              = 1/3,
-    size              = 2/9,
+    size              = 1/3,
+--    size              = 2/9,
     modifiers         = { "fn" },
     persistent        = true,
     animationDuration = 0.1,

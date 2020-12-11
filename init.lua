@@ -125,7 +125,7 @@ end
 
 -- hs.drawing.windowBehaviors.moveToActiveSpace
 console.behavior(2)
-console.titleVisibility("hidden")
+--console.titleVisibility("hidden")
 console.toolbar():addItems{
     id = "clear",
     image = hs.image.imageFromName("NSTrashFull"),
@@ -225,4 +225,4 @@ end
 settings.clear("openConsoleOnLoad")
 settings.clear("positionConsoleOnLoad")
 
-_oc = require("hs._asm.objc")
+_objc = require("hs._asm.objc")
