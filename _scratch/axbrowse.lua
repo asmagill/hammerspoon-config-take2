@@ -312,7 +312,7 @@ local hidingChooser = function()
 end
 
 _chooser = chooser.new(chooserCallback):searchSubText(true):showCallback(showingChooser):hideCallback(hidingChooser)
--- module._chooser = _chooser
+module._chooser = _chooser
 
 module.debug = false
 
