@@ -6,7 +6,7 @@ local timer    = require("hs.timer")
 local hashFN   = require("hs.hash").MD5 -- can use other hash fn if this proves insufficient
 
 local saveLabel     = "_ASMConsoleHistory" -- label for saved history
-local checkInterval = settings.get(saveLabel.."_interval") or 1 -- how often to check for changes
+--local checkInterval = settings.get(saveLabel.."_interval") or 1 -- how often to check for changes
 local maxLength     = settings.get(saveLabel.."_max") or 100    -- maximum history to save
 
 local uniqueHistory = function(raw)
@@ -23,8 +23,10 @@ end
 
 module.clearHistory = function() return console.setHistory({}) end
 
-module.saveHistory = function()
+module.saveHistory = function(with)
     local hist, save = console.getHistory(), {}
+    if with then table.insert(hist, with) end
+
     if #hist > maxLength then
         table.move(hist, #hist - maxLength, #hist, 1, save)
     else
@@ -44,13 +46,21 @@ end
 module.retrieveHistory()
 local currentHistoryCount = #console.getHistory()
 
-module.autosaveHistory = timer.new(checkInterval, function()
-    local historyNow = console.getHistory()
-    if #historyNow ~= currentHistoryCount then
-        currentHistoryCount = #historyNow
-        module.saveHistory()
-    end
-end):start()
+--module.autosaveHistory = timer.new(checkInterval, function()
+--    local historyNow = console.getHistory()
+--    if #historyNow ~= currentHistoryCount then
+--        currentHistoryCount = #historyNow
+--        module.saveHistory()
+--    end
+--end):start()
+
+local previousParser = hs._consoleInputPreparser
+hs._consoleInputPreparser = function(s)
+    if previousParser then s = previousParser(s) end
+
+    module.saveHistory(s)
+    return s
+end
 
 module.pruneHistory = function()
     console.setHistory(uniqueHistory(console.getHistory()))
@@ -72,7 +82,7 @@ module.history = function(toFind)
             print(">> " .. command)
             timer.doAfter(.1, function()
                 local newHistory = console.getHistory()
-                newHistory[#newHistory] = command
+                newHistory[#newHistory + 1] = command
                 console.setHistory(newHistory)
             end)
 
