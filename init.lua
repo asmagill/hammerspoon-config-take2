@@ -46,6 +46,8 @@ local alert       = require("hs.alert")
 local image       = require("hs.image")
 local math        = require("hs.math")
 local settings    = require("hs.settings")
+local screen      = require("hs.screen")
+local canvas      = require("hs.canvas")
 
 -- wrap these here so my personal modules see the wrapped versions
 local _hsrelaunch = hs.relaunch
@@ -123,16 +125,51 @@ m = function(which)
     os.execute("open x-man-page://"..tostring(which))
 end
 
+local _c = canvas.new{ x = 0, y = 0, h = 200, w = 200 }
+_c[1] = {
+    type           = "image",
+    image          = image.imageFromName("NSShareTemplate"):template(false),
+    transformation = canvas.matrix.translate(100, 100):rotate(180):translate(-100, -100),
+}
+local _i_reseatConsole = _c:imageFromCanvas()
+_c:delete()
+
 -- hs.drawing.windowBehaviors.moveToActiveSpace
 console.behavior(2)
 --console.titleVisibility("hidden")
 console.toolbar():addItems{
-    id = "clear",
-    image = hs.image.imageFromName("NSTrashFull"),
-    fn = function(...) console.clearConsole() end,
-    label = "clear",
-    tooltip = "Clear Console"
-}:insertItem("clear", #console.toolbar():visibleItems() + 1)
+    {
+        id = "clear",
+        image   = image.imageFromName("NSTrashFull"),
+        fn      = function(...) console.clearConsole() end,
+        label   = "Clear",
+        tooltip = "Clear Console",
+    }, {
+        id      = "reseat",
+        image   = _i_reseatConsole,
+        fn      = function(...)
+            local hammerspoon = application.applicationsForBundleID(hs.processInfo.bundleID)[1]
+            local consoleWindow = hammerspoon:mainWindow()
+            if consoleWindow then
+                local consoleFrame = consoleWindow:frame()
+                local screenFrame = screen.mainScreen():frame()
+                local newConsoleFrame = {
+                    x = screenFrame.x + (screenFrame.w - consoleFrame.w) / 2,
+                    y = screenFrame.y + (screenFrame.h - consoleFrame.h),
+                    w = consoleFrame.w,
+                    h = consoleFrame.h,
+                }
+                consoleWindow:setFrame(newConsoleFrame)
+            end
+        end,
+        label   = "Reseat",
+        tooltip = "Reseat Console",
+    }
+}
+-- since they don't exist when the toolbar is first attached, we have to re-insert them here
+--   consider adding something in _coresetup to check users config dir for toolbar additions?
+console.toolbar():insertItem("reseat", #console.toolbar():visibleItems() + 1)
+                 :insertItem("clear", #console.toolbar():visibleItems() + 1)
 
 console.smartInsertDeleteEnabled(false)
 if console.darkMode() then
@@ -226,3 +263,4 @@ settings.clear("openConsoleOnLoad")
 settings.clear("positionConsoleOnLoad")
 
 _objc = require("hs._asm.objc")
+hd = require("hs.utf8").hexDump
