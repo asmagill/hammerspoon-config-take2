@@ -49,6 +49,10 @@ local settings    = require("hs.settings")
 local screen      = require("hs.screen")
 local canvas      = require("hs.canvas")
 
+-- using yabai for a while, lets see if this causes problems when I start the
+-- hs.window.filter rewrite
+canvas.useCustomAccessibilitySubrole(false)
+
 -- wrap these here so my personal modules see the wrapped versions
 local _hsrelaunch = hs.relaunch
 hs.relaunch = function(...)
