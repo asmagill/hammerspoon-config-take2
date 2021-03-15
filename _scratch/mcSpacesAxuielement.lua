@@ -15,6 +15,11 @@ local timer       = require("hs.timer")
 --    fully document
 --    add optional callback fn to gotoSpaceOnScreen and removeSpaceFromScreen
 --    allow screenID argument to be hs.screen object?
+--    does this work if "Displays have Separate Spaces" isn't checked in System Preferences ->
+--        Mission Control? What changes, and can we work around it?
+
+-- flicker can be reduced quite a bit (but not entirely) by turning on "Reduce Motion" in
+-- System Preferences -> Accessibility -> Display.
 
 -- all functions take an optional boolean as last argument to skip clearing Mission Control
 -- upon completion; this is in case you want to run multiple functions in series -- instead
