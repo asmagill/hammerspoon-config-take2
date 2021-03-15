@@ -127,7 +127,7 @@ module.spacesForScreen = function(...)
         else
             closeMC = args[1]
         end
-    else
+    elseif #args > 1 then
         screenID, closeMC = table.unpack(args)
     end
     if screenID == nil then screenID = screen.mainScreen():id() end
@@ -189,7 +189,7 @@ module.activeSpaceOnScreen = function(...)
         else
             closeMC = args[1]
         end
-    else
+    elseif #args > 1 then
         screenID, closeMC = table.unpack(args)
     end
     if screenID == nil then screenID = screen.mainScreen():id() end
@@ -257,7 +257,7 @@ module.addSpaceToScreen = function(...)
         else
             closeMC = args[1]
         end
-    else
+    elseif #args > 1 then
         screenID, closeMC = table.unpack(args)
     end
     if screenID == nil then screenID = screen.mainScreen():id() end
