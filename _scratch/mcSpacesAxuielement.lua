@@ -9,12 +9,20 @@ local timer       = require("hs.timer")
 --        what can we add without private APIs?
 --        what of the private APIs is maybe worth keeping?
 --        yabai supports *some* stuff on M1 without injection... investigate
---            move window to space           -- according to M1 tracking issue
---            ids of windows on other spaces -- observed
---            move from space to current?    -- check, not sure
+--            move window to space               -- according to M1 tracking issue
+--            ids of windows on other spaces     -- observed
+--            move window from space to current? -- check, not sure
 --    fully document
 --    add optional callback fn to gotoSpaceOnScreen and removeSpaceFromScreen
 --    allow screenID argument to be hs.screen object?
+
+-- all functions take an optional boolean as last argument to skip clearing Mission Control
+-- upon completion; this is in case you want to run multiple functions in series -- instead
+-- of having `n` open-close flickers, you'd just have the one. e.g.
+--
+--     spaces = require(this file)
+--     allSpaces = spaces.allSpaces(false)  -- leaves MC open
+--     activeSpaces = spaces.activeSpaces() -- closes MC
 
 local module = {}
 
@@ -92,6 +100,7 @@ local findSpacesSubgroup = function(targetIdentifier, screenID)
 end
 
 -- doAfter time for gotoSpaceOnScreen and removeSpaceFromScreen
+-- adjustable in case we find that it needs to be larger to work in someone's environment (hopefully not; it's already noticable)
 module.queueTime = require("hs.math").minFloat
 
 -- opens Mission Control page; probably not commonly useful
@@ -322,7 +331,7 @@ module.gotoSpaceOnScreen = function(...)
 end
 
 -- removeSpaceFromScreen(target, [screenID], [closeMCOnCompletion]) -> true | nil, errMsg
--- goes to the specified screen (names compared with string.match) on the specified (or main) screen
+-- removes the specified screen (names compared with string.match) on the specified (or main) screen
 --
 -- * requires delayed firing of button press via timer, so probably should add callback fn to allow
 -- specifying followup commands.
