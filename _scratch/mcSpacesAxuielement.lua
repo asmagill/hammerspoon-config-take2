@@ -3,6 +3,9 @@ local application = require("hs.application")
 local screen      = require("hs.screen")
 local inspect     = require("hs.inspect")
 local timer       = require("hs.timer")
+local host        = require("hs.host")
+local fs          = require("hs.fs")
+local plist       = require("hs.plist")
 
 -- TODO:
 --    determine what hs._asm.undocumented.spaces has that this doesn't
@@ -31,6 +34,33 @@ local timer       = require("hs.timer")
 
 local module = {}
 
+-- locale handling for buttons representing spaces in Mission Control
+
+local AXExitToDesktop, AXExitToFullscreenDesktop
+local getDockExitTemplates = function()
+    local locale = host.locale.current()
+    local path   = application("Dock"):path() .. "/Contents/Resources"
+
+    while #locale > 0 do
+        if fs.attributes(path .. "/" .. locale .. ".lproj/Accessibility.strings") then break end
+        locale = locale:match("^(.-)_?[^_]+$")
+    end
+
+    if #locale == 0 then locale = "en" end -- fallback to english
+
+    local contents = plist.read(path .. "/" .. locale .. ".lproj/Accessibility.strings")
+    AXExitToDesktop           = "^" .. contents.AXExitToDesktop:gsub("%%@", "(.-)") .. "$"
+    AXExitToFullscreenDesktop = "^" .. contents.AXExitToFullscreenDesktop:gsub("%%@", "(.-)") .. "$"
+end
+
+local localeChange_identifier = host.locale.registerCallback(getDockExitTemplates)
+getDockExitTemplates() -- set initial values
+
+local spacesNameFromButtonName = function(name)
+    return name:match(AXExitToFullscreenDesktop) or name:match(AXExitToDesktop) or name
+end
+
+-- now onto the rest of the local functions
 local _dockElement
 local getDockElement = function()
     -- if the Dock is killed for some reason, its element will be invalid
@@ -143,7 +173,7 @@ module.spacesForScreen = function(...)
 
     local results = {}
     for _, child in ipairs(mcSpacesList) do
-        table.insert(results, (child.AXDescription:gsub("^exit to ", "")))
+        table.insert(results, spacesNameFromButtonName(child.AXDescription))
     end
 
     if closeMC then closeMissionControl() end
@@ -205,7 +235,7 @@ module.activeSpaceOnScreen = function(...)
 
     local results = {}
     for _, child in ipairs(mcSpacesList.AXSelectedChildren or {}) do
-        table.insert(results, (child.AXDescription:gsub("^exit to ", "")))
+        table.insert(results, spacesNameFromButtonName(child.AXDescription))
     end
 
     if closeMC then closeMissionControl() end
@@ -318,7 +348,7 @@ module.gotoSpaceOnScreen = function(...)
     end
 
     for _, child in ipairs(mcSpacesList) do
-        local childName = child.AXDescription:gsub("^exit to ", "")
+        local childName = spacesNameFromButtonName(child.AXDescription)
         if childName:match(target) then
             local tmr
             tmr = timer.doAfter(module.queueTime, function()
@@ -369,7 +399,7 @@ module.removeSpaceFromScreen = function(...)
     end
 
     for _, child in ipairs(mcSpacesList) do
-        local childName = child.AXDescription:gsub("^exit to ", "")
+        local childName = spacesNameFromButtonName(child.AXDescription)
         if childName:match(target) then
             local tmr
             tmr = timer.doAfter(module.queueTime, function()
@@ -386,4 +416,8 @@ module.removeSpaceFromScreen = function(...)
     return nil, string.format("unable to find space matching '%s' on display", target)
 end
 
-return module
+return setmetatable(module, {
+    __gc = function(_)
+        host.locale.unregisterCallback(localeChange_identifier)
+    end
+})
