@@ -42,16 +42,13 @@ local window      = require("hs.window")
 local application = require("hs.application")
 local timer       = require("hs.timer")
 local ipc         = require("hs.ipc")
-local alert       = require("hs.alert")
 local image       = require("hs.image")
 local math        = require("hs.math")
 local settings    = require("hs.settings")
-local screen      = require("hs.screen")
-local canvas      = require("hs.canvas")
 
 -- using yabai for a while, lets see if this causes problems when I start the
 -- hs.window.filter rewrite
-canvas.useCustomAccessibilitySubrole(false)
+require("hs.canvas").useCustomAccessibilitySubrole(false)
 
 -- wrap these here so my personal modules see the wrapped versions
 local _hsrelaunch = hs.relaunch
@@ -124,66 +121,6 @@ _asm._menus   = requirePlus.requirePath("utils._menus")
 edit = function(where)
     where = where or "."
     os.execute("/usr/local/bin/edit "..where)
-end
-m = function(which)
-    os.execute("open x-man-page://"..tostring(which))
-end
-
-local _c = canvas.new{ x = 0, y = 0, h = 200, w = 200 }
-_c[1] = {
-    type           = "image",
-    image          = image.imageFromName("NSShareTemplate"):template(false),
-    transformation = canvas.matrix.translate(100, 100):rotate(180):translate(-100, -100),
-}
-local _i_reseatConsole = _c:imageFromCanvas()
-_c:delete()
-
--- hs.drawing.windowBehaviors.moveToActiveSpace
-console.behavior(2)
---console.titleVisibility("hidden")
-console.toolbar():addItems{
-    {
-        id = "clear",
-        image   = image.imageFromName("NSTrashFull"),
-        fn      = function(...) console.clearConsole() end,
-        label   = "Clear",
-        tooltip = "Clear Console",
-    }, {
-        id      = "reseat",
-        image   = _i_reseatConsole,
-        fn      = function(...)
-            local hammerspoon = application.applicationsForBundleID(hs.processInfo.bundleID)[1]
-            local consoleWindow = hammerspoon:mainWindow()
-            if consoleWindow then
-                local consoleFrame = consoleWindow:frame()
-                local screenFrame = screen.mainScreen():frame()
-                local newConsoleFrame = {
-                    x = screenFrame.x + (screenFrame.w - consoleFrame.w) / 2,
-                    y = screenFrame.y + (screenFrame.h - consoleFrame.h),
-                    w = consoleFrame.w,
-                    h = consoleFrame.h,
-                }
-                consoleWindow:setFrame(newConsoleFrame)
-            end
-        end,
-        label   = "Reseat",
-        tooltip = "Reseat Console",
-    }
-}
--- since they don't exist when the toolbar is first attached, we have to re-insert them here
---   consider adding something in _coresetup to check users config dir for toolbar additions?
-console.toolbar():insertItem("reseat", #console.toolbar():visibleItems() + 1)
-                 :insertItem("clear", #console.toolbar():visibleItems() + 1)
-
-console.smartInsertDeleteEnabled(false)
-if console.darkMode() then
-    console.outputBackgroundColor{ white = 0 }
-    console.consoleCommandColor{ white = 1 }
-    console.alpha(.8)
-else
-    console.windowBackgroundColor({red=.6,blue=.7,green=.7})
-    console.outputBackgroundColor({red=.8,blue=.8,green=.8})
-    console.alpha(.9)
 end
 
 history = _asm._actions.consoleHistory.history
