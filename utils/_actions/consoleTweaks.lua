@@ -1,7 +1,8 @@
-local console = require("hs.console")
-local canvas  = require("hs.canvas")
-local image   = require("hs.image")
-local screen  = require("hs.screen")
+local console     = require("hs.console")
+local canvas      = require("hs.canvas")
+local image       = require("hs.image")
+local screen      = require("hs.screen")
+local application = require("hs.application")
 
 local _c = canvas.new{ x = 0, y = 0, h = 200, w = 200 }
 _c[1] = {
