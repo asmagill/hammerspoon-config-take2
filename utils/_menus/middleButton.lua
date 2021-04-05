@@ -298,9 +298,6 @@ end
 ---
 --- Notes:
 ---  * this function is invoked when you select the "Scan for Multitouch devices" from the menu.
----
----  * `hs._asm.undocumented.touchdevice` cannot currently detect when multitouch devices are removed or added, so this function can be used to update the watchers if you add or remove a device.
----    * this is expected to change soon and this function may disappear at that time.
 module.rescan = function()
     -- clear the current callbacks
     for _, v in ipairs(_attachedDeviceCallbacks) do v:stop() end
@@ -309,65 +306,68 @@ module.rescan = function()
     -- if we're running, start up new callbcaks for all currently attached devices
     if _menu then
         for _, v in ipairs(touchdevice.devices()) do
-            table.insert(
-                _attachedDeviceCallbacks,
-                touchdevice.forDeviceID(v):frameCallback(function(_, touches, _, _)
-                    local nFingers = #touches
+            local device = touchdevice.forDeviceID(v)
+            if device:details().MTHIDDevice then
+                table.insert(
+                    _attachedDeviceCallbacks,
+                    device:frameCallback(function(_, touches, _, _)
+                        local nFingers = #touches
 
-                    if (_needToClick) then
-                        _enoughDown = (nFingers == _fingers)
-                    else
-                        if nFingers == 0 then
-                            if _middleclickPoint and _middleclickPoint2 then
-                                local delta = math.abs(_middleclickPoint.x - _middleclickPoint2.x) +
-                                              math.abs(_middleclickPoint.y - _middleclickPoint2.y)
-                                if delta < _tapDelta then
-                                    -- empty events default to current mouse location
-                                    local nullEvent = eventtap.event.newEvent()
-                                    eventtap.middleClick(nullEvent:location())
-                                elseif module._debugDelta then
-                                    print(string.format("%s - tap delta mismatch: want < %f, got %f", USERDATA_TAG, _tapDelta, delta))
+                        if (_needToClick) then
+                            _enoughDown = (nFingers == _fingers)
+                        else
+                            if nFingers == 0 then
+                                if _middleclickPoint and _middleclickPoint2 then
+                                    local delta = math.abs(_middleclickPoint.x - _middleclickPoint2.x) +
+                                                  math.abs(_middleclickPoint.y - _middleclickPoint2.y)
+                                    if delta < _tapDelta then
+                                        -- empty events default to current mouse location
+                                        local nullEvent = eventtap.event.newEvent()
+                                        eventtap.middleClick(nullEvent:location())
+                                    elseif module._debugDelta then
+                                        print(string.format("%s - tap delta mismatch: want < %f, got %f", USERDATA_TAG, _tapDelta, delta))
+                                    end
+                                end
+                                _touchStartTime    = nil
+                                _middleclickPoint  = nil
+                                _middleclickPoint2 = nil
+                            elseif nFingers > 0 and not _touchStartTime then
+                                _touchStartTime   = timer.secondsSinceEpoch()
+                                _maybeMiddleClick = true
+                                _middleclickPoint = { x = 0, y = 0 }
+                            elseif _maybeMiddleClick then
+                                local elapsedTime = timer.secondsSinceEpoch() - _touchStartTime
+                                if elapsedTime > .5 then
+                                    _maybeMiddleClick  = false
+                                    _middleclickPoint  = nil
+                                    _middleclickPoint2 = nil
                                 end
                             end
-                            _touchStartTime    = nil
-                            _middleclickPoint  = nil
-                            _middleclickPoint2 = nil
-                        elseif nFingers > 0 and not _touchStartTime then
-                            _touchStartTime   = timer.secondsSinceEpoch()
-                            _maybeMiddleClick = true
-                            _middleclickPoint = { x = 0, y = 0 }
-                        elseif _maybeMiddleClick then
-                            local elapsedTime = timer.secondsSinceEpoch() - _touchStartTime
-                            if elapsedTime > .5 then
+
+                            if nFingers > _fingers then
                                 _maybeMiddleClick  = false
                                 _middleclickPoint  = nil
                                 _middleclickPoint2 = nil
+                            elseif nFingers == _fingers then
+                                local xAggregate = touches[1].absoluteVector.position.x +
+                                                   touches[2].absoluteVector.position.x +
+                                                   touches[3].absoluteVector.position.x
+                                local yAggregate = touches[1].absoluteVector.position.y +
+                                                   touches[2].absoluteVector.position.y +
+                                                   touches[3].absoluteVector.position.y
+
+                                if _maybeMiddleClick then
+                                    _middleclickPoint  = { x = xAggregate, y = yAggregate }
+                                    _middleclickPoint2 = { x = xAggregate, y = yAggregate }
+                                    _maybeMiddleClick  = false;
+                                else
+                                    _middleclickPoint2 = { x = xAggregate, y = yAggregate }
+                                end
                             end
                         end
-
-                        if nFingers > _fingers then
-                            _maybeMiddleClick  = false
-                            _middleclickPoint  = nil
-                            _middleclickPoint2 = nil
-                        elseif nFingers == _fingers then
-                            local xAggregate = touches[1].absoluteVector.position.x +
-                                               touches[2].absoluteVector.position.x +
-                                               touches[3].absoluteVector.position.x
-                            local yAggregate = touches[1].absoluteVector.position.y +
-                                               touches[2].absoluteVector.position.y +
-                                               touches[3].absoluteVector.position.y
-
-                            if _maybeMiddleClick then
-                                _middleclickPoint  = { x = xAggregate, y = yAggregate }
-                                _middleclickPoint2 = { x = xAggregate, y = yAggregate }
-                                _maybeMiddleClick  = false;
-                            else
-                                _middleclickPoint2 = { x = xAggregate, y = yAggregate }
-                            end
-                        end
-                    end
-                end):start()
-            )
+                    end):start()
+                )
+            end
         end
     end
     return module
