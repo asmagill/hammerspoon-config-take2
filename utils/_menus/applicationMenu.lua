@@ -28,8 +28,9 @@ local appMenu = FLM.new("Apps") ;
 
 -- Specify the root directory to start from.
 appMenu:rootDirectory({
-    OS   = "/System/Applications",
-    User = "/Applications",
+    macOS        = "/System/Applications",
+    Applications = "/Applications",
+    User         = "~/Applications",
 })
 
 -- The maximum folder depth that we will search for files or folders which match the
