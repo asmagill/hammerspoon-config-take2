@@ -424,7 +424,7 @@ module.new = function(size)
                         if buttons.left then
                             local mover = coroutine.wrap(function()
                                 while _movers[_c] do
-                                    local pos = mouse.getAbsolutePosition()
+                                    local pos = mouse.absolutePosition()
                                     local frame = _c:frame()
                                     frame.x = pos.x - _x
                                     frame.y = pos.y - _y

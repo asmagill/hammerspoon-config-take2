@@ -83,7 +83,7 @@ module.chooser:fgColor{ list = "x11", name = "lightskyblue" }
                       } },
                   })
                   table.sort(menuItems, function(a, b) return a.title < b.title end)
-                  local menu = menubar.new(false):setMenu(menuItems):popupMenu(mouse.getAbsolutePosition())
+                  local menu = menubar.new(false):setMenu(menuItems):popupMenu(mouse.absolutePosition())
               end)
 --              :bgDark(true)
 

@@ -100,7 +100,7 @@ enableRectangleDragger = function(location)
         local newFrame = {}
         -- engaged is updated by mouseUpEventtap and flagChangeEventtap to signal when to end
         while engaged do
-            local mousePos = mouse.getAbsolutePosition()
+            local mousePos = mouse.absolutePosition()
             newFrame = {
                 x = startingLocation.x,
                 y = startingLocation.y,

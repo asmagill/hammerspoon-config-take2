@@ -60,7 +60,7 @@ module._pasteWatcher = eventtap.new({eventTypes.otherMouseDown}, function(e)
             eventtap.event.newKeyEvent({"cmd"}, "v", false):post()
             module._pasteTimer = nil
         end)
-        local mousePos = mouse.getAbsolutePosition()
+        local mousePos = mouse.absolutePosition()
         return false, {
             eventtap.event.newMouseEvent(eventTypes.leftMouseDown, mousePos),
             eventtap.event.newMouseEvent(eventTypes.leftMouseUp, mousePos),

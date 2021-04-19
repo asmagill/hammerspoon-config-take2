@@ -117,7 +117,7 @@ module.rescan = function()
                                 local delta = math.abs(_middleclickPoint.x - _middleclickPoint2.x) +
                                               math.abs(_middleclickPoint.y - _middleclickPoint2.y)
                                 if delta < 0.4 then
-                                    eventtap.middleClick(mouse.getAbsolutePosition())
+                                    eventtap.middleClick(mouse.absolutePosition())
                                 end
                             end
                             _touchStartTime    = nil

@@ -136,7 +136,7 @@ end
 local updateRemoteCanvas = function()
     if __internals._rCanvas then
         if __internals._rCanvas:isShowing() then
-            local mousePos = mouse.getAbsolutePosition()
+            local mousePos = mouse.absolutePosition()
             if geometry.inside(mousePos, __internals._rCanvas:frame()) then
                 __internals._rCanvas["background"].fillColor.alpha = __spoonVariables.visibleAlpha
 
@@ -398,7 +398,7 @@ local remoteMouseCallback = function(c, m, id, x, y)
 --                                     __internals._mouseMoveTracker:stop()
 --                                     __internals._mouseMoveTracker = nil
 --                                 else
---                                     local mousePosition = mouse.getAbsolutePosition()
+--                                     local mousePosition = mouse.absolutePosition()
 --                                     __spoonVariables.position = {
 --                                         x = mousePosition.x - x,
 --                                         y = mousePosition.y - y,
@@ -410,7 +410,7 @@ local remoteMouseCallback = function(c, m, id, x, y)
 --                         ):start()
                         __internals._mouseMoveTracker = coroutine.wrap(function()
                             while __internals._mouseMoveTracker do
-                                local pos = mouse.getAbsolutePosition()
+                                local pos = mouse.absolutePosition()
                                 __spoonVariables.position = {
                                     x = pos.x - x,
                                     y = pos.y - y,
@@ -703,7 +703,7 @@ obj.show = function(self)
         updateRemoteCanvas()
 
         __internals._shouldHideWatcher = timer.doEvery(5, function()
-            local mousePos = mouse.getAbsolutePosition()
+            local mousePos = mouse.absolutePosition()
             if not geometry.inside(mousePos, __internals._rCanvas:frame()) then
                 goDark()
             end
