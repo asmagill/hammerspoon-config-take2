@@ -12,204 +12,364 @@ local buttonStyle = {
 layout.buttons = {
 -- specially handled
     _Close = {
-        enabled = false,
-        char = stext.new(utf8.char(0x2612), {
-            font = { name = "Menlo", size = 14 },
+        enabled       = true,
+        useInSizing   = false,
+        alwaysDisplay = true,
+        char          = stext.new(utf8.char(0x2612), {
+            font           = { name = "Menlo", size = 14 },
             paragraphStyle = { alignment = "center" },
-            color = { white = 1 },
+            color          = { white = 1 },
         }),
-        offset = { x = 1, y = -7.5 },
+        offset        = { x = 1, y = -7.5 },
     },
     _Move = {
-        enabled = false,
+        enabled       = true,
+        useInSizing   = false,
+        alwaysDisplay = true,
         char = stext.new(utf8.char(0x29bf), {
-            font = { name = "Menlo", size = 14 },
+            font           = { name = "Menlo", size = 14 },
             paragraphStyle = { alignment = "center" },
-            color = { white = 1 },
+            color          = { white = 1 },
         }),
-        offset = { x = 1, y = -6 },
+        offset        = { x = 1, y = -6 },
+    },
+    _Settings = {
+        enabled       = true,
+        useInSizing   = false,
+        alwaysDisplay = true,
+        char          = stext.new(utf8.char(0x25be), {
+            font           = { name = "Menlo", size = 14 },
+            paragraphStyle = { alignment = "center" },
+            color          = { green = 1 },
+        }),
+        offset        = { x = 1, y = -6 },
+        menu          = {
+            { "Auto Dimming",       "autoDim",          "boolean" },
+            { "Keyboard Shortcuts", "enableKeys",       "boolean" },
+            { "-" },
+            { "Remote Color",       "remoteColor",      "color" },
+            { "Button Frame Color", "buttonFrameColor", "color" },
+            { "Button Hover Color", "buttonHoverColor", "color" },
+            { "Button Click Color", "buttonClickColor", "color" },
+            { "-" },
+            { "Active Alpha",       "activeAlpha",      "number", { 0.0, 1.0 }},
+            { "Inactive Alpha",     "inactiveAlpha",    "number", { 0.0, 1.0 }},
+        },
     },
     _Device = {
-        enabled = true, -- include in grid size determination
-        pos = { x = 0, y = 0, w = 4, h = 1 },
-        char = stext.new(utf8.char(0x1f4fa), {
-            font = { name = "Menlo", size = 18 },
+        enabled           = true,
+        useInSizing       = false,
+        alwaysDisplay     = true,
+        pos               = { x = 0, y = 0, w = 5, h = 1 },
+        triggerUpdate     = true,
+        offset            = { x = 0, y = 2 }, -- some characters seem off, even using canvas:minimumTextSize
+        image             = true,
+        canvasFrameAction = "fill",
+        char              = stext.new("Choose Device", {
+            font           = { name = "Menlo", size = 14 },
             paragraphStyle = {
-                alignment                     = "center",
-                lineBreak                     = "truncateTail",
---                 allowsTighteningForTruncation = false,
+                alignment = "center",
+                lineBreak = "truncateTail",
             },
-            color = { white = 1 },
+            color          = { white = 1 },
         }),
-        triggerUpdate = true,
-        offset = { x = 0, y = 0 }, -- some characters seem off, even using canvas:minimumTextSize
     },
+
     _Active = {
-        enabled = true, -- include in grid size determination
-        pos = { x = 0, y = 7, w = 3, h = 2 },
+        enabled     = true,
+        useInSizing = true, -- include in grid size determination
+        pos         = { x = 0, y = 8, w = 3, h = 2 },
+        image       = true,
     },
     _Keyboard = {
-        enabled = true, -- include in grid size determination
-        pos = { x = 3, y = 7, w = 1, h = 1 },
-        char = stext.new(utf8.char(0x2328), {
-            font = { name = "Menlo", size = 28 },
+        enabled     = true,
+        useInSizing = true, -- include in grid size determination
+        pos         = { x = 3, y = 8, w = 2, h = 1 },
+        char        = stext.new(utf8.char(0x2328), {
+            font           = { name = "Menlo", size = 28 },
             paragraphStyle = { alignment = "center" },
-            color = { white = 1 },
+            color          = { white = 1 },
         }),
-        offset = { x = 0, y = -4 }, -- some characters seem off, even using canvas:minimumTextSize
+        offset      = { x = 0, y = -4 }, -- some characters seem off, even using canvas:minimumTextSize
     },
     _Launch = {
-        enabled = true, -- include in grid size determination
-        pos = { x = 3, y = 8, w = 1, h = 1 },
-        char = stext.new(utf8.char(0x2630), buttonStyle),
-        offset = { x = 0, y = -2 }, -- some characters seem off, even using canvas:minimumTextSize
+        enabled       = true,
+        useInSizing   = true, -- include in grid size determination
+        pos           = { x = 3, y = 9, w = 2, h = 1 },
+        char          = stext.new(utf8.char(0x2630), buttonStyle),
+        offset        = { x = 0, y = -2 }, -- some characters seem off, even using canvas:minimumTextSize
         triggerUpdate = true,
     },
-    -- keyboard related only; handled by _Keyboard handler, ignored by regular parser
+
+-- keyboard related only; handled by _Keyboard handler, ignored by regular parser
     Enter = {
-        enabled = false,
-        char = stext.new(utf8.char(0x23ce), buttonStyle),
-        parent = "_Keyboard",
+        enabled     = false,
+        useInSizing = false,
+        char        = stext.new(utf8.char(0x23ce), buttonStyle),
+        parent      = "_Keyboard",
     },
     Backspace = {
-        enabled = false,
-        char = stext.new(utf8.char(0x232b), buttonStyle),
-        parent = "_Keyboard",
+        enabled     = false,
+        useInSizing = false,
+        char        = stext.new(utf8.char(0x232b), buttonStyle),
+        parent      = "_Keyboard",
     },
 
 -- regular remote buttons
     Home = {
-        enabled = true,
-        pos = { x = 1.5, y = 1, w = 1.5, h = 1 },
-        char = stext.new(utf8.char(0x1f3da), buttonStyle),
-    },
-    Rev = {
-        enabled = true,
-        pos = { x = 0, y = 6, w = 1, h = 1 },
-        char = stext.new(utf8.char(0x23ea), buttonStyle),
-        offset = { x = 0, y = -.5 }, -- some characters seem off, even using canvas:minimumTextSize
-    },
-    Fwd = {
-        enabled = true,
-        pos = { x = 2, y = 6, w = 1, h = 1 },
-        char = stext.new(utf8.char(0x23e9), buttonStyle),
-        offset = { x = 0, y = -.5 }, -- some characters seem off, even using canvas:minimumTextSize
-    },
-    Play = {
-        enabled = true,
-        pos = { x = 1, y = 6, w = 1, h = 1 },
-        char = stext.new(utf8.char(0x23ef), buttonStyle),
-        offset = { x = 0, y = -.5 }, -- some characters seem off, even using canvas:minimumTextSize
-    },
-    Select = {
-        enabled = true,
-        pos = { x = 1, y = 3, w = 1, h = 1 },
-        char = stext.new(utf8.char(0x26aa), buttonStyle),
-        offset = { x = 0, y = -1 }, -- some characters seem off, even using canvas:minimumTextSize
+        enabled       = true,
+        useInSizing   = true,
+        pos           = { x = 1.5, y = 1, w = 1.5, h = 1 },
+        char          = stext.new(utf8.char(0x1f3da), buttonStyle),
         triggerUpdate = true,
-    },
-    Left = {
-        enabled = true,
-        pos = { x = 0, y = 3, w = 1, h = 1 },
-        char = stext.new(utf8.char(0x25c0), buttonStyle),
-        offset = { x = -1, y = -3 }, -- some characters seem off, even using canvas:minimumTextSize
-    },
-    Right = {
-        enabled = true,
-        pos = { x = 2, y = 3, w = 1, h = 1 },
-        char = stext.new(utf8.char(0x25b6), buttonStyle),
-        offset = { x = 1, y = -3 }, -- some characters seem off, even using canvas:minimumTextSize
-    },
-    Down = {
-        enabled = true,
-        pos = { x = 1, y = 4, w = 1, h = 1 },
-        char = stext.new(utf8.char(0x25bc), buttonStyle),
-        offset = { x = .5, y = -2 }, -- some characters seem off, even using canvas:minimumTextSize
-    },
-    Up = {
-        enabled = true,
-        pos = { x = 1, y = 2, w = 1, h = 1 },
-        char = stext.new(utf8.char(0x25b2), buttonStyle),
-        offset = { x = .5, y = -3 }, -- some characters seem off, even using canvas:minimumTextSize
+        offset        = { x = 0, y = -2 }, -- some characters seem off, even using canvas:minimumTextSize
     },
     Back = {
-        enabled = true,
-        pos = { x = 0, y = 1, w = 1.5, h = 1 },
-        char = stext.new(utf8.char(0x2b05), buttonStyle),
-        offset = { x = 0, y = -1 }, -- some characters seem off, even using canvas:minimumTextSize
+        enabled     = true,
+        useInSizing = true,
+        pos         = { x = 0, y = 1, w = 1.5, h = 1 },
+        char        = stext.new(utf8.char(0x2b05), buttonStyle),
+        offset      = { x = 0, y = -1 }, -- some characters seem off, even using canvas:minimumTextSize
     },
+
+    Rev = {
+        enabled     = true,
+        useInSizing = true,
+        pos         = { x = 0, y = 7, w = 1, h = 1 },
+        char        = stext.new(utf8.char(0x23ea), buttonStyle),
+        offset      = { x = 0, y = -1.5 }, -- some characters seem off, even using canvas:minimumTextSize
+    },
+    Fwd = {
+        enabled     = true,
+        useInSizing = true,
+        pos         = { x = 2, y = 7, w = 1, h = 1 },
+        char        = stext.new(utf8.char(0x23e9), buttonStyle),
+        offset      = { x = 0, y = -1.5 }, -- some characters seem off, even using canvas:minimumTextSize
+    },
+    Play = {
+        enabled     = true,
+        useInSizing = true,
+        pos         = { x = 1, y = 7, w = 1, h = 1 },
+        char        = stext.new(utf8.char(0x23ef), buttonStyle),
+        offset      = { x = 0, y = -1.5 }, -- some characters seem off, even using canvas:minimumTextSize
+    },
+
+    Select = {
+        enabled           = true,
+        useInSizing       = true,
+        pos               = { x = 1, y = 3.5, w = 1, h = 1 },
+        char              = stext.new(utf8.char(0x26aa), buttonStyle),
+        offset            = { x = 0, y = -1.5 }, -- some characters seem off, even using canvas:minimumTextSize
+        triggerUpdate     = true,
+        canvasFrameAction = "fill",
+    },
+    Left = {
+        enabled           = true,
+        useInSizing       = true,
+        pos               = { x = 0, y = 3.5, w = 1, h = 1 },
+        char              = stext.new(utf8.char(0x25c0), buttonStyle),
+        offset            = { x = -1, y = -3 }, -- some characters seem off, even using canvas:minimumTextSize
+        canvasFrameAction = "fill",
+    },
+    Right = {
+        enabled           = true,
+        useInSizing       = true,
+        pos               = { x = 2, y = 3.5, w = 1, h = 1 },
+        char              = stext.new(utf8.char(0x25b6), buttonStyle),
+        offset            = { x = 1, y = -3 }, -- some characters seem off, even using canvas:minimumTextSize
+        canvasFrameAction = "fill",
+    },
+    Down = {
+        enabled           = true,
+        useInSizing       = true,
+        pos               = { x = 1, y = 4.5, w = 1, h = 1 },
+        char              = stext.new(utf8.char(0x25bc), buttonStyle),
+        offset            = { x = .5, y = -2 }, -- some characters seem off, even using canvas:minimumTextSize
+        canvasFrameAction = "fill",
+    },
+    Up = {
+        enabled           = true,
+        useInSizing       = true,
+        pos               = { x = 1, y = 2.5, w = 1, h = 1 },
+        char              = stext.new(utf8.char(0x25b2), buttonStyle),
+        offset            = { x = .5, y = -3 }, -- some characters seem off, even using canvas:minimumTextSize
+        canvasFrameAction = "fill",
+    },
+
     InstantReplay = {
-        enabled = true,
-        pos = { x = 0, y = 5, w = 1, h = 1 },
-        char = stext.new(utf8.char(0x21b6), buttonStyle),
-        offset = { x = 0, y = -2 }, -- some characters seem off, even using canvas:minimumTextSize
+        enabled     = true,
+        useInSizing = true,
+        pos         = { x = 0, y = 6, w = 1, h = 1 },
+        char        = stext.new(utf8.char(0x21b6), {
+            font           = { name = "Menlo", size = 24 },
+            paragraphStyle = { alignment = "center" },
+            color          = { white = 1 },
+        }),
+        offset      = { x = 0, y = -2 }, -- some characters seem off, even using canvas:minimumTextSize
     },
     Info = {
-        enabled = true,
-        pos = { x = 2, y = 5, w = 1, h = 1 },
-        char = stext.new(utf8.char(0x2731), buttonStyle),
-        offset = { x = 0, y = -2 }, -- some characters seem off, even using canvas:minimumTextSize
+        enabled     = true,
+        useInSizing = true,
+        pos         = { x = 2, y = 6, w = 1, h = 1 },
+        char        = stext.new(utf8.char(0x2731), buttonStyle),
+        offset      = { x = 0, y = -2 }, -- some characters seem off, even using canvas:minimumTextSize
     },
     Search = {
-        enabled = true,
-        pos = { x = 1, y = 5, w = 1, h = 1 },
-        char = stext.new(utf8.char(0x1f50e), buttonStyle),
-        sendUpDown = true, -- sends "down"/"up" with mouseDown/Up rather then "pressed" with mouseUp
+        enabled     = true,
+        useInSizing = true,
+        pos         = { x = 1, y = 6, w = 1, h = 1 },
+        char        = stext.new(utf8.char(0x1f50e), buttonStyle),
+        sendUpDown  = true, -- sends "down"/"up" with mouseDown/Up rather then "pressed" with mouseUp
+        offset      = { x = 0, y = -1 }, -- some characters seem off, even using canvas:minimumTextSize
     },
+
 -- used when private listening supported or isTV
     VolumeDown = {
-        enabled = true,
-        pos = { x = 3, y = 3, w = 1, h = 1 },
-        char = stext.new(utf8.char(0x1f509), buttonStyle),
-        active = function(dev) return dev:isTV() or dev:headphonesConnected() end,
+        enabled     = true,
+        useInSizing = true,
+        pos         = { x = 4, y = 2, w = 1, h = 1 },
+        char        = stext.new(utf8.char(0x1f509), buttonStyle),
+        active      = function(dev) return dev:isTV() or dev:headphonesConnected() end,
+        offset      = { x = 1, y = -2 }, -- some characters seem off, even using canvas:minimumTextSize
     },
     VolumeUp = {
-        enabled = true,
-        pos = { x = 3, y = 1, w = 1, h = 1 },
-        char = stext.new(utf8.char(0x1f50a), buttonStyle),
-        active = function(dev) return dev:isTV() or dev:headphonesConnected() end,
+        enabled     = true,
+        useInSizing = true,
+        pos         = { x = 4, y = 1, w = 1, h = 1 },
+        char        = stext.new(utf8.char(0x1f50a), buttonStyle),
+        active      = function(dev) return dev:isTV() or dev:headphonesConnected() end,
+        offset      = { x = 1, y = -2 }, -- some characters seem off, even using canvas:minimumTextSize
     },
+
 -- not sure if useful in this context
     A = {
-        enabled = false,
+        enabled     = true,
+        useInSizing = true,
+        pos         = { x = 4, y = 3, w = 1, h = 1 },
+        char        = stext.new("A", buttonStyle),
+        offset      = { x = 0, y = -1 }, -- some characters seem off, even using canvas:minimumTextSize
     },
     B = {
-        enabled = false,
+        enabled     = true,
+        useInSizing = true,
+        pos         = { x = 4, y = 4, w = 1, h = 1 },
+        char        = stext.new("B", buttonStyle),
+        offset      = { x = 0, y = -1 }, -- some characters seem off, even using canvas:minimumTextSize
     },
+
     FindRemote = {
-        enabled = false,
+        enabled     = true,
+        useInSizing = true,
+        pos         = { x = 4, y = 5, w = 1, h = 1 },
+        char        = stext.new(utf8.char(0x1f4f2), buttonStyle),
+        active      = function(dev) return dev:supportsFindRemote() end,
+        offset      = { x = 0, y = -2 }, -- some characters seem off, even using canvas:minimumTextSize
     },
--- I don't have a RokuTV, so not sure the best way to represent these, but leaving
--- in place in case someone else wants to add them
+
+    VolumeMute = {
+        enabled     = true,
+        useInSizing = true,
+        pos         = { x = 3, y = 1, w = 1, h = 2 },
+        char        = stext.new(utf8.char(0x1f507), buttonStyle),
+        active      = function(dev) return dev:isTV() end,
+        offset      = { x = 1, y = -2 }, -- some characters seem off, even using canvas:minimumTextSize
+   },
+
     ChannelUp = {
-        enabled = false,
+        enabled     = true,
+        useInSizing = true,
+        pos         = { x = 3, y = 7, w = 1, h = 1 },
+        char        = stext.new(utf8.char(0x2b06), buttonStyle),
+        active      = function(dev) return dev:isTV() end,
+        offset      = { x = 0, y = -1 }, -- some characters seem off, even using canvas:minimumTextSize
     },
     ChannelDown = {
-        enabled = false,
+        enabled     = true,
+        useInSizing = true,
+        pos         = { x = 4, y = 7, w = 1, h = 1 },
+        char        = stext.new(utf8.char(0x2b07), buttonStyle),
+        active      = function(dev) return dev:isTV() end,
+        offset      = { x = 0, y = -1 }, -- some characters seem off, even using canvas:minimumTextSize
     },
-    VolumeMute = {
-        enabled = false,
+
+-- ECP docs only mention "PowerOff", but a little googling found forum posts mentioning "PowerOn"
+-- and "Power", so, maybe new additions? At any rate, it works for the one TV I have sporadic access to
+--     Power = {
+--         enabled     = true,
+--         useInSizing = true,
+--         pos         = { x = 3, y = 6, w = 2, h = 1 },
+--         char        = stext.new(utf8.char(0x23FB), buttonStyle),
+--         active      = function(dev) return dev:isTV() end,
+--         offset      = { x = 0, y = -1 }, -- some characters seem off, even using canvas:minimumTextSize
+--     },
+
+    Power = {
+        enabled           = true,
+        useInSizing       = false,
+        active            = function(dev) return dev:isTV() or dev:headphonesConnected() end,
+        pos               = { x = 3, y = 6, w = 2, h = 1 },
+        char              = function(dev)
+            if not (dev and dev:tvPowerIsOn()) then
+                return stext.new(utf8.char(0x26aa) .. " ", {
+                    font           = { name = "Menlo", size = 14 },
+                    paragraphStyle = { alignment = "center" },
+                    color          = { white = 1 },
+                }) .. stext.new(utf8.char(0x23FB), buttonStyle)
+            else
+                return stext.new(utf8.char(0x1f7e2) .. " ", {
+                    font           = { name = "Menlo", size = 14 },
+                    paragraphStyle = { alignment = "center" },
+                    color          = { white = 1 },
+                }) .. stext.new(utf8.char(0x23FB), buttonStyle)
+            end
+        end,
+        offset            = { x = 0, y = -3 }, -- some characters seem off, even using canvas:minimumTextSize
+        triggerUpdate     = true,
+    },
+
+-- I prefer a single button for toggling (above), but these work if you want them separate
+    PowerOn = {
+        enabled     = false,
+        useInSizing = false,
+        active      = function(dev) return dev:isTV() end,
     },
     PowerOff = {
-        enabled = false,
+        enabled     = false,
+        useInSizing = false,
+        active      = function(dev) return dev:isTV() end,
     },
+
+-- These show up in the available apps intermixed with the installed apps, so no *need* to include
+-- these unless you particularly want them...
     InputTuner = {
-        enabled = false,
+        enabled     = false,
+        useInSizing = false,
+        active      = function(dev) return dev:isTV() end,
     },
     InputHDMI1 = {
-        enabled = false,
+        enabled     = false,
+        useInSizing = false,
+        active      = function(dev) return dev:isTV() end,
     },
     InputHDMI2 = {
-        enabled = false,
+        enabled     = false,
+        useInSizing = false,
+        active      = function(dev) return dev:isTV() end,
     },
     InputHDMI3 = {
-        enabled = false,
+        enabled     = false,
+        useInSizing = false,
+        active      = function(dev) return dev:isTV() end,
     },
     InputHDMI4 = {
-        enabled = false,
+        enabled     = false,
+        useInSizing = false,
+        active      = function(dev) return dev:isTV() end,
     },
     InputAV1 = {
-        enabled = false,
+        enabled     = false,
+        useInSizing = false,
+        active      = function(dev) return dev:isTV() end,
     },
 }
 
@@ -220,8 +380,10 @@ local maxW, maxH = 0, 0
 local maxX, maxY = 0, 0
 local _c = canvas.new{}
 for k,v in pairs(layout.buttons) do
-    if v.enabled then
-        if k ~= "_Keyboard" then -- throws the caculation off because it has a lot of whitespace around it that is considered part of the character for some reason
+    if v.enabled and v.useInSizing then
+        -- these throw the caculation off because it has a lot of whitespace around then
+        -- that is considered part of the character
+        if k ~= "_Keyboard" and k ~= "InstantReplay" then
             if v.char then
                 local box = _c:minimumTextSize(v.char)
 -- print(v.char, box.w, box.h)

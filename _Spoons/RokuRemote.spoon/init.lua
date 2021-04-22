@@ -1,11 +1,22 @@
 -- TODO:
+--    recode -- some of this is a little on the ugly side, and there are better ways to do somethings now...
+--        redo menu code?
+--        move eventtaps to coroutines (for move at least, others?)
+--        obj __newindex for settings
+--
 --    document both spoons
---    implement keyboard support
---    add keyEquivelants toggle button?
---    display of device; smaller text, separate icon/text spaces?
---  + add save button (for position only; other settings require console since they're likely to be set either once or in code every time)
---  + add more keyboard equivalents?
---  +     editable through setting?
+--
+-- +  add _Settings menu
+-- +  A/B (at least as keybindings?)
+-- +  implement keyboard support
+-- +  FindRemote useful?
+-- +  add device image to _Device menu and display?
+--    tooltip on hover over buttons?
+--        add setting to suppress
+--  ? Search?
+--
+--    add more keyboard equivalents?
+--        editable through setting?
 
 --- === RokuRemote ===
 ---
@@ -13,7 +24,7 @@
 ---
 --- Requires the RokuControl spoon.
 ---
---- Download: `svn export https://github.com/asmagill/hammerspoon-config/trunk/_Spoons/PwnedPasswords.spoon`
+--- Download: `svn export https://github.com/asmagill/hammerspoon-config/trunk/_Spoons/RokuControl.spoon`
 
 local screen     = require("hs.screen")
 local canvas     = require("hs.canvas")
@@ -30,6 +41,10 @@ local image      = require("hs.image")
 local caffeinate = require("hs.caffeinate")
 local eventtap   = require("hs.eventtap")
 local spoons     = require("hs.spoons")
+local dialog     = require("hs.dialog")
+local alert      = require("hs.alert")
+local keycodes   = require("hs.keycodes")
+
 local events     = eventtap.event.types
 
 local roku     = hs.loadSpoon("RokuControl")
@@ -62,27 +77,23 @@ obj._layout = dofile(obj.spoonPath .. "layout.lua")
 local __internals = {
     timers       = {},
     cachedImages = {},
-    keyRepeating = {},
+--     keyRepeating = {},
     -- apparently there is a bug perhaps introduced in a new OS X release with the NSStatusBar approach
     -- used for menu items that means pop up menus aren't always deleted from the menubar correctly...
     -- its probably time to stop using the deprecated approach anyways and finish the more "Apple approved"
     -- version in hs._asm.guitk.menubar soon... until then, lets create them once to at least mitigate the
     -- issue
     menus        = {
-        _Launch = menu.new():removeFromMenuBar(),
-        _Device = menu.new():removeFromMenuBar(),
-        _Move   = menu.new():removeFromMenuBar(),
+        _Launch   = menu.new():removeFromMenuBar(),
+        _Device   = menu.new():removeFromMenuBar(),
+        _Move     = menu.new():removeFromMenuBar(),
+        _Settings = menu.new():removeFromMenuBar(),
     }
 }
 
-local sf = screen.mainScreen():fullFrame()
-
 ---------- Spoon Variables ----------
 
-local startingPosition = settings.get(obj.name .. "_position") or {
-    x = sf.x + sf.w - (obj._layout.gridSize.w + 2) * obj._layout.buttonSize,
-    y = sf.y + sf.h - (obj._layout.gridSize.h + 3) * obj._layout.buttonSize,
-}
+local startingPosition = settings.get(obj.name .. "_position") or "LR"
 
 -- for spoon level variables -- they are wrapped by obj's __index/__newindex metamethods so they appear
 -- as regular variables and are thus documented as such; by doing this we can consolidate data validation
@@ -95,8 +106,8 @@ local __spoonVariables = {
     buttonClickColor = settings.get(obj.name .. "_buttonClickColor") or { red = 1, green = 1, alpha = .75 },
     autoDim          = settings.get(obj.name .. "_autoDim")          or true,
     enableKeys       = settings.get(obj.name .. "_enableKeys")       or true,
-    dimAlpha         = settings.get(obj.name .. "_dimAlpha")         or .25,
-    visibleAlpha     = settings.get(obj.name .. "_visibleAlpha")     or .75,
+    inactiveAlpha    = settings.get(obj.name .. "_inactiveAlpha")    or .25,
+    activeAlpha      = settings.get(obj.name .. "_activeAlpha")      or .75,
     keyEquivalents   = settings.get(obj.name .. "_keyEquivalents")   or {
         Play   = { {},        "space",      },
         Select = { {},        "return",     },
@@ -106,6 +117,8 @@ local __spoonVariables = {
         Down   = { {},        "down",  true },
         Home   = { { "cmd" }, "h",          },
         Back   = { { "cmd" }, "b",          },
+        A      = { {},        "a"           },
+        B      = { {},        "b"           },
     }
 }
 
@@ -113,13 +126,15 @@ local __spoonVariables = {
 
 local keysEnabled = false
 
+local suppressAutoDim = false
+
 local goDark = function()
     if __internals._rCanvas then
-        if __spoonVariables.autoDim then
+        if not suppressAutoDim and __spoonVariables.autoDim then
             for i = 2, #__internals._rCanvas,1  do
                 __internals._rCanvas[i].action = "skip"
             end
-            __internals._rCanvas["background"].fillColor.alpha = __spoonVariables.dimAlpha
+            __internals._rCanvas["background"].fillColor.alpha = __spoonVariables.inactiveAlpha
         end
 
         -- reset hover coloring even if we're not supposed to autoDim
@@ -133,89 +148,162 @@ local goDark = function()
     end
 end
 
+local updateRemoteColors = function()
+    __internals._rCanvas["background"].fillColor = __spoonVariables.remoteColor
+
+    for i = 1, #__internals._rCanvas, 1 do
+        local entry = __internals._rCanvas[i]
+        if not entry.id:match("_text$") and not
+               fnutils.contains({ "background", "_Close", "_Move", "_Settings" }, entry.id) then
+            entry.strokeColor = __spoonVariables.buttonFrameColor
+        end
+    end
+end
+
 local updateRemoteCanvas = function()
     if __internals._rCanvas then
         if __internals._rCanvas:isShowing() then
             local mousePos = mouse.absolutePosition()
             if geometry.inside(mousePos, __internals._rCanvas:frame()) then
-                __internals._rCanvas["background"].fillColor.alpha = __spoonVariables.visibleAlpha
+                __internals._rCanvas["background"].fillColor.alpha = __spoonVariables.activeAlpha
 
                 local availableButtons = __internals._rDevice and __internals._rDevice:remoteButtons() or {}
                 for k,v in pairs(obj._layout.buttons) do
-                    if k == "_Close" then
-                        __internals._rCanvas[k].action = "strokeAndFill"
-                        __internals._rCanvas[k .. "_text"].action = "strokeAndFill"
-                    elseif k == "_Move" then
-                        __internals._rCanvas[k].action = "strokeAndFill"
-                        __internals._rCanvas[k .. "_text"].action = "strokeAndFill"
-                    elseif k == "_Device" then
-                        __internals._rCanvas[k].action = "strokeAndFill"
-                        __internals._rCanvas[k .. "_text"].action = "strokeAndFill"
-
-                        if __internals._rDevice then
-                            __internals._rCanvas[k .. "_text"].text = stext.new(__internals._rDevice:name(), {
-                                      font = { name = "Menlo", size = 14 },
-                                      paragraphStyle = {
-                                          alignment                     = "center",
-                                          lineBreak                     = "truncateTail",
-                                      },
-                                      color = { white = 1 },
-                                  })
-                        else
-                            __internals._rCanvas[k .. "_text"].text = v.char
+                    local theChar = v.char
+                    if type(theChar) == "function" then
+                        theChar = theChar(__internals._rDevice)
+                        __internals._rCanvas[k .. "_text"].text = theChar
+                    end
+                    if v.enabled then
+                        __internals._rCanvas[k].action = v.canvasFrameAction or "strokeAndFill"
+                        if theChar then
+                            __internals._rCanvas[k .. "_text"].action = v.canvasTextAction  or "stroke"
                         end
-                    elseif k == "_Active" then
-                        if __internals._rDevice then
-                            local appID = __internals._rDevice:currentAppID()
-                            local icon = appID and __internals.cachedImages[appID]
-                            if appID and not icon then
-                                icon = __internals._rDevice:currentAppIcon()
-                                if icon then
-                                    __internals.cachedImages[appID] = icon:setSize{ h = 32, w = 64 }
+                        if v.image then
+                            __internals._rCanvas[k .. "_image"].action = v.canvasImageAction or "stroke"
+                        end
+
+--                         if k == "_Close" then
+--                         elseif k == "_Move" then
+--                         elseif k == "_Settings" then
+
+                        if k == "_Device" then
+                            if __internals._rDevice then
+                                if not __internals._rDeviceImage then
+                                    local img     = __internals._rDevice:deviceImage()
+                                    local imgSize = nil
+                                    if img then
+                                        imgSize = img:size()
+                                        img = img:size({
+                                            h = obj._layout.buttonSize,
+                                            w = obj._layout.buttonSize * imgSize.w / imgSize.h,
+                                        })
+                                    else
+                                        img = true
+                                    end
+                                    __internals._rDeviceImage = img
+
+                                    local fullFrame = __internals._rCanvas[k].frame_raw
+                                    -- it's not a "real" table but a canvas construct that allows direct modification
+                                    -- so assignment below will fail without this
+                                    fullFrame = { x = fullFrame.x, y = fullFrame.y, w = fullFrame.w, h = fullFrame.h }
+                                    if img == true then -- no device image available
+                                        __internals._rCanvas[k .. "_text"].frame   = fullFrame
+                                        __internals._rCanvas[k .. "_image"].frame  = fullFrame
+                                        __internals._rCanvas[k .. "_image"].action = "skip"
+                                        __internals._rCanvas[k .. "_image"].image  = nil
+                                    else
+                                        local imageWidth = obj._layout.buttonSize * imgSize.w / imgSize.h
+                                        local textFrame = {
+                                            x = fullFrame.x + imageWidth,
+                                            y = fullFrame.y,
+                                            h = obj._layout.buttonSize,
+                                            w = fullFrame.w - imageWidth,
+                                        }
+                                        local imageFrame = {
+                                            x = fullFrame.x,
+                                            y = fullFrame.y,
+                                            h = obj._layout.buttonSize,
+                                            w = imageWidth,
+                                        }
+                                        __internals._rCanvas[k .. "_text"].frame   = textFrame
+                                        __internals._rCanvas[k .. "_image"].frame  = imageFrame
+                                        __internals._rCanvas[k .. "_image"].image  = img
+                                    end
+                                end
+                                __internals._rCanvas[k .. "_text"].text = stext.new(__internals._rDevice:name(), {
+                                                                              font           = {
+                                                                                  name = "Menlo",
+                                                                                  size = 14
+                                                                              },
+                                                                              paragraphStyle = {
+                                                                                  lineBreak = "truncateTail",
+                                                                              },
+                                                                              color          = { white = 1 },
+                                                                          })
+                            else
+                                __internals._rCanvas[k .. "_text"].text = theChar
+                            end
+                        elseif k == "_Active" then
+                            if __internals._rDevice then
+                                local appID = __internals._rDevice:currentAppID()
+                                local icon = appID and __internals.cachedImages[appID]
+                                if appID and not icon then
+                                    icon = __internals._rDevice:currentAppIcon()
+                                    if icon then
+                                        __internals.cachedImages[appID] = icon:size{ h = 32, w = 64 }
+                                    end
+                                end
+
+                                if not icon then
+                                    local iconCanvas = canvas.new(__internals._rCanvas[k].frame_raw)
+                                    local text = stext.new(__internals._rDevice:currentApp(), {
+                                        font = { name = "Menlo", size = 18 },
+                                        paragraphStyle = { alignment = "center", lineBreak = "truncateTail", allowsTighteningForTruncation = false },
+                                        color = { white = 1 },
+                                    })
+                                    local textFrame = iconCanvas:minimumTextSize(text)
+                                    local iconFrame = iconCanvas:frame()
+                                    textFrame.x = (iconFrame.w - textFrame.w) / 2
+                                    textFrame.y = (iconFrame.h - textFrame.h) / 2
+                                    if textFrame.x < 0 then
+                                        textFrame.x = 0
+                                        textFrame.w = iconFrame.w
+                                    end
+                                    if textFrame.y < 0 then
+                                        textFrame.y = 0
+                                        textFrame.h = iconFrame.h
+                                    end
+
+                                    iconCanvas[1] = {
+                                        type  = "text",
+                                        frame = textFrame,
+                                        text  = text,
+                                    }
+                                    icon = iconCanvas:imageFromCanvas()
+                                    iconCanvas:delete()
+                                end
+                                __internals._rCanvas[k .. "_image"].image  = icon
+                            else -- this one's actually hidden when no device has been selected
+                                __internals._rCanvas[k].action             = "skip"
+                                __internals._rCanvas[k .. "_image"].action = "skip"
+                            end
+                        else
+                            if not v.alwaysDisplay then
+                                local visible = __internals._rDevice                                     and
+                                                (k:match("^_") or fnutils.contains(availableButtons, k)) and
+                                                (not v.active or v.active(__internals._rDevice))
+
+                                if not visible then
+                                    __internals._rCanvas[k].action = "skip"
+                                    if theChar then
+                                        __internals._rCanvas[k .. "_text"].action = "skip"
+                                    end
+                                    if v.image then
+                                        __internals._rCanvas[k .. "_image"].action = "skip"
+                                    end
                                 end
                             end
-
-                            if not icon then
-                                icon = canvas.new(__internals._rCanvas[k].frame_raw)
-                                local text = stext.new(__internals._rDevice:currentApp(), {
-                                    font = { name = "Menlo", size = 18 },
-                                    paragraphStyle = { alignment = "center", lineBreak = "truncateTail", allowsTighteningForTruncation = false },
-                                    color = { white = 1 },
-                                })
-                                local textFrame = icon:minimumTextSize(text)
-                                local iconFrame = icon:frame()
-                                textFrame.x = (iconFrame.w - textFrame.w) / 2
-                                textFrame.y = (iconFrame.h - textFrame.h) / 2
-                                if textFrame.x < 0 then
-                                    textFrame.x = 0
-                                    textFrame.w = iconFrame.w
-                                end
-                                if textFrame.y < 0 then
-                                    textFrame.y = 0
-                                    textFrame.h = iconFrame.h
-                                end
-
-                                icon[1] = {
-                                    type = "text",
-                                    frame = textFrame,
-                                    text = text,
-                                }
-                                icon = icon:imageFromCanvas()
-                            end
-                            __internals._rCanvas[k].action = "strokeAndFill"
-                            __internals._rCanvas[k .. "_image"].action = "strokeAndFill"
-                            __internals._rCanvas[k .. "_image"].image = icon
-                        else
-                            __internals._rCanvas[k].action = "skip"
-                            __internals._rCanvas[k .. "_image"].action = "skip"
-                        end
-                    elseif v.enabled then
-                        local action = (__internals._rDevice and (
-                            k:match("^_") or fnutils.contains(availableButtons, k)
-                        )) and "strokeAndFill" or "skip"
-                        if __internals._rCanvas[k] then
-                            __internals._rCanvas[k].action = action
-                            __internals._rCanvas[k .. "_text"].action = action
                         end
                     end
                 end
@@ -238,6 +326,41 @@ local doDelayedUpdate = function(when)
         __internals.timers[uuid] = nil
     end)
 end
+
+local updateRealPosition = function(position)
+    position = position or __spoonVariables.position
+    if type(position) == "string" then
+        local sz = {
+            w = (obj._layout.gridSize.w + 1) * obj._layout.buttonSize,
+            h = (obj._layout.gridSize.h + 1.5) * obj._layout.buttonSize,
+        }
+        local sff = screen.mainScreen():fullFrame()
+        local sf  = screen.mainScreen():frame()
+        -- we want to consider the menu, but ignore the dock, so...
+        local mh = sf.y - sff.y
+        sff.y, sff.h = sff.y + mh, sff.h - mh
+
+        local x, y
+
+        if position == "UL" then
+            x = sff.x + obj._layout.buttonSize / 2
+            y = sff.y + obj._layout.buttonSize / 2
+        elseif position == "UR" then
+            x = sff.x + sff.w - (sz.w + obj._layout.buttonSize / 2)
+            y = sff.y + obj._layout.buttonSize / 2
+        elseif position == "LL" then
+            x = sff.x + obj._layout.buttonSize / 2
+            y = sff.y + sff.h - (sz.h + obj._layout.buttonSize / 2)
+        else -- if position == "LR" then -- default
+            x = sff.x + sff.w - (sz.w + obj._layout.buttonSize / 2)
+            y = sff.y + sff.h - (sz.h + obj._layout.buttonSize / 2)
+        end
+        __spoonVariables.position = { x = x, y = y }
+    end
+end
+
+local colorPickerWarningSeen = false
+local _cover
 
 local remoteMouseCallback = function(c, m, id, x, y)
     if id == "background" then
@@ -288,8 +411,17 @@ local remoteMouseCallback = function(c, m, id, x, y)
                 if m == "mouseDown" then
                     local popup = {}
                     for k,v in pairs(roku:availableDevices()) do
+                        local img = v:deviceImage()
+                        if img then
+                            local imgSize = img:size()
+                            img = img:setSize({
+                                h = obj._layout.buttonSize,
+                                w = obj._layout.buttonSize * imgSize.w / imgSize.h,
+                            })
+                        end
                         table.insert(popup, {
                             title   = v:name(),
+                            image   = img,
                             checked = (v == __internals._rDevice),
                             fn      = function(...)
                                 obj:selectDevice(v:sn())
@@ -350,34 +482,279 @@ local remoteMouseCallback = function(c, m, id, x, y)
                     -- they should get restarted during update for mouseUp or upon re-entry if mouse outside
                     doDelayedUpdate(.1) -- in case they release outside of the menu
                 end
+            elseif id == "_Settings" then
+                if m == "mouseDown" then
+                    local commands = {}
+                    for _, v in ipairs(buttonDef.menu) do
+                        if not v[3] then
+                            table.insert(commands, { title = v[1], disabled = true })
+                        elseif v[3] == "boolean" then
+                            table.insert(commands, {
+                                title    = v[1],
+                                fn       = function(...)
+                                    __spoonVariables[v[2]] = not __spoonVariables[v[2]]
+                                    doDelayedUpdate(.1)
+                                end,
+                                checked = __spoonVariables[v[2]] and true or false,
+                            })
+                        elseif v[3] == "color" then
+                            table.insert(commands, {
+                                title = v[1],
+                                fn    = function(...)
+                                    if not colorPickerWarningSeen then
+                                        colorPickerWarningSeen = true
+                                        dialog.blockAlert("", "Hold the command key when closing the color picker to revert to the previous color")
+                                    end
+                                    local originalColor = __spoonVariables[v[2]]
+                                    suppressAutoDim = true
+                                    dialog.color.mode("RGB")
+                                    dialog.color.showsAlpha(true)
+                                    dialog.color.color(__spoonVariables[v[2]])
+                                    dialog.color.callback(function(c, closed)
+                                        __spoonVariables[v[2]] = c
+                                        if closed then
+                                            dialog.color.callback(nil)
+                                            if eventtap.checkKeyboardModifiers().cmd then
+                                                __spoonVariables[v[2]] = originalColor
+                                            end
+                                            suppressAutoDim = false
+                                        end
+                                        updateRemoteColors()
+                                    end)
+                                    dialog.color.show()
+                                end
+                            })
+                        elseif v[3] == "number" then
+                            table.insert(commands, {
+                                title = v[1],
+                                fn    = function(...)
+                                    local status, value = dialog.textPrompt(v[1], string.format("Enter a number between %.1f anf %.1f", v[4][1], v[4][2]), tostring(__spoonVariables[v[2]]), "OK", "Cancel")
+                                    if status == "OK" then
+                                        local newNum = tonumber(value) or __spoonVariables[v[2]]
+                                        if newNum >= v[4][1] and newNum <= v[4][2] then
+                                            __spoonVariables[v[2]] = newNum
+                                        end
+                                    end
+                                    updateRemoteCanvas()
+                                end
+                            })
+                        else
+                            _log.wf("handler for type %s not found", v[3])
+                            table.insert(commands, { title = v[1], disabled = true })
+                        end
+                    end
+
+                    table.insert(commands, { title = "-", disabled = true })
+                    table.insert(commands, {
+                        title = "Save Settings",
+                        fn    = function(...)
+                            obj:saveSettings()
+                            alert("Settings Saved")
+                        end
+                    })
+                    table.insert(commands, {
+                        title = "Clear Saved Settings",
+                        fn    = function(...)
+                            obj:clearSavedSettings()
+                            alert("Saved Settings Cleared")
+                        end
+                    })
+
+                    local frame = __internals._rCanvas[id].frame_raw
+                    local topLeft = __internals._rCanvas:topLeft()
+                    -- allow arrow keys to be used in the pop-up menu
+                    if __spoonVariables.enableKeys and keysEnabled then __internals._modalKeys:exit() end
+                    __internals.menus[id]:setMenu(commands):popupMenu({
+                        x = frame.x + topLeft.x,
+                        y = frame.y + topLeft.y + frame.h
+                    }, true)
+                    -- they should get restarted during update for mouseUp or upon re-entry if mouse outside
+                    doDelayedUpdate(.1) -- in case they release outside of the menu
+                end
+            elseif id == "_Keyboard" then
+                if m == "mouseUp" and not _cover then
+                    local sf = screen.mainScreen():fullFrame()
+                    local message = "Keyboard redirecting to " .. __internals._rDevice:name() .. "\n" ..
+                                    "Press the Escape key to release."
+                    message = stext.new(message, {
+                        font = { name = "Menlo", size = 48 },
+                        paragraphStyle = { alignment = "center" },
+                        color = { white = 1 },
+                    })
+                    _cover = canvas.new(sf):level(canvas.windowLevels.popUpMenu)
+                                           :bringToFront(true)
+                                           :show()
+                    -- this is just to intercept mouse buttons that might trigger other remote actions
+                    _cover:canvasMouseEvents(true, true):mouseCallback(function(...) end)
+
+                    local textSize = _cover:minimumTextSize(message)
+                    _cover[#_cover +1] = {
+                        type      = "rectangle",
+                        action    = "fill",
+                        fillColor = { white = .25, alpha = .75 },
+                    }
+                    _cover[#_cover + 1] = {
+                        type          = "text",
+                        frame         = {
+                            x = sf.x + (sf.w - textSize.w) / 2,
+                            y = sf.y + (sf.h - textSize.h) / 2,
+                            w = textSize.w,
+                            h = textSize.h,
+                        },
+                        text          = message,
+                    }
+
+                    local encodeAnyways = {
+                        "$", "&", "+", ",", "/", ":", ";", "=", "?", "@", " ", "\"", "<",
+                        ">", "#", "%", "{", "}", "|", "\\", "^", "~", "[", "]", "`"
+                    }
+                    local specialMappings = {
+                        [keycodes.map["left"]]     = "Left",
+                        [keycodes.map["right"]]    = "Right",
+                        [keycodes.map["up"]]       = "Up",
+                        [keycodes.map["down"]]     = "Down",
+                        [keycodes.map["return"]]   = "Select",
+                        [keycodes.map["padenter"]] = "Enter",
+                        [keycodes.map["delete"]]   = "Backspace",
+                    }
+                    -- the mac will send multiple keyDown events if you hold (repeat) but we want
+                    -- to leave that to the Roku, so record downs and eat extra downs before the
+                    -- corresponding up
+                    local alreadyDown = {}
+
+                    local _watcher
+                    _watcher = eventtap.new({ events.keyUp, events.keyDown }, function(e)
+                        local dwn = (e:getType() == events.keyDown)
+                        local kc  = e:getKeyCode()
+                        local ky  = e:getUnicodeString()
+                        local seq = { string.byte(ky, 1, #ky) }
+                        local txt
+
+                        if kc == keycodes.map.escape then
+                            _watcher:stop()
+                            _watcher = nil
+                            _cover:delete()
+                            _cover = nil ;
+                        else
+                            txt = specialMappings[kc]
+                            if kc == keycodes.map["return"] and eventtap.checkKeyboardModifiers().cmd then
+                                txt = "Enter"
+                            end
+                            if not txt then
+                                if #seq == 1 and seq[1] > 31 and seq[1] < 127 and not fnutils.contains(encodeAnyways, ky) then
+                                    txt = "Lit_" .. ky
+                                else
+                                    txt = "Lit_"
+                                    for _, v in ipairs(seq) do
+                                        txt = txt .. string.format("%%%0x", v):upper()
+                                    end
+                                end
+                            end
+
+                            if not (dwn and alreadyDown[kc]) then
+                                alreadyDown[kc] = dwn or nil
+                                __internals._rDevice:remote(txt, dwn, true)
+                            end
+                        end
+                        return true
+                    end):start()
+                end
             elseif id == "_Close" then
                 if m == "mouseUp" then obj:hide() end
             elseif id == "_Move" then
                 if m == "mouseDown" then
                     if eventtap.checkMouseButtons().right or eventtap.checkKeyboardModifiers().ctrl then
+                        local tl = __internals._rCanvas:topLeft()
+                        local sz = __internals._rCanvas:size()
                         local popup = {
                             {
-                                title = "Save as start position",
-                                fn    = function(...)
-                                    local tl = __internals._rCanvas:topLeft()
-                                    startingPosition.x = tl.x
-                                    startingPosition.y = tl.y
-                                    settings.set(obj.name .. "_position", startingPosition)
-                                    doDelayedUpdate(.1)
-                                end,
+                                title = "Move to",
+                                menu = {
+                                    {
+                                        title = "Upper Left",
+                                        fn    = function(...)
+                                            updateRealPosition("UL")
+                                            __internals._rCanvas:topLeft(__spoonVariables.position)
+                                            doDelayedUpdate(.1)
+                                        end,
+                                    }, {
+                                        title = "Upper Right",
+                                        fn    = function(...)
+                                            updateRealPosition("UR")
+                                            __internals._rCanvas:topLeft(__spoonVariables.position)
+                                            doDelayedUpdate(.1)
+                                        end,
+                                    }, {
+                                        title = "Lower Left",
+                                        fn    = function(...)
+                                            updateRealPosition("LL")
+                                            __internals._rCanvas:topLeft(__spoonVariables.position)
+                                            doDelayedUpdate(.1)
+                                        end,
+                                    }, {
+                                        title = "Lower Right",
+                                        fn    = function(...)
+                                            updateRealPosition("LR")
+                                            __internals._rCanvas:topLeft(__spoonVariables.position)
+                                            doDelayedUpdate(.1)
+                                        end,
+                                    }
+                                }
                             }, {
                                 title = "-",
                             }, {
-                                title = "Current start position:",
-                                disabled = true,
+                                title = "Save as Start Position",
+                                menu = {
+                                    {
+                                        title = "Current Position",
+                                        fn    = function(...)
+                                            settings.set(obj.name .. "_position", tl)
+                                            alert("Location Saved")
+                                        end,
+                                    }, {
+                                        title = "-",
+                                    }, {
+                                        title   = "Upper Left",
+                                        checked = startingPosition == "UL",
+                                        fn      = function(...)
+                                            settings.set(obj.name .. "_position", "UL")
+                                            startingPosition = "UL"
+                                            alert("Location Saved")
+                                        end,
+                                    }, {
+                                        title   = "Upper Right",
+                                        checked = startingPosition == "UR",
+                                        fn      = function(...)
+                                            settings.set(obj.name .. "_position", "UR")
+                                            startingPosition = "UR"
+                                            alert("Location Saved")
+                                        end,
+                                    }, {
+                                        title   = "Lower Left",
+                                        checked = startingPosition == "LL",
+                                        fn      = function(...)
+                                            settings.set(obj.name .. "_position", "LL")
+                                            startingPosition = "LL"
+                                            alert("Location Saved")
+                                        end,
+                                    }, {
+                                        title   = "Lower Right",
+                                        checked = startingPosition == "LR",
+                                        fn      = function(...)
+                                            settings.set(obj.name .. "_position", "LR")
+                                            startingPosition = "LR"
+                                            alert("Location Saved")
+                                        end,
+                                    }
+                                }
                             }, {
-                                title = "x = " .. tostring(startingPosition.x),
-                                indent = 2,
-                                disabled = true,
-                            }, {
-                                title = "y = " .. tostring(startingPosition.y),
-                                indent = 2,
-                                disabled = true,
+                                title    = "Clear Saved Start Position",
+                                disabled = not settings.get(obj.name .. "_position"),
+                                fn       = function(...)
+                                    settings.clear(obj.name .. "_position")
+                                    startingPosition = "LR"
+                                    alert("Location Cleared")
+                                end,
                             }
                         }
                         local frame = __internals._rCanvas[id].frame_raw
@@ -454,6 +831,9 @@ end
 
 local createRemoteCanvas = function()
     if not __internals._rCanvas then
+        if type(__spoonVariables.position) == "string" then
+            updateRealPosition()
+        end
         local _rCanvas = canvas.new{
             x = __spoonVariables.position.x,
             y = __spoonVariables.position.y,
@@ -485,166 +865,231 @@ local createRemoteCanvas = function()
         }
 
         for k,v in pairs(obj._layout.buttons) do
-            local buttonFrame = v.pos and {
-                x = (v.pos.x + .5) * obj._layout.buttonSize,
-                y = (v.pos.y + 1) * obj._layout.buttonSize,
-                w = v.pos.w * obj._layout.buttonSize,
-                h = v.pos.h * obj._layout.buttonSize,
-            } or {}
+            local theChar = type(v.char) == "function" and v.char() or v.char
+            if v.enabled then
+                local buttonFrame = v.pos and {
+                    x = (v.pos.x + .5) * obj._layout.buttonSize,
+                    y = (v.pos.y + 1) * obj._layout.buttonSize,
+                    w = v.pos.w * obj._layout.buttonSize,
+                    h = v.pos.h * obj._layout.buttonSize,
+                } or {}
 
-            if k == "_Close" then
-                local textFrame = _rCanvas:minimumTextSize(v.char)
-                local buttonFrame = {
-                    x = obj._layout.buttonSize / 3,
-                    y = obj._layout.buttonSize / 3,
-                    w = textFrame.w + 2,
-                    h = textFrame.w + 2,
-                }
-                _rCanvas[#_rCanvas + 1] = {
-                    id                  = k,
-                    type                = "rectangle",
-                    frame               = buttonFrame,
-                    strokeColor         = { alpha = 0 },
-                    fillColor           = { alpha = 0 },
-                    roundedRectRadii    = {
-                        xRadius = buttonFrame.w / 4,
-                        yRadius = buttonFrame.h / 4,
-                    },
-                    trackMouseDown      = true,
-                    trackMouseEnterExit = true,
-                    trackMouseUp        = true,
-                }
+                if k == "_Close" then
+                    local textFrame = _rCanvas:minimumTextSize(theChar)
+                    local buttonFrame = {
+                        x = obj._layout.buttonSize / 3,
+                        y = obj._layout.buttonSize / 3,
+                        w = textFrame.w + 2,
+                        h = textFrame.w + 2,
+                    }
+                    _rCanvas[#_rCanvas + 1] = {
+                        id                  = k,
+                        type                = "rectangle",
+                        frame               = buttonFrame,
+                        strokeColor         = { alpha = 0 },
+                        fillColor           = { alpha = 0 },
+                        roundedRectRadii    = {
+                            xRadius = buttonFrame.w / 4,
+                            yRadius = buttonFrame.h / 4,
+                        },
+                        trackMouseDown      = true,
+                        trackMouseEnterExit = true,
+                        trackMouseUp        = true,
+                    }
 
-                textFrame.x = buttonFrame.x + ((v.offset or {}).x or 0)
-                textFrame.y = buttonFrame.y + ((v.offset or {}).y or 0)
-                _rCanvas[#_rCanvas + 1] = {
-                    id    = k .. "_text",
-                    type  = "text",
-                    frame = textFrame,
-                    text  = v.char,
-                }
-            elseif k == "_Move" then
-                local textFrame = _rCanvas:minimumTextSize(v.char)
-                local buttonFrame = {
-                    x = (_rCanvas:frame().w - textFrame.w) / 2,
-                    y = obj._layout.buttonSize / 3,
-                    w = textFrame.w + 2,
-                    h = textFrame.w + 2,
-                }
-                _rCanvas[#_rCanvas + 1] = {
-                    id                  = k,
-                    type                = "rectangle",
-                    frame               = buttonFrame,
-                    strokeColor         = { alpha = 0 },
-                    fillColor           = { alpha = 0 },
-                    roundedRectRadii    = {
-                        xRadius = buttonFrame.w / 4,
-                        yRadius = buttonFrame.h / 4,
-                    },
-                    trackMouseDown      = true,
-                    trackMouseEnterExit = true,
-                    trackMouseUp        = true,
-                }
+                    textFrame.x = buttonFrame.x + ((v.offset or {}).x or 0)
+                    textFrame.y = buttonFrame.y + ((v.offset or {}).y or 0)
+                    _rCanvas[#_rCanvas + 1] = {
+                        id    = k .. "_text",
+                        type  = "text",
+                        frame = textFrame,
+                        text  = theChar,
+                    }
+                elseif k == "_Move" then
+                    local textFrame = _rCanvas:minimumTextSize(theChar)
+                    local buttonFrame = {
+                        x = (_rCanvas:frame().w - textFrame.w) / 2,
+                        y = obj._layout.buttonSize / 3,
+                        w = textFrame.w + 2,
+                        h = textFrame.w + 2,
+                    }
+                    _rCanvas[#_rCanvas + 1] = {
+                        id                  = k,
+                        type                = "rectangle",
+                        frame               = buttonFrame,
+                        strokeColor         = { alpha = 0 },
+                        fillColor           = { alpha = 0 },
+                        roundedRectRadii    = {
+                            xRadius = buttonFrame.w / 4,
+                            yRadius = buttonFrame.h / 4,
+                        },
+                        trackMouseDown      = true,
+                        trackMouseEnterExit = true,
+                        trackMouseUp        = true,
+                    }
 
-                textFrame.x = buttonFrame.x + ((v.offset or {}).x or 0)
-                textFrame.y = buttonFrame.y + ((v.offset or {}).y or 0)
-                _rCanvas[#_rCanvas + 1] = {
-                    id    = k .. "_text",
-                    type  = "text",
-                    frame = textFrame,
-                    text  = v.char,
-                }
-            elseif k == "_Device" then
-                _rCanvas[#_rCanvas + 1] = {
-                    id                  = k,
-                    type                = "rectangle",
-                    frame               = buttonFrame,
-                    strokeColor         = __spoonVariables.buttonFrameColor,
-                    fillColor           = { alpha = 0 },
-                    roundedRectRadii    = {
-                        xRadius = obj._layout.buttonSize / 4,
-                        yRadius = obj._layout.buttonSize / 4,
-                    },
-                    trackMouseDown      = true,
-                    trackMouseEnterExit = true,
-                    trackMouseUp        = true,
-                }
-                _rCanvas[#_rCanvas + 1] = {
-                    id    = k .. "_text",
-                    type  = "text",
-                    frame = buttonFrame,
-                    text  = v.char,
-                }
-            elseif k == "_Active" then
-                _rCanvas[#_rCanvas + 1] = {
-                    id                  = k,
-                    type                = "rectangle",
-                    frame               = buttonFrame,
-                    strokeColor         = __spoonVariables.buttonFrameColor,
-                    fillColor           = { alpha = 0 },
-                    roundedRectRadii    = {
-                        xRadius = obj._layout.buttonSize / 4,
-                        yRadius = obj._layout.buttonSize / 4,
-                    },
-                }
-                buttonFrame.x = buttonFrame.x +  5
-                buttonFrame.y = buttonFrame.y +  5
-                buttonFrame.w = buttonFrame.w - 10
-                buttonFrame.h = buttonFrame.h - 10
-                _rCanvas[#_rCanvas + 1] = {
-                    id                  = k .. "_image",
-                    type                = "image",
-                    frame               = buttonFrame,
-                }
---             elseif k == "_Keyboard" then
---             elseif k == "_Launch" then
-            elseif v.enabled then
-                local textFrame = _rCanvas:minimumTextSize(v.char)
-                textFrame.x = buttonFrame.x + (buttonFrame.w - textFrame.w) / 2 + ((v.offset or {}).x or 0)
-                textFrame.y = buttonFrame.y + (buttonFrame.h - textFrame.h) / 2 + ((v.offset or {}).y or 0)
+                    textFrame.x = buttonFrame.x + ((v.offset or {}).x or 0)
+                    textFrame.y = buttonFrame.y + ((v.offset or {}).y or 0)
+                    _rCanvas[#_rCanvas + 1] = {
+                        id    = k .. "_text",
+                        type  = "text",
+                        frame = textFrame,
+                        text  = theChar,
+                    }
+                elseif k == "_Settings" then
+                    local textFrame = _rCanvas:minimumTextSize(theChar)
+                    local buttonFrame = {
+                        x = _rCanvas:frame().w - (obj._layout.buttonSize / 3 + textFrame.w),
+                        y = obj._layout.buttonSize / 3,
+                        w = textFrame.w + 2,
+                        h = textFrame.w + 2,
+                    }
+                    _rCanvas[#_rCanvas + 1] = {
+                        id                  = k,
+                        type                = "rectangle",
+                        frame               = buttonFrame,
+                        strokeColor         = { alpha = 0 },
+                        fillColor           = { alpha = 0 },
+                        roundedRectRadii    = {
+                            xRadius = buttonFrame.w / 4,
+                            yRadius = buttonFrame.h / 4,
+                        },
+                        trackMouseDown      = true,
+                        trackMouseEnterExit = true,
+                        trackMouseUp        = true,
+                    }
 
-                _rCanvas[#_rCanvas + 1] = {
-                    id                  = k,
-                    type                = "rectangle",
-                    frame               = buttonFrame,
-                    strokeColor         = __spoonVariables.buttonFrameColor,
-                    fillColor           = { alpha = 0 },
-                    roundedRectRadii    = {
-                        xRadius = obj._layout.buttonSize / 4,
-                        yRadius = obj._layout.buttonSize / 4,
-                    },
-                    trackMouseDown      = true,
-                    trackMouseEnterExit = true,
-                    trackMouseUp        = true,
-                }
-                _rCanvas[#_rCanvas + 1] = {
-                    id    = k .. "_text",
-                    type  = "text",
-                    frame = textFrame,
-                    text  = v.char,
-                }
+                    textFrame.x = buttonFrame.x + ((v.offset or {}).x or 0)
+                    textFrame.y = buttonFrame.y + ((v.offset or {}).y or 0)
+                    _rCanvas[#_rCanvas + 1] = {
+                        id    = k .. "_text",
+                        type  = "text",
+                        frame = textFrame,
+                        text  = theChar,
+                    }
+                elseif k == "_Device" then
+                    _rCanvas[#_rCanvas + 1] = {
+                        id                  = k,
+                        type                = "rectangle",
+                        frame               = buttonFrame,
+                        strokeColor         = __spoonVariables.buttonFrameColor,
+                        fillColor           = { alpha = 0 },
+                        roundedRectRadii    = {
+                            xRadius = obj._layout.buttonSize / 4,
+                            yRadius = obj._layout.buttonSize / 4,
+                        },
+                        trackMouseDown      = true,
+                        trackMouseEnterExit = true,
+                        trackMouseUp        = true,
+                    }
 
-                local keyEquivalent = __spoonVariables.keyEquivalents[k]
-                if keyEquivalent then
-                    local mods, key, repeats = keyEquivalent[1], keyEquivalent[2], keyEquivalent[3]
+                    local textFrame = {
+                        w = buttonFrame.w,
+                        h = buttonFrame.h,
+                        x = buttonFrame.x + ((v.offset or {}).x or 0),
+                        y = buttonFrame.y + ((v.offset or {}).y or 0),
+                    }
+                    _rCanvas[#_rCanvas + 1] = {
+                        id     = k .. "_image",
+                        action = "skip",
+                        type   = "image",
+                        frame  = buttonFrame,
+                    }
+                    _rCanvas[#_rCanvas + 1] = {
+                        id    = k .. "_text",
+                        type  = "text",
+                        frame = textFrame,
+                        text  = theChar,
+                    }
+                elseif k == "_Active" then
+                    local imageFrame = {
+                        x = buttonFrame.x +  5,
+                        y = buttonFrame.y +  5,
+                        w = buttonFrame.w - 10,
+                        h = buttonFrame.h - 10,
+                    }
+                    _rCanvas[#_rCanvas + 1] = {
+                        id                  = k,
+                        type                = "rectangle",
+                        frame               = buttonFrame,
+                        strokeColor         = __spoonVariables.buttonFrameColor,
+                        fillColor           = { alpha = 0 },
+                        roundedRectRadii    = {
+                            xRadius = obj._layout.buttonSize / 4,
+                            yRadius = obj._layout.buttonSize / 4,
+                        },
+                    }
 
-                    if repeats then
-                        __internals._modalKeys:bind(mods, key,  function()
-                                                                  __internals.keyRepeating[key] = false
-                                                                  mimicCallback(k, "mouseDown")
-                                                                end,
-                                                                function()
-                                                                    if not __internals.keyRepeating[key] then
-                                                                        mimicCallback(k, "mouseUp")
-                                                                    end
-                                                                end,
-                                                                function()
-                                                                    __internals.keyRepeating[key] = true
-                                                                    mimicCallback(k, "mouseUp")
-                                                                end)
-                    else
-                        __internals._modalKeys:bind(mods, key, function() mimicCallback(k, "mouseDown") end,
-                                                               function() mimicCallback(k, "mouseUp") end)
+                    _rCanvas[#_rCanvas + 1] = {
+                        id                  = k .. "_image",
+                        type                = "image",
+                        frame               = imageFrame,
+                    }
+                else
+                    local textFrame = _rCanvas:minimumTextSize(theChar)
+                    textFrame.x = buttonFrame.x + (buttonFrame.w - textFrame.w) / 2 + ((v.offset or {}).x or 0)
+                    textFrame.y = buttonFrame.y + (buttonFrame.h - textFrame.h) / 2 + ((v.offset or {}).y or 0)
+
+                    _rCanvas[#_rCanvas + 1] = {
+                        id                  = k,
+                        type                = "rectangle",
+                        frame               = buttonFrame,
+                        strokeColor         = __spoonVariables.buttonFrameColor,
+                        fillColor           = { alpha = 0 },
+                        roundedRectRadii    = {
+                            xRadius = obj._layout.buttonSize / 4,
+                            yRadius = obj._layout.buttonSize / 4,
+                        },
+                        trackMouseDown      = true,
+                        trackMouseEnterExit = true,
+                        trackMouseUp        = true,
+                    }
+
+                    if theChar then
+                        _rCanvas[#_rCanvas + 1] = {
+                            id    = k .. "_text",
+                            type  = "text",
+                            frame = textFrame,
+                            text  = theChar,
+                        }
+                    end
+
+                    if v.image then
+                        _rCanvas[#_rCanvas + 1] = {
+                            id    = k .. "_image",
+                            type  = "image",
+                            frame = buttonFrame,
+                            image = type(v.image) ~= boolean and v.image or nil
+                        }
+                    end
+
+                    local keyEquivalent = __spoonVariables.keyEquivalents[k]
+                    if keyEquivalent then
+                        local mods, key, repeats = keyEquivalent[1], keyEquivalent[2], keyEquivalent[3]
+
+                        if repeats then
+                            -- for repeaters (all non-special buttons?), it's the mouseUp action
+                            -- that does the real work so that's what we repeat and then suppress
+                            -- on mouseUp to prevent going too far
+                            local isRepeating = nil
+                            __internals._modalKeys:bind(mods, key,
+                                        function() mimicCallback(k, "mouseDown") end,
+                                        function()
+                                            if not isRepeating then
+                                                mimicCallback(k, "mouseUp")
+                                            else
+                                                isRepeating = nil
+                                            end
+                                        end,
+                                        function()
+                                            isRepeating = true
+                                            mimicCallback(k, "mouseUp")
+                                        end)
+                        else
+                            __internals._modalKeys:bind(mods, key,
+                                        function() mimicCallback(k, "mouseDown") end,
+                                        function() mimicCallback(k, "mouseUp") end)
+                        end
                     end
                 end
             end
@@ -661,9 +1106,22 @@ obj.saveSettings = function(self, andPos)
     -- in case called as function
     if self ~= obj then self, andPos = obj, self end
 
-    for k,v in pairs(__spoonVariables) do
+    for k, v in pairs(__spoonVariables) do
         if andPos or not k:match("^" .. obj.name .. "_position$") then
             settings.set(obj.name .. "_" .. k, v)
+        end
+    end
+
+    return self
+end
+
+obj.clearSavedSettings = function(self, andPos)
+    -- in case called as function
+    if self ~= obj then self, andPos = obj, self end
+
+    for k, _ in pairs(__spoonVariables) do
+        if andPos or not k:match("^" .. obj.name .. "_position$") then
+            settings.clear(obj.name .. "_" .. k)
         end
     end
 
@@ -681,6 +1139,11 @@ obj.selectDevice = function(self, dev)
         if rDev then
             roku:addDevice(rDev:host(), rDev:port()) -- mark it as manually added so it won't disappear on us if its slow to respond to a future discovery scan
             __internals._rDevice = rDev
+            __internals._rDeviceImage = nil
+-- app IDs are actually consistent across devices, so don't clear when switching to different device
+--             for _, v in pairs(__internals.cachedImages) do
+--                 __internals.cachedImages[k] = nil
+--             end
         else
             _log.ef("%s device not found; current selected device unchanged", dev)
             return nil
@@ -696,7 +1159,7 @@ obj.show = function(self)
     -- in case called as function
     if self ~= obj then self = obj end
     if not __internals._rCanvas then
-        __internals._rCanvas = createRemoteCanvas()
+        obj:start()
     end
     if not __internals._rCanvas:isShowing() then
         __internals._rCanvas:show()
@@ -774,7 +1237,11 @@ obj.start = function(self)
     -- in case called as function
     if self ~= obj then self = obj end
 
-    roku:start()
+    if not __internals._rCanvas then
+        roku:start()
+        __internals._rCanvas = createRemoteCanvas()
+    end
+
     return self
 end
 
@@ -800,9 +1267,11 @@ obj.stop = function(self)
         __internals._modalKeys:delete()
         __internals._modalKeys = nil
     end
-    for k,v in pairs(__internals.timers) do
-        __internals.timers[k]:stop()
-        __internals.timers[k] = nil
+    for _, v in pairs(__internals.cachedImages) do
+        __internals.cachedImages[k] = nil
+    end
+    for k, v in pairs(__internals.timers) do
+        v:stop() ; __internals.timers[k] = nil
     end
     roku:stop()
     return self
@@ -839,7 +1308,6 @@ obj.bindHotkeys = function(self, mapping)
         toggle = self.toggle,
         show   = self.show,
         hide   = self.hide,
-        save   = self.saveSettings,
     }
     spoons.bindHotkeysToSpec(def, mapping)
 

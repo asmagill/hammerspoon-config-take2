@@ -1,22 +1,55 @@
--- Quick & Dirty Ugly XML parser
+-- Quick, Dirty, & Ugly XML parser
 --
 --  I like JSON. It's well understood, has a simple layout, maps nicely to lua data types...
 --  XML doesn't. But some web enabled devices still use XML though its probably bloated
---  overkill for what they really need (<cough>Roku</cough>)... but I'm stuck with using it...
+--  overkill for what they really need (<cough>Roku</cough>)... so I'm stuck with using it...
 --
 -- Based on XML specifications as described at https://www.w3schools.com/xml/xml_syntax.asp
---
--- Known limitations
---    minimally tested
---    will probably barf on UTF-8 in tag names or attributes.
---        Should be ok for entity values though.
---    just parses tags, attributes, and entity values... no validation, no DTDs no nutten but the
---        bare minimum
---    does not fail gracefully when presented with bad (i.e. not well formed) XML
---
+-- and to a lesser extent https://www.w3.org/TR/REC-xml/
+
+local usage = [[
+xmlObj = qduXML.parseXML(xmlString)
+xmlObj:tag() -> string           tag this object represents
+xmlObj:value() -> string | nil   if the entity contains text, returns the text
+xmlObj:children() -> table       returns a table of the child entities (may be empty)
+xmlObj:asTable() -> table        returns a table describing the xml tree
+                                     each entity will be a table with the following keys:
+                                     * `tag`        a string for the entity's tag name
+                                     * `value`      a string of the entity content or nil
+                                     * `children`   a table of entity tables for each child or nil
+                                     * `attributes` a table of k-v pairs for the attributes or nil
+xmlObj[i] -> xmlObj | nil        returns xmlObj:children()[i]
+xmlObj["attr"] -> string | nil   returns string for value of attribute or nil
+xmlObj("tag") -> table | nil     returns a table of all children of type "tag" or nil
+
+for i, v in ipairs(xmlObj) do ... end    enumerate children
+for k, v in pairs(xmlObj) do ... end     enumerate attributes
+
+qduXML.entityValue(obj, [idx])
+      Used to simplify code logic from:
+             a = xmlObj and xmlObj[idx] and xmlObj[idx]:value() or nil
+      Or if idx not provided (i.e. nil):
+             a = xmlObj and xmlObj:value() or nil
+      To just:
+             a = xml.entityValue(xmlObj, [idx])
+
+Known limitations
+     minimally tested -- works for Roku ECP as of Apr 2021, but not tested elsewhere
+     no mixed-content -- an entity contains *either* text *or* zero or more child entities, not both
+     all values returned as strings
+
+     will probably barf on multi-byte UTF-8 sequences in tag and attribute names
+         attribute and entity values should be ok, though
+     has never heard of CDATA
+     just parses tags, attributes, and entity values... no validation, no DTDs no nutten but the
+         bare minimum
+     probably more...
+
+     when it fails, it does not fail gracefully (e.g. bad XML, mixed-content, etc.)
+]]
 
 local module = {}
-module._version = "0.0.1"
+module._version = "0.0.2"
 
 local NAME_PATTERN = "[%a_][%a%d%-%._:]*"
 
@@ -40,6 +73,28 @@ local elementMetatable = {
         local v = getmetatable(self)._value
         return type(v) == "table" and v or {}
     end,
+    asTable = function(self)
+        local descend
+        descend = function(t)
+            local results = {
+                attributes = {},
+                tag        = t:tag(),
+                value      = t:value(),
+                children   = {},
+            }
+            for k,v in pairs(t) do
+                results.attributes[k] = v
+            end
+            for i,v in ipairs(t) do
+                results.children[i] = descend(v)
+            end
+            if not next(results.attributes) then results.attributes = nil end
+            if not next(results.children)   then results.children   = nil end
+--             if results.value == ""          then results.value = nil end
+            return results
+        end
+        return descend(self)
+    end,
 }
 
 local elementCall = function(self, key)
@@ -52,7 +107,7 @@ local elementCall = function(self, key)
                 table.insert(results, v)
             end
         end
-        return results
+        return #results > 0 and results or nil
     else
         return nil
     end
@@ -74,11 +129,14 @@ parseSegment = function(xmlString)
         return decodeEntities(xmlString)
     end
 
+-- print("{{" .. xmlString .. "}}")
     local result = {}
 
     local pos = 1
     while (pos < #xmlString) do
         local workingString = xmlString:sub(pos)
+
+        if workingString:match("^%s*$") then break end
 
         local tag, attrs, closing = workingString:match("^%s*<(" .. NAME_PATTERN .. ")%s*([^/>]-)%s*(/?>)")
         if not tag then
@@ -110,11 +168,13 @@ parseSegment = function(xmlString)
         if closing ~= "/>" then
             local start = e + 1
             s, e = workingString:find("<%s*/" .. tag:gsub("%-", "%%-") .. "%s*>", start)
-            pos = pos + e + 1
-            value = parseSegment(workingString:sub(start, s - 1))
+-- print(workingString:sub(s, e), #workingString, pos, s, e, workingString:sub(start, s - 1))
+            pos = pos + e
+            if start < s then
+                value = parseSegment(workingString:sub(start, s - 1))
+            end
         else
-            value = ""
-            pos = pos + e + 1
+            pos = pos + e
         end
 
         table.insert(result, setmetatable(entity, {
@@ -130,6 +190,8 @@ parseSegment = function(xmlString)
     return result
 end
 
+module._help = function() return usage end
+
 module.parseXML = function(xmlString)
     assert(type(xmlString) == "string", "input must be a string")
 
@@ -141,16 +203,15 @@ module.parseXML = function(xmlString)
     return parseSegment(xmlString)[1]
 end
 
-module.entityValue = function(entity)
-    -- Simplifies upstream logic from:
-    --        a = #xml.parseXML(txt)("tag")[n] and xml.parseXML(txt)("tag")[n]:value() or nil
-    -- to just:
-    --        a = xml.entityValue(xml.parseXML(txt)("tag")[n])
-    if entity and getmetatable(entity).__index == elementIndex then
-        return entity:value()
-    else
-        return nil
+module.entityValue = function(entity, idx)
+    if entity then
+        if idx then
+            return entity[idx] and entity[idx]:value() or nil
+        elseif (getmetatable(entity) or {}).__index == elementIndex then
+            return entity:value()
+        end
     end
+    return nil
 end
 
 return module

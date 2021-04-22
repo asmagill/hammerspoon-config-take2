@@ -1,3 +1,6 @@
+-- This really belongs in a module -- it's background control mostly
+-- RokuRemote should be a spoon once this is landed as a module
+
 -- TODO:
 --      Finish Documentation
 --   -  xml parser or continue using string matches?
@@ -18,9 +21,9 @@
 ---
 --- Control Roku devices with Hammerspoon
 ---
---- This spoon allows the control of Roku devices on your local network using the protocols and specifications as described at https://sdkdocs.roku.com/display/sdkdoc/External+Control+API.
+--- This spoon allows the control of Roku devices on your local network using the protocols and specifications as described at https://developer.roku.com/docs/developer-program/debugging/external-control-api.md
 ---
---- Download: `svn export https://github.com/asmagill/hammerspoon-config/trunk/_Spoons/PwnedPasswords.spoon`
+--- Download: `svn export https://github.com/asmagill/hammerspoon-config/trunk/_Spoons/RokuControl.spoon`
 
 local inspect  = require("hs.inspect")
 local timer    = require("hs.timer")
@@ -59,8 +62,8 @@ obj.logger = _log
 -- for timers, etc so they don't get collected
 local __internals = {}
 
--- discovered/assigned roku devices
-obj.__devices = setmetatable({}, discoveredMetatable)
+-- -- discovered/assigned roku devices
+-- obj.__devices = setmetatable({}, discoveredMetatable)
 
 -- devices to ignore
 obj.__ignored = setmetatable(settings.get(obj.name .. "_ignoredList") or {}, {
@@ -100,6 +103,9 @@ local discoveredMetatable = {
     end,
 }
 
+-- discovered/assigned roku devices
+obj.__devices = setmetatable({}, discoveredMetatable)
+
 local cleanUpDiscovery = function(isNormal)
     -- clean up after ourselves
     if __internals.clearQueryTimer then
@@ -129,7 +135,7 @@ end
 --- Specifies the number of seconds, default 5, the SSDP query for Roku devices on the local network remains active. Must be an integer > 0.
 ---
 --- This is the number of seconds the SSDP query will remain active when [RokuControl:start](#start) is invoked or [RokuControl:discoverDevices](#discoverDevices) is later invoked to update the active list without a parameter.
-__spoonVariables.ssdpQueryTime = 5
+__spoonVariables.ssdpQueryTime = 10
 
 --- RokuControl.rediscoveryInterval
 --- Variable
@@ -191,8 +197,8 @@ local deviceMetatable = {
         return "http://" .. self:host() .. ":" .. self:port() .. "/" .. query:match("^/?(.*)$")
     end,
 
-    devInfo = function(self)
-        local s, b, h = http.get(self:url("/query/device-info"), {})
+    devInfo = function(self, root)
+        local s, b, h = http.get(self:url(root and "/" or "/query/device-info"), {})
         if s == 200 then
             return xml.parseXML(b)
         else
@@ -202,11 +208,16 @@ local deviceMetatable = {
     end,
 
     headphonesConnected = function(self)
-        local devInfo = self:devInfo()
-        return tostring(xml.entityValue(devInfo("headphones-connected")[1])):upper() == "TRUE"
+        local info = self:devInfo()
+        if info:tag() == "error" then
+            return nil, info["status"], info:value()
+        else
+            return tostring(xml.entityValue(info("headphones-connected"), 1)):upper() == "TRUE"
+        end
     end,
 
     isTV = function(self) return obj.__devices[self[1]].details.isTV end,
+    tvPowerIsOn = function(self) return self:devInfo()("power-mode")[1]:value() == "PowerOn" end,
     supportsFindRemote = function(self) return obj.__devices[self[1]].details.supportsFindRemote end,
     supportsHeadphones = function(self) return obj.__devices[self[1]].details.supportsHeadphones end,
 
@@ -242,16 +253,26 @@ local deviceMetatable = {
             table.insert(buttonArray, "VolumeDown")
             table.insert(buttonArray, "VolumeMute")
             table.insert(buttonArray, "VolumeUp")
-            table.insert(buttonArray, "PowerOff")
             table.insert(buttonArray, "InputTuner")
             table.insert(buttonArray, "InputHDMI1")
             table.insert(buttonArray, "InputHDMI2")
             table.insert(buttonArray, "InputHDMI3")
             table.insert(buttonArray, "InputHDMI4")
             table.insert(buttonArray, "InputAV1")
-        elseif self:supportsHeadphones() then
-            table.insert(buttonArray, "VolumeDown")
-            table.insert(buttonArray, "VolumeUp")
+
+-- ECP docs only mention "PowerOff", but a little googling found forum posts mentioning "PowerOn"
+-- and "Power", so, maybe new additions? At any rate, it works for the one TV I have sporadic access to
+            table.insert(buttonArray, "PowerOff")
+            table.insert(buttonArray, "PowerOn")
+            table.insert(buttonArray, "Power")
+        end
+        if self:supportsHeadphones() then
+            if not fnutils.contains(buttonArray, "VolumeDown") then
+                table.insert(buttonArray, "VolumeDown")
+            end
+            if not fnutils.contains(buttonArray, "VolumeUp") then
+                table.insert(buttonArray, "VolumeUp")
+            end
         end
 
         return setmetatable(buttonArray, {
@@ -289,16 +310,18 @@ local deviceMetatable = {
             end
         end
 
---         print( "http://" .. self:host() .. ":" .. self:port() .. "/" .. action .. "/" .. tostring(button))
-        local s, b, r = http.post(
+        http.asyncPost(
             "http://" .. self:host() .. ":" .. self:port() .. "/" .. action .. "/" .. tostring(button),
-            "", {})
-        if s ~= 200 then
-            -- skip it if it's volume related and the headphones aren't attached
-            if not (button:match("^Volume") and not self:headphonesConnected()) then
-                _log.ef("remote button error: %d -- %s -- %s", s, b, inspect(h, {  newline = " ", indent = "" }))
-            end
-        end
+            "",
+            {},
+            function(s, b, r)
+                if s ~= 200 then
+                    -- skip it if it's volume related and the headphones aren't attached
+                    if not (button:match("^Volume") and not self:headphonesConnected()) then
+                        _log.ef("remote button error: %d -- %s -- %s", s, b, inspect(h, {  newline = " ", indent = "" }))
+                    end
+                end
+            end)
         return self
     end,
 
@@ -359,6 +382,24 @@ local deviceMetatable = {
         })
     end,
 
+    deviceImage = function(self)
+        local info = self:devInfo(true)
+        if info:tag() == "error" then
+            return nil, info["status"], info:value()
+        else
+            -- build in a way that doesn't break if somethings missing
+            local imgURL = info("device")[1]
+            imgURL = imgURL and imgURL("iconList")[1]
+            imgURL = imgURL and imgURL("icon")[1]
+            imgURL = imgURL and imgURL("url")[1]
+            imgURL = imgURL and imgURL:value()
+            if imgURL then
+                img = image.imageFromURL(self:url("/" .. imgURL))
+            end
+        end
+        return img
+    end,
+
     currentApp = function(self)
         local result
         local s, b, r = http.get(self:url("/query/active-app"), {})
@@ -407,23 +448,27 @@ local deviceMetatable = {
             end
         end
         if isLaunch then
-            local s, b, r = http.post(
+            http.asyncPost(
                 "http://" .. self:host() .. ":" .. self:port() .. "/launch/" .. id,
                 "",
-                {}
+                {},
+                function(s, b, r)
+                    if s ~= 200 then
+                        _log.ef("launch error: %d -- %s -- %s", s, b, inspect(h, {  newline = " ", indent = "" }))
+                    end
+                end
             )
-            if s ~= 200 then
-                _log.ef("launch error: %d -- %s -- %s", s, b, inspect(h, {  newline = " ", indent = "" }))
-            end
         elseif allowInstall then
-            local s, b, r = http.post(
+            http.asyncPost(
                 "http://" .. self:host() .. ":" .. self:port() .. "/install/" .. id,
                 "",
-                {}
+                {},
+                function(s, b, r)
+                    if s ~= 200 then
+                        _log.ef("install error: %d -- %s -- %s", s, b, inspect(h, {  newline = " ", indent = "" }))
+                    end
+                end
             )
-            if s ~= 200 then
-                _log.ef("install error: %d -- %s -- %s", s, b, inspect(h, {  newline = " ", indent = "" }))
-            end
         else
             _log.wf("id %s not recognized for launch and allowInstall flag not set", id)
         end
@@ -548,10 +593,10 @@ obj.addDevice = function(self, host, port, headers)
             entry.host = host
             entry.port = port
 
-            local name = xml.entityValue(data("user-device-name")[1])     or
-                         xml.entityValue(data("friendly-device-name")[1]) or
-                         xml.entityValue(data("friendly-model-name")[1])  or
-                         xml.entityValue(data("default-device-name")[1])  or
+            local name = xml.entityValue(data("user-device-name"), 1)     or
+                         xml.entityValue(data("friendly-device-name"), 1) or
+                         xml.entityValue(data("friendly-model-name"), 1)  or
+                         xml.entityValue(data("default-device-name"), 1)  or
                          serialNumber
 
             -- things that don't change (well, at least not often enough to be queried each time we care; update during discovery, that's often enough)
@@ -561,9 +606,9 @@ obj.addDevice = function(self, host, port, headers)
             else
                 entry.details.ssdpDiscovery = headers
             end
-            entry.details.isTV = tostring(xml.entityValue(data("is-tv")[1])):upper() == "TRUE"
-            entry.details.supportsFindRemote = tostring(xml.entityValue(data("supports-find-remote")[1])):upper() == "TRUE"
-            entry.details.supportsHeadphones = tostring(xml.entityValue(data("supports-private-listening")[1])):upper() == "TRUE"
+            entry.details.isTV = tostring(xml.entityValue(data("is-tv"), 1)):upper() == "TRUE"
+            entry.details.supportsFindRemote = tostring(xml.entityValue(data("supports-find-remote"), 1)):upper() == "TRUE"
+            entry.details.supportsHeadphones = tostring(xml.entityValue(data("supports-private-listening"), 1)):upper() == "TRUE"
 
         else
             _log.ef("Unable to reach Roku device at %s: status = %d, msg = %s", host, s, b)
@@ -586,7 +631,9 @@ end
 ---  * if a discovery process is already in progress, this method has no effect.
 ---
 ---  * once [RokuControl:start](#start) has been invoked, this method will be invoked automatically at the interval specified by [RokuControl.rediscoveryInteerval](#rediscoveryInterval) (default 1 hour) to determine if new devices have been added or if existing devices have been removed from your local network.
+---
 ---  * you can invoke this method directly to force an update prior to the scheduled checks.
+---  * if you invoke this method directly *without* first invoking [RokuControl:start](#start) then no rediscovery check will be scheduled -- it will perform a one time query that will not update the list if your network changes or devices are added or removed from your network.
 obj.discoverDevices = function(self, queryTime)
     -- in case called as function
     if self ~= obj then self, queryTime = obj, self end
@@ -609,7 +656,12 @@ obj.discoverDevices = function(self, queryTime)
                 if headers["USN"] and headers["USN"]:match("^uuid:roku:ecp:") then
                     local serial = headers["USN"]:match("^uuid:roku:ecp:(.*)$")
                     local host, port = headers["LOCATION"]:match("^http://([%d%.]+):(%d+)/$")
-                    table.insert(__internals.seenDevices, serial)
+                    -- if a udp response is queued but clearQueryTimer callback is queued first
+                    -- seenDevices may disappear... its ok to add the Device and skip seenDevices
+                    -- since it's for clearing out things we *no longer* see..
+                    if __internals.seenDevices then
+                        table.insert(__internals.seenDevices, serial)
+                    end
                     obj:addDevice(host, port, headers)
                 end
             end
@@ -646,8 +698,11 @@ obj.start = function(self)
     -- in case called as function
     if self ~= obj then self = obj end
 
-    if not __internals.ssdpDiscovery and not __internals.rediscoveryCheck then
+    if not __internals.ssdpDiscovery then
         obj:discoverDevices()
+    end
+
+    if not __internals.rediscoveryCheck then
         local rediscoveryFunction
         rediscoveryFunction = function()
             obj:discoverDevices()
@@ -681,8 +736,10 @@ obj.stop = function(self)
     -- in case called as function
     if self ~= obj then self = obj end
 
-    __internals.rediscoveryCheck:stop()
-    __internals.rediscoveryCheck = nil
+    if __internals.rediscoveryCheck then
+        __internals.rediscoveryCheck:stop()
+        __internals.rediscoveryCheck = nil
+    end
     cleanUpDiscovery()
     return self
 end
