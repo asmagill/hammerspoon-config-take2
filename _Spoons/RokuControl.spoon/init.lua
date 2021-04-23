@@ -207,6 +207,25 @@ local deviceMetatable = {
         end
     end,
 
+-- want to move to this approach using `asTable` but it will take more effort than I want to
+-- put forth at the moment...
+--
+--     devInfo2 = function(self, root)
+--         local s, b, h = http.get(self:url(root and "/" or "/query/device-info"), {})
+--         if s == 200 then
+--             local state, bXML = pcall(xml.parseXML, b)
+--             if state then
+--                 return bXML:asTable()
+--             else
+--                 b = bXML
+--             end
+--         else
+--             _log.ef("devInfo query error --  %d -- %s -- %s", s, b, inspect(h, {  newline = " ", indent = "" }))
+--         end
+--
+--         return nil, s, b
+--     end,
+
     headphonesConnected = function(self)
         local info = self:devInfo()
         if info:tag() == "error" then
@@ -217,7 +236,7 @@ local deviceMetatable = {
     end,
 
     isTV = function(self) return obj.__devices[self[1]].details.isTV end,
-    tvPowerIsOn = function(self) return self:devInfo()("power-mode")[1]:value() == "PowerOn" end,
+    powerIsOn = function(self) return self:devInfo()("power-mode")[1]:value() == "PowerOn" end,
     supportsFindRemote = function(self) return obj.__devices[self[1]].details.supportsFindRemote end,
     supportsHeadphones = function(self) return obj.__devices[self[1]].details.supportsHeadphones end,
 

@@ -13,11 +13,7 @@ xmlObj:tag() -> string           tag this object represents
 xmlObj:value() -> string | nil   if the entity contains text, returns the text
 xmlObj:children() -> table       returns a table of the child entities (may be empty)
 xmlObj:asTable() -> table        returns a table describing the xml tree
-                                     each entity will be a table with the following keys:
-                                     * `tag`        a string for the entity's tag name
-                                     * `value`      a string of the entity content or nil
-                                     * `children`   a table of entity tables for each child or nil
-                                     * `attributes` a table of k-v pairs for the attributes or nil
+
 xmlObj[i] -> xmlObj | nil        returns xmlObj:children()[i]
 xmlObj["attr"] -> string | nil   returns string for value of attribute or nil
 xmlObj("tag") -> table | nil     returns a table of all children of type "tag" or nil
@@ -74,26 +70,38 @@ local elementMetatable = {
         return type(v) == "table" and v or {}
     end,
     asTable = function(self)
-        local descend
-        descend = function(t)
-            local results = {
-                attributes = {},
-                tag        = t:tag(),
-                value      = t:value(),
-                children   = {},
-            }
-            for k,v in pairs(t) do
-                results.attributes[k] = v
+        local buildTable
+        buildTable = function(entity)
+            local results = {}
+            if #entity == 0 then
+                results = entity:value()
+            else
+                for _, vEntity in ipairs(entity) do
+                    local tag, value = vEntity:tag(), buildTable(vEntity)
+                    if results[tag] then
+                        if type(results[tag]) ~= "table" then
+                            results[tag] = { results[tag] }
+                        end
+                        table.insert(results[tag], value)
+                    else
+                        results[tag] = value
+                    end
+                end
             end
-            for i,v in ipairs(t) do
-                results.children[i] = descend(v)
+
+            local xml_attributes = {}
+            for attr, vValue in pairs(entity) do xml_attributes[attr] = vValue end
+            if next(xml_attributes) then
+                if type(results) ~= "table" then
+                    results = { results }
+                end
+                results.xml_attributes = xml_attributes
             end
-            if not next(results.attributes) then results.attributes = nil end
-            if not next(results.children)   then results.children   = nil end
---             if results.value == ""          then results.value = nil end
+
             return results
         end
-        return descend(self)
+
+        return setmetatable({ [bXML:tag()] = buildTable(bXML) }, { __tostring = inspect })
     end,
 }
 

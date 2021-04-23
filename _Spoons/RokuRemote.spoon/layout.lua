@@ -309,7 +309,7 @@ layout.buttons = {
         active            = function(dev) return dev:isTV() or dev:headphonesConnected() end,
         pos               = { x = 3, y = 6, w = 2, h = 1 },
         char              = function(dev)
-            if not (dev and dev:tvPowerIsOn()) then
+            if not (dev and dev:powerIsOn()) then
                 return stext.new(utf8.char(0x26aa) .. " ", {
                     font           = { name = "Menlo", size = 14 },
                     paragraphStyle = { alignment = "center" },
