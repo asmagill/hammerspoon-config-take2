@@ -334,7 +334,7 @@ local deviceMetatable = {
             "",
             {},
             function(s, b, r)
-                if s ~= 200 then
+                if s ~= 200 and s ~= 202 then -- 202 indicates it has been accepted but not processed yet
                     -- skip it if it's volume related and the headphones aren't attached
                     if not (button:match("^Volume") and not self:headphonesConnected()) then
                         _log.ef("remote button error: %d -- %s -- %s", s, b, inspect(h, {  newline = " ", indent = "" }))
@@ -407,10 +407,11 @@ local deviceMetatable = {
             return nil, info["status"], info:value()
         else
             -- build in a way that doesn't break if somethings missing
-            local imgURL = info("device")[1]
-            imgURL = imgURL and imgURL("iconList")[1]
-            imgURL = imgURL and imgURL("icon")[1]
-            imgURL = imgURL and imgURL("url")[1]
+            local imgURL = info("device")
+            imgURL = imgURL and imgURL[1]("iconList")
+            imgURL = imgURL and imgURL[1]("icon")
+            imgURL = imgURL and imgURL[1]("url")
+            imgURL = imgURL and imgURL[1]
             imgURL = imgURL and imgURL:value()
             if imgURL then
                 img = image.imageFromURL(self:url("/" .. imgURL))
@@ -472,7 +473,7 @@ local deviceMetatable = {
                 "",
                 {},
                 function(s, b, r)
-                    if s ~= 200 then
+                    if s ~= 200 and s ~= 202 then -- 202 indicates it has been accepted but not processed yet
                         _log.ef("launch error: %d -- %s -- %s", s, b, inspect(h, {  newline = " ", indent = "" }))
                     end
                 end
@@ -483,7 +484,7 @@ local deviceMetatable = {
                 "",
                 {},
                 function(s, b, r)
-                    if s ~= 200 then
+                    if s ~= 200 and s ~= 202 then -- 202 indicates it has been accepted but not processed yet
                         _log.ef("install error: %d -- %s -- %s", s, b, inspect(h, {  newline = " ", indent = "" }))
                     end
                 end

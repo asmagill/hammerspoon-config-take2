@@ -101,7 +101,7 @@ local elementMetatable = {
             return results
         end
 
-        return setmetatable({ [bXML:tag()] = buildTable(bXML) }, { __tostring = inspect })
+        return setmetatable({ [self:tag()] = buildTable(self) }, { __tostring = inspect })
     end,
 }
 
