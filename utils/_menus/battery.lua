@@ -151,7 +151,7 @@ local updateMenuTitle = function()
         c[1] = { type = "text", text = titleText }
         menuUserData:setIcon(c:imageFromCanvas())
         -- canvas does not auto-collect, so repeating this eats memory
-        c:delete() ; c = nil
+--         c:delete() ; c = nil
 --         menuUserData:setTitle(titleText)
     end
 end
