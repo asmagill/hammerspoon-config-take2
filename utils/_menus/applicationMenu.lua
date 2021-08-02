@@ -30,7 +30,7 @@ local appMenu = FLM.new("Apps") ;
 appMenu:rootDirectory({
     macOS        = "/System/Applications",
     Applications = "/Applications",
-    User         = "~/Applications",
+    User         = os.getenv("HOME") .. "/Applications",
 })
 
 -- The maximum folder depth that we will search for files or folders which match the
