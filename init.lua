@@ -178,7 +178,7 @@ table.insert(spoon.BonjourLauncher.templates, {
     subText = "http://%hostname%:%port%/%txt:path%",
     url     = "http://%hostname%:%port%/%txt:path%",
     filter  = function(svc) local p = svc:port() ; return (p ~= 8266) and (p ~= -1) end,
-    hidden  = true,
+    hidden  = false,
 })
 hs.loadSpoon("FadeLogo"):start(.5)
 
