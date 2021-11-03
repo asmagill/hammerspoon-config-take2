@@ -182,6 +182,9 @@ table.insert(spoon.BonjourLauncher.templates, {
 })
 hs.loadSpoon("FadeLogo"):start(.5)
 
+
+-- if package.searchpath("EmmyLua", package.path) then hs.loadSpoon("EmmyLua") end
+
 -- now restore console and its position, if it was open when we relaunched/loaded
 if settings.get("openConsoleOnLoad") then
     hs.openConsole()

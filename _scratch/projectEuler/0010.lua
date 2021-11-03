@@ -6,7 +6,7 @@ local buildSieve = function(max_size)
     -- force a freeing of used memory
     sievedPrimes = nil ; collectgarbage() ; collectgarbage() ;
     local isPrime = {}
-    for i = 1, max_size, 1 do isPrime[i] = true end
+    for i = 2, max_size, 1 do isPrime[i] = true end
 
     local p = 2
     while p * p <= max_size do

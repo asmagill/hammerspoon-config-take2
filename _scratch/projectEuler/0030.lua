@@ -1,7 +1,7 @@
 local systemTime = hs and hs.timer.secondsSinceEpoch or os.time
 local t = systemTime()
 
--- can't simplify iterate with five loops (though this does work for the 4th pwr version)
+-- can't simply iterate with five loops (though this does work for the 4th pwr version)
 -- because answer may have 6 digits...
 
 local ans = {}
