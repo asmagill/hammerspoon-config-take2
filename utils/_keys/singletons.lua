@@ -59,8 +59,8 @@ hotkey.bind(mods.CAsC, "r", function()
         conswin:close()
         if windowHolder and #windowHolder:role() ~= 0 then
             windowHolder:becomeMain():focus()
-            windowHolder = nil
         end
+        windowHolder = nil
     else
         windowHolder = window.frontmostWindow()
         hs.openConsole()
