@@ -45,6 +45,7 @@ local ipc         = require("hs.ipc")
 local image       = require("hs.image")
 local math        = require("hs.math")
 local settings    = require("hs.settings")
+local fs          = require("hs.fs")
 
 -- using yabai for a while, lets see if this causes problems when I start the
 -- hs.window.filter rewrite
@@ -99,6 +100,40 @@ require("hs.hotkey").setLogLevel("warning")
 
 -- If something grows into usefulness, I'll modularize it.
 _xtras = require("hs._asm.extras")
+
+_xtras.launchNewBuild = function()
+    local zipFile = "~/Hammerspoon.zip"
+
+    assert((fs.attributes(zipFile) or {}).mode == "file", zipFile .. " not found or wrong type")
+    local prevDir = fs.currentDir()
+    -- force return to original dir, even if we error out
+    local onClose <close> = setmetatable({}, { __close = function(_) fs.chdir(prevDir) end })
+
+    fs.chdir("~")
+    assert(os.execute("unzip " .. zipFile), "Unable to expand " .. zipFile)
+
+    os.execute([[
+(while ps -p ]] .. hs.processInfo.processID .. [[ > /dev/null ; do
+    sleep 1
+done
+rm -fr "]] .. hs.processInfo.bundlePath .. [["
+mv Hammerspoon.app "]] .. hs.processInfo.bundlePath .. [["
+open -a "]] .. hs.processInfo.bundlePath .. [[" ) &
+]])
+
+    local hspoon = application.applicationsForBundleID(hs.processInfo.bundleID)[1]
+    local conswin = hspoon:mainWindow()
+    if conswin then
+        settings.set("openConsoleOnLoad", true)
+
+        local fr = conswin:frame()
+        -- stupid hs.geometry doesn't allow settings to serialize this properly
+        fr = { x = fr.x, y = fr.y, h = fr.h, w = fr.w }
+        settings.set("positionConsoleOnLoad", fr)
+    end
+
+    hs._exit(true, true)
+end
 
 -- _asm.relaunch = function()
 --     os.execute([[ (while ps -p ]]..hs.processInfo.processID..[[ > /dev/null ; do sleep 1 ; done ; open -a "]]..hs.processInfo.bundlePath..[[" ) & ]])
