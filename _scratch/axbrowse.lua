@@ -257,7 +257,8 @@ end
 local showingChooser = function()
     -- it seems if the chooser is double triggered, it never calls the callback or hide for the initial one
     if _canvas then
-        _canvas:delete()
+--         _canvas:delete()
+        _canvas:hide()
         _canvas = nil
     end
     -- chooser window attribute doesn't exist until after it's showing, so we can't get the frame until
@@ -306,7 +307,8 @@ end
 
 local hidingChooser = function()
     if _canvas then
-        _canvas:delete()
+--         _canvas:delete()
+        _canvas:hide()
         _canvas = nil
     end
 end
