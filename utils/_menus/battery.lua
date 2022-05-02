@@ -1,3 +1,6 @@
+
+-- vastly in need of a rewrite --
+
 local module = {
 --[=[
     _NAME        = 'battery',
@@ -12,7 +15,7 @@ local module = {
     ]],
     _TODO        = [[
 
-       [x] issue warning for low battery?  System doesn't if we hide it's icon...
+       [x] issue warning for low battery?  System doesn't if we hide its icon...
        [ ] change menu title to icon with color change for battery state?
               awaiting way to composite drawing objects...
 
@@ -22,7 +25,8 @@ local module = {
 }
 
 -- local menubar    = require("hs.menubar")
-local menubar    = require("hs._asm.guitk.menubar")
+-- local menubar    = require("hs._asm.guitk.menubar")
+local menubar    = require("hs.menubar")
 local utf8       = require("hs.utf8")
 local battery    = require("hs.battery")
 local fnutils    = require("hs.fnutils")
@@ -113,7 +117,8 @@ local notificationStatus = {}
 
 local updateMenuTitle = function()
     if menuUserData then
-        local titleText = onAC
+        local titleText = (batteryPowerSource() == "AC Power") and onAC or onBattery
+        local additionalTitleText
 
         local amp = battery.amperage()
         if amp then
@@ -130,7 +135,7 @@ local updateMenuTitle = function()
                     string.format("%d:%02d", math.floor(timeValue/60), timeValue%60))
 
             local titleColor = { white = (host.interfaceStyle() == "Dark") and 1 or 0 }
-            titleText = styledtext.new(text,  {
+            additionalTitleText = styledtext.new(text,  {
                 font = {
                     name = "Menlo",
                     size = 9
@@ -142,17 +147,25 @@ local updateMenuTitle = function()
             })
         end
 
-        -- Big Sur forces a common text baseline for titles which
-        -- causes multi-line text to push upper liness off top of
-        -- menubar; this converts it to an image which is allowed
-        -- the full menubar height for display
-        local c = canvas.new{ x = 0, y = 0, h = 0, w = 0 }
-        c:frame(c:minimumTextSize(titleText))
-        c[1] = { type = "text", text = titleText }
-        menuUserData:setIcon(c:imageFromCanvas())
-        -- canvas does not auto-collect, so repeating this eats memory
---         c:delete() ; c = nil
---         menuUserData:setTitle(titleText)
+--         local c = canvas.new{ x = 0, y = 0, h = 0, w = 0 }
+--         c:frame(c:minimumTextSize(titleText))
+--         c[1] = { type = "text", text = titleText }
+--         menuUserData:setIcon(c:imageFromCanvas())
+--         c = nil
+        menuUserData:setTitle(titleText)
+        if additionalTitleText then
+            -- Big Sur+ forces a common text baseline for titles which
+            -- causes multi-line text to push upper liness off top of
+            -- menubar; this converts it to an image which is allowed
+            -- the full menubar height for display
+            local c = canvas.new{ x = 0, y = 0, h = 0, w = 0 }
+            c:frame(c:minimumTextSize(additionalTitleText))
+            c[1] = { type = "text", text = additionalTitleText }
+            menuUserData:setIcon(c:imageFromCanvas()):imagePosition(3)
+            c = nil
+        else
+            menuUserData:setIcon(nil):imagePosition(0)
+        end
     end
 end
 
@@ -267,11 +280,11 @@ rawBatteryData = function(tbl)
                 title = styledtext.new(i .. " = " .. tostring(v), rawStyle),
                 disabled = true,
             })
-        else
+        elseif next(v) then
             table.insert(data, {
                 title = styledtext.new(i, rawStyle),
                 menu = rawBatteryData(v),
-                disabled = not next(v),
+                disabled = false,
             })
         end
     end
@@ -288,8 +301,7 @@ local displayBatteryData = function(modifier)
         local pwrIcon = (batteryPowerSource() == "AC Power") and onAC or onBattery
         table.insert(menuTable, { title = pwrIcon .. "  " .. (
                 (battery.isCharged()  and "Fully Charged") or
-                (battery.isCharging() and (battery.isFinishingCharge() and "Finishing Charge" or "Charging")) or
-                "On Battery"
+                (battery.isCharging() and (battery.isFinishingCharge() and "Finishing Charge" or "Charging")) or (battery._powerSources()[1]["Optimized Battery Charging Engaged"] and "On Hold" or "On Battery")
             )
         })
     end
