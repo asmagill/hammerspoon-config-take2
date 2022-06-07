@@ -203,7 +203,7 @@ local generateHtml = function(allMenuItems)
             <hr />
               <div class="content" >
                 <div class="col">
-                  by <a href="https://github.com/dharmapoudel" target="_parent">dharma poudel</a>
+                  inspired by <a href="https://github.com/dharmapoudel" target="_parent">dharma poudel</a>
                 </div>
               </div>
           </footer>
@@ -232,30 +232,6 @@ module.cs = hotkey.modal.new()
 
         local screenFrame = screen.mainScreen():frame()
 
-        local c = canvas.new{ x = 0, y = 0, h = 0, w = 0 }
-        c[1] = {
-            type             = "rectangle",
-            action           = "strokeAndFill",
-            strokeColor      = { white = 1, alpha = 1 },
-            fillColor        = { hex = module.bgColor, alpha = 0.75 },
-            roundedRectRadii = { xRadius = 27, yRadius = 27 },
-        }
-        c[2] = {
-            type             = "text",
-            textColor        = { white = 1, alpha = 1 },
-            textFont         = ".AppleSystemUIFont",
-            textSize         = 24,
-            text             = "Thinking",
-        }
-        local textSize = c:minimumTextSize(2, "Thinking . . .")
-        c[2].frame = { x = c[2].textSize, y = c[2].textSize / 2, w = textSize.w, h = textSize.h }
-        c:frame{
-            x = screenFrame.x + (screenFrame.w - (textSize.w + (c[2].textSize * 2))) / 2,
-            y = screenFrame.y + (screenFrame.h - (textSize.h + (c[2].textSize * 3))) / 2,
-            w = textSize.w + (c[2].textSize * 2),
-            h = textSize.h + c[2].textSize
-        }:show()
-
         local thinkingLabels = {
             "Thinking",
             "Thinking .",
@@ -263,28 +239,59 @@ module.cs = hotkey.modal.new()
             "Thinking . . .",
         }
         local thinkingPos = 0
+
+        local thinkingCanvas = canvas.new{ x = 0, y = 0, h = 0, w = 0 }
+        thinkingCanvas[1] = {
+            type             = "rectangle",
+            action           = "strokeAndFill",
+            strokeColor      = { white = 1, alpha = 1 },
+            fillColor        = { hex = module.bgColor, alpha = 0.75 },
+            roundedRectRadii = { xRadius = 27, yRadius = 27 },
+        }
+        thinkingCanvas[2] = {
+            type             = "text",
+            textColor        = { white = 1, alpha = 1 },
+            textFont         = ".AppleSystemUIFont",
+            textSize         = 24,
+            text             = thinkingLabels[thinkingPos + 1],
+        }
+        local textSize = thinkingCanvas:minimumTextSize(2, thinkingLabels[#thinkingLabels])
+        thinkingCanvas[2].frame = {
+            x = thinkingCanvas[2].textSize,
+            y = thinkingCanvas[2].textSize / 2,
+            w = textSize.w,
+            h = textSize.h
+        }
+        thinkingCanvas:frame{
+            x = screenFrame.x + (screenFrame.w - (textSize.w + (thinkingCanvas[2].textSize * 2))) / 2,
+            y = screenFrame.y + (screenFrame.h - (textSize.h + (thinkingCanvas[2].textSize * 8))) / 2,
+            w = textSize.w + (thinkingCanvas[2].textSize * 2),
+            h = textSize.h + thinkingCanvas[2].textSize
+        }:show()
+
         local thinkingUpdated = timer.secondsSinceEpoch()
-        local thinkingCR
+
+        local thinkingCR -- make upvalue so won't get collected
         thinkingCR = coroutine.wrap(function()
             while module.cs._waitingToBuild do
 --                 print(thinkingUpdated, thinkingPos)
                 if timer.secondsSinceEpoch() - thinkingUpdated >= 0.5 then
                     thinkingPos = (thinkingPos + 1) % #thinkingLabels
-                    c[2].text = thinkingLabels[thinkingPos + 1]
+                    thinkingCanvas[2].text = thinkingLabels[thinkingPos + 1]
                     thinkingUpdated = timer.secondsSinceEpoch()
                 end
                 coroutine.applicationYield(.2)
             end
-            c:hide()
+            thinkingCanvas:hide()
 
             thinkingCR = nil
-            c = nil
+            thinkingCanvas = nil
         end)
 
         thinkingCR()
 --         application.frontmostApplication():getMenuItems(function(allMenuItems)
         menuGetter(application.frontmostApplication(), function(allMenuItems)
-            if c then c:hide() end
+            if thinkingCanvas then thinkingCanvas:hide() end
             if module.cs._waitingToBuild then
                 module.cs._waitingToBuild = nil
 
