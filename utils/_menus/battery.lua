@@ -30,8 +30,6 @@ local menubar    = require("hs.menubar")
 local utf8       = require("hs.utf8")
 local battery    = require("hs.battery")
 local fnutils    = require("hs.fnutils")
-local settings   = require("hs.settings")
-local speech     = require("hs.speech")
 local styledtext = require("hs.styledtext")
 local timer      = require("hs.timer")
 local host       = require("hs.host")
@@ -40,80 +38,10 @@ local canvas     = require("hs.canvas")
 local onAC       = utf8.codepointToUTF8(0x1F50C) -- plug
 local onBattery  = utf8.codepointToUTF8(0x1F50B) -- battery
 
-local suppressAudioKey = "_asm.battery.suppressAudio"
-local suppressAudio = settings.get(suppressAudioKey) or false
-
 local menuUserData = nil
 local currentPowerSource = ""
 
 local batteryPowerSource = function() return battery.powerSource() or "no battery" end
-
--- Some "notifications" to apply... need to update battery watcher to do these
-module.batteryNotifications = {
-    { onBattery = true, percentage = 10, doEvery = false,
-        fn = function()
-            local alert = require("hs.alert")
-            if not suppressAudio then
-                local audio = require("hs.audiodevice").defaultOutputDevice()
-                local volume, muted = audio:volume(), audio:muted()
-                -- apparently some devices don't have a volume or mute...
-                if volume then audio:setVolume(100) end
-                if muted then audio:setMuted(false) end
-                local sp = speech.new("Zarvox"):setCallback(function(s, why, ...)
-                    if why == "didFinish" then
-                        if volume then audio:setVolume(volume) end
-                        if muted then audio:setMuted(true) end
-                    end
-                end):speak("LOW BATTERY")
-            end
-            alert.show("LOW BATTERY")
-        end
-    },
-    { onBattery = true, percentage = 5, doEvery = 60,
-        fn = function()
-            local alert = require("hs.alert")
-            if not suppressAudio then
-                local audio = require("hs.audiodevice").defaultOutputDevice()
-                local volume, muted = audio:volume(), audio:muted()
-                -- apparently some devices don't have a volume or mute...
-                if volume then audio:setVolume(100) end
-                if muted then audio:setMuted(false) end
-                local sp = speech.new("Zarvox"):setCallback(function(s, why, ...)
-                    if why == "didFinish" then
-                        if volume then audio:setVolume(volume) end
-                        if muted then audio:setMuted(true) end
-                    end
-                end):speak("PLUG ME IN NOW")
-            end
-            alert.show("PLUG ME IN NOW")
-        end
-    },
-    { onBattery = true, timeRemaining = 30, doEvery = 300,
-        fn = function()
-            local alert = require("hs.alert")
-            local battery = require("hs.battery")
-            alert.show("Battery has " .. tostring(math.floor(battery.timeRemaining())) .. " minutes left...", 10)
-        end
-    },
-    { onBattery = false, percentage = 10, doEvery = false,
-        fn = function()
-            if not suppressAudio then
-        -- I don't care if I miss this one, so... no volume changes
-                local sp = speech.new("Zarvox"):speak("Feeling returning to my circuits")
-            end
-        end
-    },
-    { onBattery = false, percentage = 90, doEvery = false,
-        fn = function()
-            if not suppressAudio then
-        -- I don't care if I miss this one, so... no volume changes
-                local sp = speech.new("Zarvox"):speak("I'm feeling [[inpt PHON; rate 80]]+mUXC[[inpt TEXT; rset 0]] better [[emph +]]now")
-            end
-        end
-    },
-}
-
-local notificationStatus = {}
 
 local updateMenuTitle = function()
     if menuUserData then
@@ -182,18 +110,6 @@ local powerSourceChangeFN = function(justOn)
 
         if currentPowerSource ~= newPowerSource then
             currentPowerSource = newPowerSource
-            for i,v in ipairs(module.batteryNotifications) do
-                if newPowerSource == "AC Power" then
-                    if not v.onBattery then
-                        if v.percentage and test.percentage > v.percentage then notificationStatus[i] = test.timeStamp end
-                    end
-                else
-                    if v.onBattery then
-                        if v.percentage and test.percentage < v.percentage then notificationStatus[i] = test.timeStamp end
-                        if v.timeRemaining and test.timeRemaining < v.timeRemaining then notificationStatus[i] = test.timeStamp end
-                    end
-                end
-            end
     --         if menuUserData then
     --             if currentPowerSource == "AC Power" then
     --                 menuUserData:setTitle(onAC)
@@ -201,64 +117,6 @@ local powerSourceChangeFN = function(justOn)
     --                 menuUserData:setTitle(onBattery)
     --             end
     --         end
-        end
-        if not justOn then
-            for i,v in ipairs(module.batteryNotifications) do
-                if v.onBattery == test.onBattery then
-                    local shouldWeDoSomething = false
-                    if not notificationStatus[i] then
-                        if v.percentage then
-                            if v.onBattery then
-                                shouldWeDoSomething = (test.percentage - v.percentage) < 0
-                            else
-                                shouldWeDoSomething = (test.percentage - v.percentage) > 0
-                            end
-                        elseif v.timeRemaining then
-                            if v.onBattery and test.timeRemaining > 0 then
-                                shouldWeDoSomething = (test.timeRemaining - v.timeRemaining) < 0
-                            else
-                                shouldWeDoSomething = (test.timeRemaining - v.timeRemaining) > 0
-                            end
-                        else
-                            print("++ unknown test for battery notification #" .. tostring(i))
-                        end
-                    elseif notificationStatus[i] and doEvery and
-                      (test.timeStamp - notificationStatus[i]) > v.doEvery then
-                          shouldWeDoSomething = true
-                    end
-    --                print("++ " .. tostring(i) .. " -- " .. hs.inspect(v))
-                    if shouldWeDoSomething then
-                        notificationStatus[i] = test.timeStamp
-                        v.fn()
-                    end
-                else
-                -- remove stored status for wrong onBattery types...
-                    if notificationStatus[i] then notificationStatus[i] = nil end
-                end
-            end
-        else
-            for i,v in ipairs(module.batteryNotifications) do
-                if v.onBattery == test.onBattery then
-                    local shouldWeDoSomething = false
-                    if v.percentage then
-                        if v.onBattery then
-                            shouldWeDoSomething = (test.percentage - v.percentage) < 0
-                        else
-                            shouldWeDoSomething = (test.percentage - v.percentage) > 0
-                        end
-                    elseif v.timeRemaining then
-                        if v.onBattery and test.timeRemaining > 0 then
-                            shouldWeDoSomething = (test.timeRemaining - v.timeRemaining) < 0
-                        else
-                            shouldWeDoSomething = (test.timeRemaining - v.timeRemaining) > 0
-                        end
-                    else
-                        print("++ unknown test for battery notification #" .. tostring(i))
-                    end
-
-                    if shouldWeDoSomething then notificationStatus[i] = test.timeStamp end
-                end
-            end
         end
     end
 end
@@ -352,13 +210,6 @@ local displayBatteryData = function(modifier)
     table.insert(menuTable, { title = "-" })
 
     table.insert(menuTable, { title = "Raw Battery Data...", menu = rawBatteryData(battery.getAll()) })
-
-    table.insert(menuTable, { title = "-" })
-
-    table.insert(menuTable, { title = "Suppress Audio", checked = suppressAudio, fn = function()
-        suppressAudio = not suppressAudio
-        settings.set(suppressAudioKey, suppressAudio)
-    end })
 
     return menuTable
 end
