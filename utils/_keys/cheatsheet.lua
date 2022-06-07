@@ -14,7 +14,7 @@ local application = require("hs.application")
 local watchables  = require("hs.watchable")
 local screen      = require("hs.screen")
 local webview     = require("hs.webview")
-local drawing     = require("hs.drawing")
+local canvas      = require("hs.canvas")
 
 local events = eventtap.event.types
 
@@ -229,17 +229,72 @@ end
 module.cs = hotkey.modal.new()
     function module.cs:entered()
         module.cs._waitingToBuild = true
+
+        local screenFrame = screen.mainScreen():frame()
+
+        local c = canvas.new{ x = 0, y = 0, h = 0, w = 0 }
+        c[1] = {
+            type             = "rectangle",
+            action           = "strokeAndFill",
+            strokeColor      = { white = 1, alpha = 1 },
+            fillColor        = { hex = module.bgColor, alpha = 0.75 },
+            roundedRectRadii = { xRadius = 27, yRadius = 27 },
+        }
+        c[2] = {
+            type             = "text",
+            textColor        = { white = 1, alpha = 1 },
+            textFont         = ".AppleSystemUIFont",
+            textSize         = 24,
+            text             = "Thinking",
+        }
+        local textSize = c:minimumTextSize(2, "Thinking . . .")
+        c[2].frame = { x = c[2].textSize, y = c[2].textSize / 2, w = textSize.w, h = textSize.h }
+        c:frame{
+            x = screenFrame.x + (screenFrame.w - (textSize.w + (c[2].textSize * 2))) / 2,
+            y = screenFrame.y + (screenFrame.h - (textSize.h + (c[2].textSize * 3))) / 2,
+            w = textSize.w + (c[2].textSize * 2),
+            h = textSize.h + c[2].textSize
+        }:show()
+
+        local thinkingLabels = {
+            "Thinking",
+            "Thinking .",
+            "Thinking . .",
+            "Thinking . . .",
+        }
+        local thinkingPos = 0
+        local thinkingUpdated = timer.secondsSinceEpoch()
+        local thinkingCR
+        thinkingCR = coroutine.wrap(function()
+            while module.cs._waitingToBuild do
+--                 print(thinkingUpdated, thinkingPos)
+                if timer.secondsSinceEpoch() - thinkingUpdated >= 0.5 then
+                    thinkingPos = (thinkingPos + 1) % #thinkingLabels
+                    c[2].text = thinkingLabels[thinkingPos + 1]
+                    thinkingUpdated = timer.secondsSinceEpoch()
+                end
+                coroutine.applicationYield(.2)
+            end
+            c:hide()
+
+            thinkingCR = nil
+            c = nil
+        end)
+
+        thinkingCR()
 --         application.frontmostApplication():getMenuItems(function(allMenuItems)
         menuGetter(application.frontmostApplication(), function(allMenuItems)
+            if c then c:hide() end
             if module.cs._waitingToBuild then
                 module.cs._waitingToBuild = nil
-                local screenFrame = screen.mainScreen():frame()
+
                 local viewFrame = {
                     x = screenFrame.x + 50,
                     y = screenFrame.y + 50,
                     h = screenFrame.h - 100,
                     w = screenFrame.w - 100,
                 }
+
                 if not module._contentController then
                     module._contentController = webview.usercontent.new("injectedLocalJS")
                     local scriptPath = hs.configdir .. "/_localAssets/isotope.pkgd.min.js"
@@ -252,12 +307,13 @@ module.cs = hotkey.modal.new()
                         print("*** Unable to load " .. scriptPath)
                     end
                 end
+
                 module.myView = webview.new(viewFrame, { developerExtrasEnabled = true }, module._contentController)
                       :windowStyle("utility")
                       :closeOnEscape(true)
                       :allowGestures(true)
                       :windowTitle("CheatSheets")
-                      :level(drawing.windowLevels.floating)
+                      :level(canvas.windowLevels.floating)
                       :alpha(module.alpha or 1.0)
                       :html(generateHtml(allMenuItems))
                       :show()
