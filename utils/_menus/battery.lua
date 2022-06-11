@@ -200,7 +200,7 @@ local displayBatteryData = function(modifier)
         title = utf8.codepointToUTF8(0x1F300) .. "  Cycles: ".. (battery.cycles() or "n/a")
     })
 
-    local healthcondition = battery.healthCondition()
+    local healthCondition = battery.healthCondition()
     if healthCondition then
         table.insert(menuTable, {
             title = utf8.codepointToUTF8(0x26A0) .. "  " .. healthCondition
