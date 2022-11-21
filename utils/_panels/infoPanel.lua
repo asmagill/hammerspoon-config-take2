@@ -2,7 +2,7 @@ local slidingPanels = hs.loadSpoon("SlidingPanels")
 
 slidingPanels:addPanel("infoPanel", {
     side              = "top",
-    size              = 1/3,
+    size              = 1/5,
 --    size              = 2/9,
     modifiers         = { "fn" },
     persistent        = true,
@@ -25,18 +25,19 @@ local filepath = debug.getinfo(1, "S").source:match("^@(.+/).+%.lua$")
 --    * background - a table specifying a canvas element, e.g. a rectangle or an image, to use as the background for the spoon canvas. This can be useful to provide contrast if the spoon's coloring is hard to see against the panel's background.
 
 -- slidingPanels:panel("infoPanel"):addWidget("FromSpoon", "HCalendar",      { rX = "100%", bY = "100%" })
-slidingPanels:panel("infoPanel"):addWidget("FromSpoon", "HCalendar",      { cX = "50%", bY = "100%" })
+--slidingPanels:panel("infoPanel"):addWidget("FromSpoon", "HCalendar",      { cX = "50%", bY = "100%" })
+--
+--slidingPanels:panel("infoPanel"):addWidget("FromSpoon", "CircleClock",    { rX = "100%",  y = 0 }, {
+--    background = {
+--        type             = "rectangle",
+--        action           = "fill",
+--        roundedRectRadii = { xRadius = 20, yRadius = 20 },
+--        fillColor        = { red = .4, blue = .32, green = .32, alpha = .7 },
+--    },
+--})
 
-slidingPanels:panel("infoPanel"):addWidget("FromSpoon", "CircleClock",    { rX = "100%",  y = 0 }, {
-    background = {
-        type             = "rectangle",
-        action           = "fill",
-        roundedRectRadii = { xRadius = 20, yRadius = 20 },
-        fillColor        = { red = .4, blue = .32, green = .32, alpha = .7 },
-    },
-})
-
-slidingPanels:panel("infoPanel"):addWidget("FromSpoon", "MountedVolumes", {  x = 0, bY = "100%" }, {
+--slidingPanels:panel("infoPanel"):addWidget("FromSpoon", "MountedVolumes", {  x = 0, bY = "100%" }, {
+slidingPanels:panel("infoPanel"):addWidget("FromSpoon", "MountedVolumes", {  rX = "100%", y = 0 }, {
     start = function(spoon)
         spoon.textStyle.font.size = 10 -- easier then spelling out entire style in vars
                                       -- need to think about separating out font from style in spoon
