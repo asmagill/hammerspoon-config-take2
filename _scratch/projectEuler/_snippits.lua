@@ -107,8 +107,8 @@ local sievedPrimes = {}
 local isPrime = {}
 
 local isPrimeLookup = function(n, allowNegative)
-    local ans = isPrime[n]
     if allowNegative then n = math.abs(n) end
+    local ans = isPrime[n]
     if n > 0 and ans == nil then
         error(string.format("prime sieve not large enough; need at least %d", n))
     else
