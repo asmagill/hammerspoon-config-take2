@@ -217,8 +217,33 @@ table.insert(spoon.BonjourLauncher.templates, {
 })
 hs.loadSpoon("FadeLogo"):start(.5)
 
+if package.searchpath("EmmyLua", package.path) then
+    hs.loadSpoon("EmmyLua")
+end
 
--- if package.searchpath("EmmyLua", package.path) then hs.loadSpoon("EmmyLua") end
+_objc = require("hs._asm.objc")
+
+hd = require("hs.utf8").hexDump
+
+which = function(what)
+    local results = {}
+    for _,v in ipairs(package.searchers) do
+        local fn, where = v(tostring(what))
+        if type(fn) == "function" then table.insert(results, where) end
+    end
+    if #results == 0 then
+        return nil, tostring(what) .. " not found"
+    else
+        return table.unpack(results)
+    end
+end
+
+local prevFrame = settings.get("positionConsoleOnLoad")
+if prevFrame then
+    local hspoon = application.applicationsForBundleID(hs.processInfo.bundleID)[1]
+    local conswin = hspoon:mainWindow()
+    if conswin then conswin:setFrame(prevFrame) end
+end
 
 -- now restore console and its position, if it was open when we relaunched/loaded
 if settings.get("openConsoleOnLoad") then
@@ -231,15 +256,5 @@ else
     end)
 end
 
-local prevFrame = settings.get("positionConsoleOnLoad")
-if prevFrame then
-    local hspoon = application.applicationsForBundleID(hs.processInfo.bundleID)[1]
-    local conswin = hspoon:mainWindow()
-    if conswin then conswin:setFrame(prevFrame) end
-end
-
 settings.clear("openConsoleOnLoad")
 settings.clear("positionConsoleOnLoad")
-
-_objc = require("hs._asm.objc")
-hd = require("hs.utf8").hexDump
