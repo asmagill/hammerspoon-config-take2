@@ -5,37 +5,47 @@
 --
 -- This is neither complete nor optimized... but it works for my needs
 --
--- Implemented:
---    addition of bigInts
---    subtraction of bigInts
---    multiplication of bigInts
---    comparisons: <, >, <=, >=, ==, ~=
---    exponentiation but exponent must be non-negative integer (i.e. not a bigInt itself)
---    unary minus
---    (integer) division - plausibly fast, considering, but still the slowest of all operations
---    modulus - plausibly fast, considering, but still the slowest of all operations
+-- Functions:
+-- ?  __add addition of bigInts
+-- +  __sub subtraction of bigInts
+--    __mul multiplication of bigInts
 --
---    bigint:eq(y)
---        shortcut for `bX == bigint(y)` since the __eq mm only triggers if *both* arguments
---        are tables (unlike __lt and __le)
---    bigint:abs()
---    bigint:sgn()
---        return -1 if bigint is negative, 0 if zero, and 1 if positive
---  ? bigint:div(y)
+--    __pow exponentiation but exponent must be non-negative integer (i.e. not a bigInt itself)
+--          could we allow bigint exp by dividing by (-1 >> 1) and looping?
+-- +  __unm unary minus
+-- +  __idiv (integer) division
+-- +  __div  (same as __idiv)
+-- +  __mod modulus
+--
+--    bigint:div(y)
 --        shortcut for `bX // y, bX % y` since both are calculated at the same time
 --        __(i)div and __mod return the single value expected; if you need both, use
 --        this to prevent having to calculate it twice
 --
--- I suspect I'll need to move to an array of 64bit ints that adds more as necessary
--- and represent numbers in binary to speed it up much faster and/or implement the
--- following...
+-- +  bigint:eq(y) shortcut for `bX == bigint(y)` since the __eq mm only triggers if *both* arguments are tables (unlike __lt and __le)
+-- +  bigint:abs()
+-- +  bigint:sgn() return -1 if bigint is negative, 0 if zero, and 1 if positive
 --
---    bitwise and, or, xor, not
---    shift left, right
+-- +  __band bitwise and
+-- +  __bor  bitwise or
+-- +  __bxor bitwise xor
+-- +  __bnot bitwise not
+-- +  __shl  bitwise shift left
+-- +  __shr  bitwise shift right
 --
--- (and should probably move it into a compiled library at that point to take advantage of
+-- <, >, <=, >=, ==, ~=
+-- +  __lt
+-- +  __le
+-- +  __eq
+--
+-- +  __tostring
+--
+-- (should probably move it into a compiled library at that point to take advantage of
 -- compiler optimizations for bitwise operations if I want true speed or to formally add it
 -- to Hammerspoon...)
+--
+--    __pairs   -- if moved to userdata in compiled library
+--    __ipairs  -- if moved to userdata in compiled library
 
 local module = {}
 
@@ -62,6 +72,7 @@ module.new = function(n)
     -- in case they gave us a string, strip leading 0's
     while nAsStr:sub(1,1) == "0" and #nAsStr > 1 do nAsStr = nAsStr:sub(2) end
 
+    -- convert base-10 to base-2 (256)
     local byte, digit = 0, "0"
     repeat
         digit, nAsStr = nAsStr:sub(-1), nAsStr:sub(1, -2)
@@ -73,7 +84,12 @@ module.new = function(n)
     until nAsStr == ""
     if byte ~= 0 then table.insert(ans, byte) end
 
-    if negative then ans = -ans end
+    -- set sign
+    if not (#self == 1 and self[1] == 0) then
+        table.insert(ans, 0) -- it's a positive number (so far) so set last byte to 0
+    end
+    if negative then ans = -ans end -- now adjust if it's negative
+
     return ans
 end
 
@@ -96,6 +112,15 @@ local _duplicate = function(n)
     return setmetatable(ans, getmetatable(n))
 end
 
+-- consolidate leading 0 or 255
+local _compress = function(self)
+    if #self ~= 1 then
+        while #self > 2 and self[#self] == self[#self - 1] do table.remove(self) end
+        if #self == 2 and self[1] == 0 then table.remove(self) end
+    end
+    return self
+end
+
 bigIntMT.abs = function(self)
     local ans = _duplicate(self)
     if ans < 0 then ans = -ans end
@@ -103,11 +128,7 @@ bigIntMT.abs = function(self)
 end
 
 bigIntMT.sgn = function(self)
-    if #self == 1 and self[1] == 0 then
-        return 0
-    else
-        return (self[#self] == 255) and -1 or 1
-    end
+    return (#self == 1) and 0 or ((self[#self] == 255) and -1 or 1)
 end
 
 -- Shorthand when comparing to non-bigint "number"
@@ -125,84 +146,21 @@ bigIntMT.__add = function(self, other)
     local ans, carry = setmetatable({}, bigIntMT), 0
     local selfSign, otherSign = self[#self], other[#other]
 
-    for i = 1, math.max(#self, #other), 1 do
-        local a, b = self[i], other[i]
-        if not a then a = selfSign end
-        if not b then b = otherSign end
-        local c = a + b + carry
-        c, carry = c % 256, c // 256
-        table.insert(ans, c)
-    end
--- I think we throw away the carry, but need to test
---     if carry ~= 0 then table.insert(ans, 255) end
+    -- by extending the sequence by a copy of the sign byte, I *think* we
+    -- can ignore the carry at the end, but this needs testing!!
+    local a, b = _duplicate(self), _duplicate(other)
+    table.insert(a, selfSign)
+    table.insert(b, otherSign)
 
--- wrong for negative if high bytes are 255... I think we actually need to track number of
--- bytes that are "in use"
-    while #ans > 2 and ans[#ans] == 255 and ans[#ans] == ans[#ans -1] do
-        table.remove(ans)
-    end
-    while #ans > 2 and ans[#ans] == 0 and ans[#ans] == ans[#ans -1] do
-        table.remove(ans)
+    local idx, maxIdx = 1, math.max(#a, #b)
+    while idx < maxIdx do
+        local tmp = (a[idx] or selfSign) + (b[idx] or otherSign) + carry
+        ans[idx] = tmp % 256
+        carry = (tmp // 256) >> 8
+        idx = idx + 1
     end
 
-    if #ans == 2 and ans[1] == 0 and ans[2] == 0 then table.remove(ans) end
-
-    return ans
-end
-
-bigIntMT.__bnot = function(self)
-    local ans = _duplicate(self)
-    for i = 1, #ans, 1 do ans[i] = (~ans[i]) & 255 end
-    return ans
-end
-
--- bigIntMT.__band = function(self, other)
---     if getmetatable(self) ~= bigIntMT then self = newBigInt(self) end
---     if getmetatable(other) ~= bigIntMT then other = newBigInt(other) end
--- end
---
--- bigIntMT.__bor = function(self, other)
---     if getmetatable(self) ~= bigIntMT then self = newBigInt(self) end
---     if getmetatable(other) ~= bigIntMT then other = newBigInt(other) end
--- end
---
--- bigIntMT.__bxor = function(self, other)
---     if getmetatable(self) ~= bigIntMT then self = newBigInt(self) end
---     if getmetatable(other) ~= bigIntMT then other = newBigInt(other) end
--- end
-
-bigIntMT.__shl = function(self, shift)
-    assert(getmetatable(self) == bigIntMT and math.type(shift) == "integer", "shift must be an integer")
-    if shift < 0 then return self >> (-shift) end
-
-    if #ans == 1 and ans[1] == 0 then
-        return zeroBigInt
-    end
-
-    local ans = _duplicate(self)
-    local idx, carry = 0, 0
-    for i = 1, shft, 1 do
-        while idx < #ans do
-            idx = idx + 1
-            local tmp = (ans[idx] << 1) + carry
-            ans[idx] = tmp % 256
-            carry = tmp // 256
-        end
--- wrong when negative
-        if carry == 1 then table.insert(ans, carry) end
-    end
-    return ans
-end
-
-bigIntMT.__shr = function(self, shift)
-    assert(getmetatable(self) == bigIntMT and math.type(shift) == "integer", "shift must be an integer")
-    if shift < 0 then return self << (-shift) end
-
-    if #ans == 1 and ans[1] == 0 then
-        return zeroBigInt
-    end
-
-
+    return _compress(ans)
 end
 
 bigIntMT.__unm = function(self)
@@ -221,28 +179,119 @@ bigIntMT.__sub = function(self, other)
     return self + (-other)
 end
 
-bigIntMT.__mul = function(self, other)
-    if getmetatable(self) ~= bigIntMT then self = newBigInt(self) end
-    if getmetatable(other) ~= bigIntMT then other = newBigInt(other) end
+-- bigIntMT.__mul = function(self, other)
+--     if getmetatable(self) ~= bigIntMT then self = newBigInt(self) end
+--     if getmetatable(other) ~= bigIntMT then other = newBigInt(other) end
+--
+--     local ans = setmetatable({}, bigIntMT)
+--
+--
+-- end
 
-    local ans = setmetatable({}, bigIntMT)
-
-
-end
+-- bigIntMT.div = function(self, other)
+--     if getmetatable(self) ~= bigIntMT then self = newBigInt(self) end
+--     if getmetatable(other) ~= bigIntMT then other = newBigInt(other) end
+--
+--     if other == zeroBigInt then error("attempt to divide by zero") end
+--
+-- end
 
 bigIntMT.__idiv = function(self, other)
+    local Q, _ = self:div(other)
+    return Q
 end
 
 bigIntMT.__mod = function(self, other)
+    local _, R = self:div(other)
+    return R
 end
 
 bigIntMT.__div = bigIntMT.__idiv
 
-bigIntMT.__pow = function(self, pwr)
+-- bigIntMT.__pow = function(self, pwr)
+-- end
+--
+
+bigIntMT.__bnot = function(self)
+    local ans = _duplicate(self)
+    for i = 1, #ans, 1 do ans[i] = (~ans[i]) & 255 end
+    return ans
+end
+
+bigIntMT.__band = function(self, other)
+    if getmetatable(self) ~= bigIntMT then self = newBigInt(self) end
+    if getmetatable(other) ~= bigIntMT then other = newBigInt(other) end
+    local ans = setmetatable({}, bigIntMT)
+
+    for i = 1, math.max(#self, #other), 1 do
+        ans[i] = (self[i] or self[#self]) & (other[i] or other[#other])
+    end
+    return _compress(ans)
+end
+
+bigIntMT.__bor = function(self, other)
+    if getmetatable(self) ~= bigIntMT then self = newBigInt(self) end
+    if getmetatable(other) ~= bigIntMT then other = newBigInt(other) end
+    local ans = setmetatable({}, bigIntMT)
+
+    for i = 1, math.max(#self, #other), 1 do
+        ans[i] = (self[i] or self[#self]) | (other[i] or other[#other])
+    end
+    return _compress(ans)
+end
+
+bigIntMT.__bxor = function(self, other)
+    if getmetatable(self) ~= bigIntMT then self = newBigInt(self) end
+    if getmetatable(other) ~= bigIntMT then other = newBigInt(other) end
+    local ans = setmetatable({}, bigIntMT)
+
+    for i = 1, math.max(#self, #other), 1 do
+        ans[i] = (self[i] or self[#self]) ~ (other[i] or other[#other])
+    end
+    return _compress(ans)
+end
+
+bigIntMT.__shl = function(self, shift)
+    assert(getmetatable(self) == bigIntMT and math.type(shift) == "integer", "shift must be an integer")
+    if shift < 0 then return self >> (-shift) end
+    if #self == 1 and self[1] == 0 then return _duplicate(zeroBigInt) end
+    local ans, isNegative = self:abs(), (self < 0)
+
+    for i = 1, shft, 1 do
+        local idx, carry = 1, 0
+        while idx < #ans do
+            local tmp = (ans[idx] << 1) + carry
+            ans[idx] = tmp % 256
+            carry = (tmp // 256) >> 8
+            idx = idx + 1
+        end
+
+        if carry == 1 then table.insert(ans, #ans, carry) end
+    end
+    return _compress(isNegative and -ans or ans)
+end
+
+bigIntMT.__shr = function(self, shift)
+    assert(getmetatable(self) == bigIntMT and math.type(shift) == "integer", "shift must be an integer")
+    if shift < 0 then return self << (-shift) end
+    if #self == 1 and self[1] == 0 then return _duplicate(zeroBigInt) end
+    local ans, isNegative = self:abs(), (self < 0)
+
+    for i = 1, shft, 1 do
+        local idx, carry = #ans - 1, 0
+        while idx > 0 do
+            local tmp = (ans[idx] >> 1) + carry
+            carry = (ans[idx] & 1 == 1) and 255 or 0
+            ans[idx] = tmp
+            idx = idx - 1
+        end
+        -- shift right drops bits that shift below 0
+    end
+    return _compress(isNegative and -ans or ans)
 end
 
 bigIntMT.__eq = function(self, other)
--- hack to allow inspect to work
+    -- hack to allow inspect to work
     if getmetatable(self) == bigIntMT and getmetatable(other) ~= bigIntMT and type(other) == "table" then return false end
 
     if getmetatable(self) ~= bigIntMT then self = newBigInt(self) end
@@ -257,6 +306,7 @@ bigIntMT.__eq = function(self, other)
     return ans
 end
 
+-- https://en.wikipedia.org/wiki/Two's_complement#Comparison_(ordering)
 bigIntMT.__lt = function(self, other)
     if getmetatable(self) ~= bigIntMT then self = newBigInt(self) end
     if getmetatable(other) ~= bigIntMT then other = newBigInt(other) end
@@ -290,18 +340,30 @@ bigIntMT.__le = function(self, other)
     return (self == other) or (self < other)
 end
 
+-- see https://stackoverflow.com/a/36665483
+local chunker = math.tointeger(10 ^ math.floor(math.log(-1 >> 1, 10))) --  max power of 10 that lua represents as int
+-- local chunker = 1000000000 -- 1000000000 based on example in above link
+local numZeros = math.floor(math.log(chunker, 10)) -- number of zeros in chunker
+
 bigIntMT.__tostring = function(self)
     if #self == 1 and self[1] == 0 then return "0" end
     local negative = (self[#self] == 255)
-    local tmp = negative and -self or _duplicate(self)
+    local num = self:abs()
     local ans = ""
 
-
+    repeat
+        num, current = num:div(chunker)
+        current = tointeger(tostring(current)) -- we know current will be representable as int
+        for i = 0, numZeros - 1, 1 do
+            ans = tostring(current % 10) .. ans
+            current = current // 10
+            if current == 0 and num == 0 then break end
+        end
+    until num == 0
 
     if negative then ans = "-" .. ans end
     return ans
 end
-
 
 
 return setmetatable(module, {

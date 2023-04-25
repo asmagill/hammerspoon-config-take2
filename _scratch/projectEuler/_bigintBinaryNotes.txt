@@ -1,0 +1,24 @@
+-- see https://stackoverflow.com/a/36665483
+
+-- reduce divisions based on max power of 10 that is positive signed int?
+local chunker = math.tointeger(10 ^ math.floor(math.log(-1 >> 1, 10)))
+-- local chunker = 1000000000 -- 1000000000 based on example in above link
+
+local numZeros = math.floor(math.log(chunker, 10)) -- number of digits - 1
+
+toDecimal = function(num)
+    local sb = ""
+    repeat
+        local current = num % chunker
+        num = num // chunker
+        for i = 0, numZeros - 1, 1 do
+            sb = tostring(current % 10) .. sb
+            current = current // 10
+            if current == 0 and num == 0 then break end
+        end
+    until num == 0
+    return sb
+end
+
+-- https://en.wikipedia.org/wiki/Two's_complement
+-- https://en.wikipedia.org/wiki/Division_algorithm
