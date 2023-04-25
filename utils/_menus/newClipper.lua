@@ -38,22 +38,23 @@ local utf8     = require("hs.utf8")
 local settings = require("hs.settings")
 local pb       = require("hs.pasteboard")
 local timer    = require("hs.timer")
--- local menubar  = require("hs.menubar")
-local menubar  = require("hs._asm.guitk.menubar")
+local menubar  = require("hs.menubar")
+-- local menubar  = require("hs._asm.guitk.menubar")
 local eventtap = require("hs.eventtap")
 local stext    = require("hs.styledtext")
 
 local hashFN   = require("hs.hash").MD5 -- can use other hash fn if this proves insufficient
 local prompt   = require("utils.prompter").prompt
 
-local settingsTag = "_asm.newClipper"
+local USERDATA_TAG = "newClipper"
+local settingsTag = "_asm_" .. USERDATA_TAG
 -- local menuTitle   = utf8.codepointToUTF8("U+1f4cb") -- clipboard
 local menuTitle   = utf8.codepointToUTF8("U+1f4ce") -- paperclip
 
 -- private variables and methods -----------------------------------------
 
-local getSetting = function(label, default) return settings.get(settingsTag.."."..label) or default end
-local setSetting = function(label, value)   return settings.set(settingsTag.."."..label, value) end
+local getSetting = function(label, default) return settings.get(settingsTag.."_"..label) or default end
+local setSetting = function(label, value)   return settings.set(settingsTag.."_"..label, value) end
 
 local maxSize         = getSetting("maxSize", 128 * 1024)    -- if larger than 128KB, don't bother saving
 local frequency       = getSetting("frequency", 1)           -- poll frequency
@@ -338,7 +339,9 @@ module.clipWatcher = timer.new(frequency, function()
     end
 end):start()
 
-module.menu = menubar.new():setTitle(menuTitle):setMenu(renderNewClipperMenu)
+module.menu = menubar.new():setTitle(menuTitle)
+                           :autosaveName(USERDATA_TAG)
+                           :setMenu(renderNewClipperMenu)
 
 -- Return Module Object --------------------------------------------------
 

@@ -41,6 +41,8 @@ local onBattery  = utf8.codepointToUTF8(0x1F50B) -- battery
 local menuUserData = nil
 local currentPowerSource = ""
 
+local USERDATA_TAG = "batteryMenu"
+
 local batteryPowerSource = function() return battery.powerSource() or "no battery" end
 
 local updateMenuTitle = function()
@@ -218,7 +220,7 @@ end
 
 module.start = function()
 --     menuUserData, currentPowerSource = menubar.new(), ""
-    menuUserData, currentPowerSource = menubar.new(), ""
+    menuUserData, currentPowerSource = menubar.new():autosaveName(USERDATA_TAG), ""
 
     powerSourceChangeFN(true)
 --     powerWatcher:start()

@@ -148,9 +148,11 @@ end
 local _setupMenu = function()
     if _menu and type(_menu) ~= "boolean" then _menu:delete() end
     if _showMenu then
-        _menu = menubar.new():setIcon(_menuIcon:imageFromCanvas():template(true):size{ h = 22, w = 22 })
+        _menu = menubar.new():setIcon(_menuIcon:imageFromCanvas()
+                             :template(true):size{ h = 22, w = 22 })
                              :setTooltip("MiddleClick")
                              :setMenu(_menuFunction)
+                             :autosaveName(USERDATA_TAG)
     else
         _menu = true
     end

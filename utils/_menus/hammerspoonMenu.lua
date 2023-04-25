@@ -16,8 +16,8 @@ local module = {
 --]=]
 }
 
--- local menubar   = require("hs.menubar")
-local menubar   = require("hs._asm.guitk.menubar")
+local menubar   = require("hs.menubar")
+-- local menubar   = require("hs._asm.guitk.menubar")
 local appwatch  = require("hs.application").watcher
 local image     = require("hs.image")
 local settings  = require("hs.settings")
@@ -28,7 +28,9 @@ local listener  = require("utils.speech")
 
 -- private variables and methods -----------------------------------------
 
-module.watchables = watchable.new("hammerspoonMenu", true)
+local USERDATA_TAG = "hammerspoonMenu"
+
+module.watchables = watchable.new(USERDATA_TAG, true)
 module.watchables.status = true
 
 -- module.status = true
@@ -61,7 +63,7 @@ local toggleWatcher = function(setItTo)
 end
 
 
-local watcherMenu = menubar.new()
+local watcherMenu = menubar.new():autosaveName(USERDATA_TAG)
 
 watcherMenu:setIcon(image.imageFromName("statusicon"))
 
