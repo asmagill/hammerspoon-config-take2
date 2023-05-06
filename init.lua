@@ -215,11 +215,10 @@ table.insert(spoon.BonjourLauncher.templates, {
     filter  = function(svc) local p = svc:port() ; return (p ~= 8266) and (p ~= -1) end,
     hidden  = false,
 })
-hs.loadSpoon("FadeLogo"):start(.5)
 
-if package.searchpath("EmmyLua", package.path) then
-    hs.loadSpoon("EmmyLua")
-end
+-- if package.searchpath("EmmyLua", package.path) then
+--     hs.loadSpoon("EmmyLua")
+-- end
 
 _objc = require("hs._asm.objc")
 
@@ -258,3 +257,5 @@ end
 
 settings.clear("openConsoleOnLoad")
 settings.clear("positionConsoleOnLoad")
+
+hs.loadSpoon("FadeLogo"):start(.5)
