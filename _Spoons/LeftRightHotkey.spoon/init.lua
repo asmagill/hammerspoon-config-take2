@@ -1,10 +1,10 @@
 --- === LeftRightHotkey ===
 ---
---- This spoon addresses a limitation within the `hs.hotkey` module that allows the creation of hotkeys bound to specific left or right keyboard modifiers while leaving the other side free.
+--- This spoon addresses a limitation within the [hs.hotkey](hs.hotkey.html) module that allows the creation of hotkeys bound to specific left or right keyboard modifiers while leaving the other side free.
 ---
---- This is accomplished by creating unactivated hotkeys for each definition and using an `hs.eventtap` watcher to detect when modifier keys are pressed and conditionally activating only those hotkeys which correspond to the left or right modifiers currently active as specified by the `bind` and `new` methods of this spoon.
+--- This is accomplished by creating unactivated hotkeys for each definition and using an [hs.eventtap](hs.eventtap.html) watcher to detect when modifier keys are pressed and conditionally activating only those hotkeys which correspond to the left or right modifiers currently active as specified by the `bind` and `new` methods of this spoon.
 ---
---- The `LeftRightHotkeyObject` that is returned by [LeftRightHotkey:new](#new) and [LeftRightHotkey:bind](#bind) supports the following methods in a manner similar to the `hs.hotkey` equivalents:
+--- The `LeftRightHotkeyObject` that is returned by [LeftRightHotkey:new](#new) and [LeftRightHotkey:bind](#bind) supports the following methods in a manner similar to the [hs.hotkey](hs.hotkey.html) equivalents:
 ---
 ---  * `LeftRightHotkeyObject:enable()`   -- enables the registered hotkey.
 ---  * `LeftRightHotkeyObject:disable()`  -- disables the registered hotkey.
@@ -137,12 +137,15 @@ local flagChangeCallback = function(ev)
         queueIndex = queueIndex | modifierMasks.rshift
     end
 -- print("activating " .. tostring(queueIndex))
+    local foundMatches = {}
     for i, v in ipairs(queuedHotKeys) do
         if i == queueIndex then
             for key, _ in pairs(v) do
-              if key._enabled then
-                  key._hotkey:enable() end
-              end
+                if key._enabled then
+                    table.insert(foundMatches, key)
+--                     key._hotkey:enable()
+                end
+            end
         else
             for key, _ in pairs(v) do
                 if key._enabled then
@@ -150,6 +153,11 @@ local flagChangeCallback = function(ev)
                 end
             end
         end
+    end
+    if #foundMatches > 0 then
+        -- enable only the most recently created version in case of stacking
+        table.sort(foundMatches, function(a, b) return a._creationID > b._creationID end)
+        foundMatches[1]._hotkey:enable()
     end
 end
 
@@ -173,13 +181,28 @@ _LeftRightHotkeyObjMT.__index = {
     isEnabled = function(self) return self._enabled end,
 }
 _LeftRightHotkeyObjMT.__tostring = function(self)
-    return self._description
+    return self._modDesc .. " " .. (keycodes.map[self._keycode] or ("unmapped:" .. tostring(self._keycode)))
 end
 
----------- Spoon Methods ----------
+local convertModifiers = function(specifiedMods)
+    local actualMods, queueIndex  = {}, 0
 
-obj.queuedHotKeys = queuedHotKeys
-obj.existantHotKeys = existantHotKeys
+    for _, v in pairs(specifiedMods) do
+        queueIndex = queueIndex | (modifierMasks[v] or 0)
+        local hotkeyModEquivalant = modiferBase[v]
+        if hotkeyModEquivalant then
+            table.insert(actualMods, hotkeyModEquivalant)
+        else
+            queueIndex = 0
+            break
+        end
+    end
+    return actualMods, queueIndex
+end
+
+local definitionIndex = 0
+
+---------- Spoon Methods ----------
 
 --- LeftRightHotkey:new(mods, key, [message,] pressedfn, releasedfn, repeatfn) -> LeftRightHotkeyObject
 --- Method
@@ -191,12 +214,12 @@ obj.existantHotKeys = existantHotKeys
 ---    * "rCmd", "rCommand", or "r⌘" for the right Command modifier
 ---    * "lCtrl", "lControl" or "l⌃" for the left Control modifier
 ---    * "rCtrl", "rControl" or "r⌃" for the right Control modifier
----    * "lAlt", "lOpt", "lOption" or "l⌥" for the Option left modifier
----    * "rAlt", "rOpt", "rOption" or "r⌥" for the Option right modifier
+---    * "lAlt", "lOpt", "lOption" or "l⌥" for the left Option modifier
+---    * "rAlt", "rOpt", "rOption" or "r⌥" for the right Option modifier
 ---    * "lShift" or "l⇧" for the left Shift modifier
 ---    * "rShift" or "r⇧" for the right Shift modifier
 ---  * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number
----  * message - (optional) A string containing a message to be displayed via `hs.alert()` when the hotkey has been triggered; if omitted, no alert will be shown
+---  * message - (optional) A string containing a message to be displayed via [hs.alert()](hs.alert.html) when the hotkey has been triggered; if omitted, no alert will be shown
 ---  * pressedfn - A function that will be called when the hotkey has been pressed, or nil
 ---  * releasedfn - A function that will be called when the hotkey has been released, or nil
 ---  * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil
@@ -205,46 +228,129 @@ obj.existantHotKeys = existantHotKeys
 ---  * a new, initially disabled, hotkey with the specified left/right modifiers.
 ---
 --- Notes:
----  * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to `hs.hotkey.new` as is and any caveats or considerations outlined there also apply here.
+---  * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to [hs.hotkey.new](hs.hotkey.html#new) as is and any caveats or considerations outlined there also apply here.
 obj.new = function(self, ...)
     local args = { ... }
     if self ~= obj then
         table.insert(args, 1, self)
         self = obj
     end
-    local specMods = normalizeModsTable(args[1])
-    local actMods, queueIndex  = {}, 0
-
-    for _, v in pairs(specMods) do
-        queueIndex = queueIndex | (modifierMasks[v] or 0)
-        local hotkeyModEquivalant = modiferBase[v]
-        if hotkeyModEquivalant then
-            table.insert(actMods, hotkeyModEquivalant)
-        else
-            queueIndex = 0
-            break
-        end
-    end
+    local specifiedMods = normalizeModsTable(args[1])
+    local actualMods, queueIndex = convertModifiers(specifiedMods)
 
     if queueIndex ~= 0 then
-        args[1] = actMods
-        for i, v in ipairs(specMods) do
-            specMods[i] = v:sub(1,1) .. v:sub(2,2):upper() .. v:sub(3)
+        args[1] = actualMods
+        for i, v in ipairs(specifiedMods) do
+            specifiedMods[i] = v:sub(1,1) .. v:sub(2,2):upper() .. v:sub(3)
         end
-        local key = args[2]
-        if type(key) == "number" then
-            key = keycodes.map[key] or "unmapped:" .. tostring(key)
-        end
--- print(queueIndex, "actually " .. finspect(actMods))
+        local key     = args[2]
+        local keycode = keycodes.map[key]
+        if type(key) == "number" then keycode = key end
+-- print(queueIndex, "actually " .. finspect(actualMods))
         local newObject = setmetatable({
-            _description = table.concat(specMods, "+") .. " " .. key .. " hotkey",
-            _hotkey = hotkey.new(table.unpack(args)),
-            _enabled = false,
+            _modDesc    = table.concat(specifiedMods, "+"),
+            _queueIndex = queueIndex,
+            _keycode    = keycode,
+            _hotkey     = hotkey.new(table.unpack(args)),
+            _enabled    = false,
+            _creationID = definitionIndex,
         }, _LeftRightHotkeyObjMT)
+
+        -- used to determine creation order for stacking
+        definitionIndex = definitionIndex + 1
 
         existantHotKeys[newObject] = true
         queuedHotKeys[queueIndex][newObject] = true
         return newObject
+    else
+        error("you must specifiy one or more of lcmd, rcmd, lshift, rshift, lalt, ralt, lctrl, rctrl", 2)
+    end
+end
+
+--- LeftRightHotkey:deleteAll(mods, key)
+--- Method
+--- Deletes all previously set callbacks for a given keyboard combination
+---
+--- Parameters:
+---  * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:
+---    * "lCmd", "lCommand", or "l⌘" for the left Command modifier
+---    * "rCmd", "rCommand", or "r⌘" for the right Command modifier
+---    * "lCtrl", "lControl" or "l⌃" for the left Control modifier
+---    * "rCtrl", "rControl" or "r⌃" for the right Control modifier
+---    * "lAlt", "lOpt", "lOption" or "l⌥" for the left Option modifier
+---    * "rAlt", "rOpt", "rOption" or "r⌥" for the right Option modifier
+---    * "lShift" or "l⇧" for the left Shift modifier
+---    * "rShift" or "r⇧" for the right Shift modifier
+---  * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number
+---
+--- Returns:
+---  * None
+obj.deleteAll = function(self, ...)
+    local args = { ... }
+    if self ~= obj then
+        table.insert(args, 1, self)
+        self = obj
+    end
+    local specifiedMods = normalizeModsTable(args[1])
+    local _, queueIndex = convertModifiers(specifiedMods)
+
+    if queueIndex ~= 0 then
+        local key     = args[2]
+        local keycode = keycodes.map[key]
+        if type(key) == "number" then keycode = key end
+
+        local foundMatches = {}
+        for k, v in pairs(existantHotKeys) do
+            if v._queueIndex == queueIndex and v._keycode == keycode then
+                table.insert(foundMatches, k)
+            end
+        end
+        -- this is so we don't remove items from existantHotKeys while iterating through it
+        for _, v in ipairs(foundMatches) do
+            v:delete()
+        end
+    else
+        error("you must specifiy one or more of lcmd, rcmd, lshift, rshift, lalt, ralt, lctrl, rctrl", 2)
+    end
+end
+
+--- LeftRightHotkey:disableAll(mods, key)
+--- Method
+--- Disables all previously set callbacks for a given keyboard combination
+---
+--- Parameters:
+---  * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:
+---    * "lCmd", "lCommand", or "l⌘" for the left Command modifier
+---    * "rCmd", "rCommand", or "r⌘" for the right Command modifier
+---    * "lCtrl", "lControl" or "l⌃" for the left Control modifier
+---    * "rCtrl", "rControl" or "r⌃" for the right Control modifier
+---    * "lAlt", "lOpt", "lOption" or "l⌥" for the left Option modifier
+---    * "rAlt", "rOpt", "rOption" or "r⌥" for the right Option modifier
+---    * "lShift" or "l⇧" for the left Shift modifier
+---    * "rShift" or "r⇧" for the right Shift modifier
+---  * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number
+---
+--- Returns:
+---  * None
+obj.disableAll = function(self, ...)
+    local args = { ... }
+    if self ~= obj then
+        table.insert(args, 1, self)
+        self = obj
+    end
+    local specifiedMods = normalizeModsTable(args[1])
+    local _, queueIndex = convertModifiers(specifiedMods)
+
+    if queueIndex ~= 0 then
+        local key     = args[2]
+        local keycode = keycodes.map[key]
+        if type(key) == "number" then keycode = key end
+
+        for k, v in pairs(existantHotKeys) do
+            if v._queueIndex == queueIndex and v._keycode == keycode then
+                k:disable() -- we don't need the temp table used in delete since we're just disabling
+            end
+        end
     else
         error("you must specifiy one or more of lcmd, rcmd, lshift, rshift, lalt, ralt, lctrl, rctrl", 2)
     end
@@ -261,12 +367,12 @@ end
 ---    * "rCmd", "rCommand", or "r⌘" for the right Command modifier
 ---    * "lCtrl", "lControl" or "l⌃" for the left Control modifier
 ---    * "rCtrl", "rControl" or "r⌃" for the right Control modifier
----    * "lAlt", "lOpt", "lOption" or "l⌥" for the Option left modifier
----    * "rAlt", "rOpt", "rOption" or "r⌥" for the Option right modifier
+---    * "lAlt", "lOpt", "lOption" or "l⌥" for the left Option modifier
+---    * "rAlt", "rOpt", "rOption" or "r⌥" for the right Option modifier
 ---    * "lShift" or "l⇧" for the left Shift modifier
 ---    * "rShift" or "r⇧" for the right Shift modifier
 ---  * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number
----  * message - (optional) A string containing a message to be displayed via `hs.alert()` when the hotkey has been triggered; if omitted, no alert will be shown
+---  * message - (optional) A string containing a message to be displayed via [hs.alert()](hs.alert.html) when the hotkey has been triggered; if omitted, no alert will be shown
 ---  * pressedfn - A function that will be called when the hotkey has been pressed, or nil
 ---  * releasedfn - A function that will be called when the hotkey has been released, or nil
 ---  * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil
@@ -276,18 +382,21 @@ end
 ---
 --- Notes:
 ---  * This function is just a wrapper that performs `LeftRightHotkey:new(...):enable()`
----  * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to `hs.hotkey.bind` as is and any caveats or considerations outlined there also apply here.
+---  * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to [hs.hotkey.bind](hs.hotkey.html#bind) as is and any caveats or considerations outlined there also apply here.
 obj.bind = function(...) return obj.new(...):enable() end
 
 --- LeftRightHotkey:start() -> self
 --- Method
---- Starts the processing or displays for the LeftRightHotkey spoon
+--- Starts watching for flag (modifier key) change events that can determine if the right or left modifiers have been pressed.
 ---
 --- Parameters:
 ---  * None
 ---
 --- Returns:
 ---  * the LeftRightHotkey spoon object
+---
+--- Notes:
+---  * this enables the use of hotkeys created by using this Spoon.
 obj.start = function(self)
     -- in case called as function
     if self ~= obj then self = obj end
@@ -299,13 +408,16 @@ end
 
 --- LeftRightHotkey:stop() -> self
 --- Method
---- Stops the processing and/or removes the displays generated by the LeftRightHotkey spoon
+--- Stops watching for flag (modifier key) change events that can determine if the right or left modifiers have been pressed.
 ---
 --- Parameters:
 ---  * None
 ---
 --- Returns:
 ---  * the LeftRightHotkey spoon object
+---
+--- Notes:
+---  * this will implicitly disable all hotkeys created by using this Spoon -- only those hotkeys which are defined with [hs.hotkey](hs.hotkey.html) directly will still be available.
 obj.stop = function(self)
     -- in case called as function
     if self ~= obj then self = obj end
@@ -317,6 +429,10 @@ obj.stop = function(self)
 end
 
 -- Spoon Metadata definition and object return --
+
+-- for debugging purposes, may go away
+obj._queuedHotKeys   = queuedHotKeys
+obj._existantHotKeys = existantHotKeys
 
 return setmetatable(obj, {
     -- more useful than "table: 0x????????????????"

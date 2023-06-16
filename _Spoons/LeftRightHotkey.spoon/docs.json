@@ -15,42 +15,26 @@
     "stripped_doc" : [
 
     ],
+    "desc" : "This spoon addresses a limitation within the [hs.hotkey](hs.hotkey.html) module that allows the creation of hotkeys bound to specific left or right keyboard modifiers while leaving the other side free.",
     "Deprecated" : [
 
     ],
     "type" : "Module",
-    "desc" : "This spoon addresses a limitation within the `hs.hotkey` module that allows the creation of hotkeys bound to specific left or right keyboard modifiers while leaving the other side free.",
     "Constructor" : [
 
     ],
-    "doc" : "This spoon addresses a limitation within the `hs.hotkey` module that allows the creation of hotkeys bound to specific left or right keyboard modifiers while leaving the other side free.\n\nThis is accomplished by creating unactivated hotkeys for each definition and using an `hs.eventtap` watcher to detect when modifier keys are pressed and conditionally activating only those hotkeys which correspond to the left or right modifiers currently active as specified by the `bind` and `new` methods of this spoon.\n\nThe `LeftRightHotkeyObject` that is returned by [LeftRightHotkey:new](#new) and [LeftRightHotkey:bind](#bind) supports the following methods in a manner similar to the `hs.hotkey` equivalents:\n\n * `LeftRightHotkeyObject:enable()`   -- enables the registered hotkey.\n * `LeftRightHotkeyObject:disable()`  -- disables the registered hotkey.\n * `LeftRightHotkeyObject:delete()`   -- deletes the registered hotkey.\n * `LeftRightHotkeyObject:isEnabled() -- returns a boolean value specifying whether the hotkey is currently enabled (true) or disabled (false)\n\nLike all Spoons, don't forget to use the [LeftRightHotkey:start()](#start) method to activate the modifier key watcher.\n\nDownload: `svn export https:\/\/github.com\/asmagill\/hammerspoon-config-take2\/trunk\/_Spoons\/LeftRightHotkey.spoon`",
+    "doc" : "This spoon addresses a limitation within the [hs.hotkey](hs.hotkey.html) module that allows the creation of hotkeys bound to specific left or right keyboard modifiers while leaving the other side free.\n\nThis is accomplished by creating unactivated hotkeys for each definition and using an [hs.eventtap](hs.eventtap.html) watcher to detect when modifier keys are pressed and conditionally activating only those hotkeys which correspond to the left or right modifiers currently active as specified by the `bind` and `new` methods of this spoon.\n\nThe `LeftRightHotkeyObject` that is returned by [LeftRightHotkey:new](#new) and [LeftRightHotkey:bind](#bind) supports the following methods in a manner similar to the [hs.hotkey](hs.hotkey.html) equivalents:\n\n * `LeftRightHotkeyObject:enable()`   -- enables the registered hotkey.\n * `LeftRightHotkeyObject:disable()`  -- disables the registered hotkey.\n * `LeftRightHotkeyObject:delete()`   -- deletes the registered hotkey.\n * `LeftRightHotkeyObject:isEnabled() -- returns a boolean value specifying whether the hotkey is currently enabled (true) or disabled (false)\n\nLike all Spoons, don't forget to use the [LeftRightHotkey:start()](#start) method to activate the modifier key watcher.\n\nDownload: `svn export https:\/\/github.com\/asmagill\/hammerspoon-config-take2\/trunk\/_Spoons\/LeftRightHotkey.spoon`",
     "Method" : [
       {
-        "doc" : "Create a new hotkey with the specified left\/right specific modifiers.\n\nParameters:\n * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:\n   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier\n   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier\n   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier\n   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier\n   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the Option left modifier\n   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the Option right modifier\n   * \"lShift\" or \"l⇧\" for the left Shift modifier\n   * \"rShift\" or \"r⇧\" for the right Shift modifier\n * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number\n * message - (optional) A string containing a message to be displayed via `hs.alert()` when the hotkey has been triggered; if omitted, no alert will be shown\n * pressedfn - A function that will be called when the hotkey has been pressed, or nil\n * releasedfn - A function that will be called when the hotkey has been released, or nil\n * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil\n\nReturns:\n * a new, initially disabled, hotkey with the specified left\/right modifiers.\n\nNotes:\n * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to `hs.hotkey.new` as is and any caveats or considerations outlined there also apply here.",
+        "doc" : "Create a new hotkey with the specified left\/right specific modifiers.\n\nParameters:\n * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:\n   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier\n   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier\n   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier\n   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier\n   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier\n   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier\n   * \"lShift\" or \"l⇧\" for the left Shift modifier\n   * \"rShift\" or \"r⇧\" for the right Shift modifier\n * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number\n * message - (optional) A string containing a message to be displayed via [hs.alert()](hs.alert.html) when the hotkey has been triggered; if omitted, no alert will be shown\n * pressedfn - A function that will be called when the hotkey has been pressed, or nil\n * releasedfn - A function that will be called when the hotkey has been released, or nil\n * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil\n\nReturns:\n * a new, initially disabled, hotkey with the specified left\/right modifiers.\n\nNotes:\n * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to [hs.hotkey.new](hs.hotkey.html#new) as is and any caveats or considerations outlined there also apply here.",
         "stripped_doc" : [
           "Create a new hotkey with the specified left\/right specific modifiers.",
           ""
         ],
-        "parameters" : [
-          " * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:",
-          "   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier",
-          "   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier",
-          "   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier",
-          "   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier",
-          "   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the Option left modifier",
-          "   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the Option right modifier",
-          "   * \"lShift\" or \"l⇧\" for the left Shift modifier",
-          "   * \"rShift\" or \"r⇧\" for the right Shift modifier",
-          " * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number",
-          " * message - (optional) A string containing a message to be displayed via `hs.alert()` when the hotkey has been triggered; if omitted, no alert will be shown",
-          " * pressedfn - A function that will be called when the hotkey has been pressed, or nil",
-          " * releasedfn - A function that will be called when the hotkey has been released, or nil",
-          " * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil",
-          ""
-        ],
-        "name" : "new",
+        "def" : "LeftRightHotkey:new(mods, key, [message,] pressedfn, releasedfn, repeatfn) -> LeftRightHotkeyObject",
+        "desc" : "Create a new hotkey with the specified left\/right specific modifiers.",
         "notes" : [
-          " * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to `hs.hotkey.new` as is and any caveats or considerations outlined there also apply here."
+          " * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to [hs.hotkey.new](hs.hotkey.html#new) as is and any caveats or considerations outlined there also apply here."
         ],
         "signature" : "LeftRightHotkey:new(mods, key, [message,] pressedfn, releasedfn, repeatfn) -> LeftRightHotkeyObject",
         "type" : "Method",
@@ -58,36 +42,98 @@
           " * a new, initially disabled, hotkey with the specified left\/right modifiers.",
           ""
         ],
-        "desc" : "Create a new hotkey with the specified left\/right specific modifiers.",
-        "def" : "LeftRightHotkey:new(mods, key, [message,] pressedfn, releasedfn, repeatfn) -> LeftRightHotkeyObject"
-      },
-      {
-        "doc" : "Create and enable a new hotkey with the specified left\/right specific modifiers.\n\nParameters:\nParameters:\n * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:\n   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier\n   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier\n   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier\n   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier\n   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the Option left modifier\n   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the Option right modifier\n   * \"lShift\" or \"l⇧\" for the left Shift modifier\n   * \"rShift\" or \"r⇧\" for the right Shift modifier\n * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number\n * message - (optional) A string containing a message to be displayed via `hs.alert()` when the hotkey has been triggered; if omitted, no alert will be shown\n * pressedfn - A function that will be called when the hotkey has been pressed, or nil\n * releasedfn - A function that will be called when the hotkey has been released, or nil\n * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil\n\nReturns:\n * a new enabled hotkey with the specified left\/right modifiers.\n\nNotes:\n * This function is just a wrapper that performs `LeftRightHotkey:new(...):enable()`\n * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to `hs.hotkey.bind` as is and any caveats or considerations outlined there also apply here.",
-        "stripped_doc" : [
-          "Create and enable a new hotkey with the specified left\/right specific modifiers.",
-          ""
-        ],
+        "name" : "new",
         "parameters" : [
           " * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:",
           "   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier",
           "   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier",
           "   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier",
           "   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier",
-          "   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the Option left modifier",
-          "   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the Option right modifier",
+          "   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier",
+          "   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier",
           "   * \"lShift\" or \"l⇧\" for the left Shift modifier",
           "   * \"rShift\" or \"r⇧\" for the right Shift modifier",
           " * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number",
-          " * message - (optional) A string containing a message to be displayed via `hs.alert()` when the hotkey has been triggered; if omitted, no alert will be shown",
+          " * message - (optional) A string containing a message to be displayed via [hs.alert()](hs.alert.html) when the hotkey has been triggered; if omitted, no alert will be shown",
           " * pressedfn - A function that will be called when the hotkey has been pressed, or nil",
           " * releasedfn - A function that will be called when the hotkey has been released, or nil",
           " * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil",
           ""
+        ]
+      },
+      {
+        "doc" : "Deletes all previously set callbacks for a given keyboard combination\n\nParameters:\n * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:\n   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier\n   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier\n   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier\n   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier\n   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier\n   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier\n   * \"lShift\" or \"l⇧\" for the left Shift modifier\n   * \"rShift\" or \"r⇧\" for the right Shift modifier\n * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number\n\nReturns:\n * None",
+        "stripped_doc" : [
+          "Deletes all previously set callbacks for a given keyboard combination",
+          ""
         ],
-        "name" : "bind",
+        "def" : "LeftRightHotkey:deleteAll(mods, key)",
+        "desc" : "Deletes all previously set callbacks for a given keyboard combination",
+        "notes" : [
+
+        ],
+        "signature" : "LeftRightHotkey:deleteAll(mods, key)",
+        "type" : "Method",
+        "returns" : [
+          " * None"
+        ],
+        "name" : "deleteAll",
+        "parameters" : [
+          " * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:",
+          "   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier",
+          "   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier",
+          "   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier",
+          "   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier",
+          "   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier",
+          "   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier",
+          "   * \"lShift\" or \"l⇧\" for the left Shift modifier",
+          "   * \"rShift\" or \"r⇧\" for the right Shift modifier",
+          " * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number",
+          ""
+        ]
+      },
+      {
+        "doc" : "Disables all previously set callbacks for a given keyboard combination\n\nParameters:\n * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:\n   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier\n   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier\n   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier\n   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier\n   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier\n   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier\n   * \"lShift\" or \"l⇧\" for the left Shift modifier\n   * \"rShift\" or \"r⇧\" for the right Shift modifier\n * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number\n\nReturns:\n * None",
+        "stripped_doc" : [
+          "Disables all previously set callbacks for a given keyboard combination",
+          ""
+        ],
+        "def" : "LeftRightHotkey:disableAll(mods, key)",
+        "desc" : "Disables all previously set callbacks for a given keyboard combination",
+        "notes" : [
+
+        ],
+        "signature" : "LeftRightHotkey:disableAll(mods, key)",
+        "type" : "Method",
+        "returns" : [
+          " * None"
+        ],
+        "name" : "disableAll",
+        "parameters" : [
+          " * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:",
+          "   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier",
+          "   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier",
+          "   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier",
+          "   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier",
+          "   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier",
+          "   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier",
+          "   * \"lShift\" or \"l⇧\" for the left Shift modifier",
+          "   * \"rShift\" or \"r⇧\" for the right Shift modifier",
+          " * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number",
+          ""
+        ]
+      },
+      {
+        "doc" : "Create and enable a new hotkey with the specified left\/right specific modifiers.\n\nParameters:\nParameters:\n * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:\n   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier\n   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier\n   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier\n   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier\n   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier\n   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier\n   * \"lShift\" or \"l⇧\" for the left Shift modifier\n   * \"rShift\" or \"r⇧\" for the right Shift modifier\n * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number\n * message - (optional) A string containing a message to be displayed via [hs.alert()](hs.alert.html) when the hotkey has been triggered; if omitted, no alert will be shown\n * pressedfn - A function that will be called when the hotkey has been pressed, or nil\n * releasedfn - A function that will be called when the hotkey has been released, or nil\n * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil\n\nReturns:\n * a new enabled hotkey with the specified left\/right modifiers.\n\nNotes:\n * This function is just a wrapper that performs `LeftRightHotkey:new(...):enable()`\n * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to [hs.hotkey.bind](hs.hotkey.html#bind) as is and any caveats or considerations outlined there also apply here.",
+        "stripped_doc" : [
+          "Create and enable a new hotkey with the specified left\/right specific modifiers.",
+          ""
+        ],
+        "def" : "LeftRightHotkey:bind(mods, key, [message,] pressedfn, releasedfn, repeatfn) -> LeftRightHotkeyObject",
+        "desc" : "Create and enable a new hotkey with the specified left\/right specific modifiers.",
         "notes" : [
           " * This function is just a wrapper that performs `LeftRightHotkey:new(...):enable()`",
-          " * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to `hs.hotkey.bind` as is and any caveats or considerations outlined there also apply here."
+          " * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to [hs.hotkey.bind](hs.hotkey.html#bind) as is and any caveats or considerations outlined there also apply here."
         ],
         "signature" : "LeftRightHotkey:bind(mods, key, [message,] pressedfn, releasedfn, repeatfn) -> LeftRightHotkeyObject",
         "type" : "Method",
@@ -95,88 +141,87 @@
           " * a new enabled hotkey with the specified left\/right modifiers.",
           ""
         ],
-        "desc" : "Create and enable a new hotkey with the specified left\/right specific modifiers.",
-        "def" : "LeftRightHotkey:bind(mods, key, [message,] pressedfn, releasedfn, repeatfn) -> LeftRightHotkeyObject"
+        "name" : "bind",
+        "parameters" : [
+          " * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:",
+          "   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier",
+          "   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier",
+          "   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier",
+          "   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier",
+          "   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier",
+          "   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier",
+          "   * \"lShift\" or \"l⇧\" for the left Shift modifier",
+          "   * \"rShift\" or \"r⇧\" for the right Shift modifier",
+          " * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number",
+          " * message - (optional) A string containing a message to be displayed via [hs.alert()](hs.alert.html) when the hotkey has been triggered; if omitted, no alert will be shown",
+          " * pressedfn - A function that will be called when the hotkey has been pressed, or nil",
+          " * releasedfn - A function that will be called when the hotkey has been released, or nil",
+          " * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil",
+          ""
+        ]
       },
       {
-        "doc" : "Starts the processing or displays for the LeftRightHotkey spoon\n\nParameters:\n * None\n\nReturns:\n * the LeftRightHotkey spoon object",
+        "doc" : "Starts watching for flag (modifier key) change events that can determine if the right or left modifiers have been pressed.\n\nParameters:\n * None\n\nReturns:\n * the LeftRightHotkey spoon object\n\nNotes:\n * this enables the use of hotkeys created by using this Spoon.",
         "stripped_doc" : [
-          "Starts the processing or displays for the LeftRightHotkey spoon",
+          "Starts watching for flag (modifier key) change events that can determine if the right or left modifiers have been pressed.",
           ""
         ],
-        "parameters" : [
-          " * None",
-          ""
-        ],
-        "name" : "start",
+        "def" : "LeftRightHotkey:start() -> self",
+        "desc" : "Starts watching for flag (modifier key) change events that can determine if the right or left modifiers have been pressed.",
         "notes" : [
-
+          " * this enables the use of hotkeys created by using this Spoon."
         ],
         "signature" : "LeftRightHotkey:start() -> self",
         "type" : "Method",
         "returns" : [
-          " * the LeftRightHotkey spoon object"
-        ],
-        "desc" : "Starts the processing or displays for the LeftRightHotkey spoon",
-        "def" : "LeftRightHotkey:start() -> self"
-      },
-      {
-        "doc" : "Stops the processing and\/or removes the displays generated by the LeftRightHotkey spoon\n\nParameters:\n * None\n\nReturns:\n * the LeftRightHotkey spoon object",
-        "stripped_doc" : [
-          "Stops the processing and\/or removes the displays generated by the LeftRightHotkey spoon",
+          " * the LeftRightHotkey spoon object",
           ""
         ],
+        "name" : "start",
         "parameters" : [
           " * None",
           ""
+        ]
+      },
+      {
+        "doc" : "Stops watching for flag (modifier key) change events that can determine if the right or left modifiers have been pressed.\n\nParameters:\n * None\n\nReturns:\n * the LeftRightHotkey spoon object\n\nNotes:\n * this will implicitly disable all hotkeys created by using this Spoon -- only those hotkeys which are defined with [hs.hotkey](hs.hotkey.html) directly will still be available.",
+        "stripped_doc" : [
+          "Stops watching for flag (modifier key) change events that can determine if the right or left modifiers have been pressed.",
+          ""
         ],
-        "name" : "stop",
+        "def" : "LeftRightHotkey:stop() -> self",
+        "desc" : "Stops watching for flag (modifier key) change events that can determine if the right or left modifiers have been pressed.",
         "notes" : [
-
+          " * this will implicitly disable all hotkeys created by using this Spoon -- only those hotkeys which are defined with [hs.hotkey](hs.hotkey.html) directly will still be available."
         ],
         "signature" : "LeftRightHotkey:stop() -> self",
         "type" : "Method",
         "returns" : [
-          " * the LeftRightHotkey spoon object"
+          " * the LeftRightHotkey spoon object",
+          ""
         ],
-        "desc" : "Stops the processing and\/or removes the displays generated by the LeftRightHotkey spoon",
-        "def" : "LeftRightHotkey:stop() -> self"
+        "name" : "stop",
+        "parameters" : [
+          " * None",
+          ""
+        ]
       }
     ],
     "Command" : [
 
     ],
-    "Field" : [
-
-    ],
     "items" : [
       {
-        "doc" : "Create and enable a new hotkey with the specified left\/right specific modifiers.\n\nParameters:\nParameters:\n * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:\n   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier\n   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier\n   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier\n   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier\n   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the Option left modifier\n   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the Option right modifier\n   * \"lShift\" or \"l⇧\" for the left Shift modifier\n   * \"rShift\" or \"r⇧\" for the right Shift modifier\n * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number\n * message - (optional) A string containing a message to be displayed via `hs.alert()` when the hotkey has been triggered; if omitted, no alert will be shown\n * pressedfn - A function that will be called when the hotkey has been pressed, or nil\n * releasedfn - A function that will be called when the hotkey has been released, or nil\n * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil\n\nReturns:\n * a new enabled hotkey with the specified left\/right modifiers.\n\nNotes:\n * This function is just a wrapper that performs `LeftRightHotkey:new(...):enable()`\n * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to `hs.hotkey.bind` as is and any caveats or considerations outlined there also apply here.",
+        "doc" : "Create and enable a new hotkey with the specified left\/right specific modifiers.\n\nParameters:\nParameters:\n * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:\n   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier\n   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier\n   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier\n   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier\n   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier\n   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier\n   * \"lShift\" or \"l⇧\" for the left Shift modifier\n   * \"rShift\" or \"r⇧\" for the right Shift modifier\n * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number\n * message - (optional) A string containing a message to be displayed via [hs.alert()](hs.alert.html) when the hotkey has been triggered; if omitted, no alert will be shown\n * pressedfn - A function that will be called when the hotkey has been pressed, or nil\n * releasedfn - A function that will be called when the hotkey has been released, or nil\n * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil\n\nReturns:\n * a new enabled hotkey with the specified left\/right modifiers.\n\nNotes:\n * This function is just a wrapper that performs `LeftRightHotkey:new(...):enable()`\n * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to [hs.hotkey.bind](hs.hotkey.html#bind) as is and any caveats or considerations outlined there also apply here.",
         "stripped_doc" : [
           "Create and enable a new hotkey with the specified left\/right specific modifiers.",
           ""
         ],
-        "parameters" : [
-          " * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:",
-          "   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier",
-          "   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier",
-          "   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier",
-          "   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier",
-          "   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the Option left modifier",
-          "   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the Option right modifier",
-          "   * \"lShift\" or \"l⇧\" for the left Shift modifier",
-          "   * \"rShift\" or \"r⇧\" for the right Shift modifier",
-          " * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number",
-          " * message - (optional) A string containing a message to be displayed via `hs.alert()` when the hotkey has been triggered; if omitted, no alert will be shown",
-          " * pressedfn - A function that will be called when the hotkey has been pressed, or nil",
-          " * releasedfn - A function that will be called when the hotkey has been released, or nil",
-          " * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil",
-          ""
-        ],
-        "name" : "bind",
+        "def" : "LeftRightHotkey:bind(mods, key, [message,] pressedfn, releasedfn, repeatfn) -> LeftRightHotkeyObject",
+        "desc" : "Create and enable a new hotkey with the specified left\/right specific modifiers.",
         "notes" : [
           " * This function is just a wrapper that performs `LeftRightHotkey:new(...):enable()`",
-          " * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to `hs.hotkey.bind` as is and any caveats or considerations outlined there also apply here."
+          " * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to [hs.hotkey.bind](hs.hotkey.html#bind) as is and any caveats or considerations outlined there also apply here."
         ],
         "signature" : "LeftRightHotkey:bind(mods, key, [message,] pressedfn, releasedfn, repeatfn) -> LeftRightHotkeyObject",
         "type" : "Method",
@@ -184,35 +229,97 @@
           " * a new enabled hotkey with the specified left\/right modifiers.",
           ""
         ],
-        "desc" : "Create and enable a new hotkey with the specified left\/right specific modifiers.",
-        "def" : "LeftRightHotkey:bind(mods, key, [message,] pressedfn, releasedfn, repeatfn) -> LeftRightHotkeyObject"
-      },
-      {
-        "doc" : "Create a new hotkey with the specified left\/right specific modifiers.\n\nParameters:\n * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:\n   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier\n   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier\n   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier\n   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier\n   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the Option left modifier\n   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the Option right modifier\n   * \"lShift\" or \"l⇧\" for the left Shift modifier\n   * \"rShift\" or \"r⇧\" for the right Shift modifier\n * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number\n * message - (optional) A string containing a message to be displayed via `hs.alert()` when the hotkey has been triggered; if omitted, no alert will be shown\n * pressedfn - A function that will be called when the hotkey has been pressed, or nil\n * releasedfn - A function that will be called when the hotkey has been released, or nil\n * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil\n\nReturns:\n * a new, initially disabled, hotkey with the specified left\/right modifiers.\n\nNotes:\n * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to `hs.hotkey.new` as is and any caveats or considerations outlined there also apply here.",
-        "stripped_doc" : [
-          "Create a new hotkey with the specified left\/right specific modifiers.",
-          ""
-        ],
+        "name" : "bind",
         "parameters" : [
           " * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:",
           "   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier",
           "   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier",
           "   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier",
           "   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier",
-          "   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the Option left modifier",
-          "   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the Option right modifier",
+          "   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier",
+          "   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier",
           "   * \"lShift\" or \"l⇧\" for the left Shift modifier",
           "   * \"rShift\" or \"r⇧\" for the right Shift modifier",
           " * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number",
-          " * message - (optional) A string containing a message to be displayed via `hs.alert()` when the hotkey has been triggered; if omitted, no alert will be shown",
+          " * message - (optional) A string containing a message to be displayed via [hs.alert()](hs.alert.html) when the hotkey has been triggered; if omitted, no alert will be shown",
           " * pressedfn - A function that will be called when the hotkey has been pressed, or nil",
           " * releasedfn - A function that will be called when the hotkey has been released, or nil",
           " * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil",
           ""
+        ]
+      },
+      {
+        "doc" : "Deletes all previously set callbacks for a given keyboard combination\n\nParameters:\n * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:\n   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier\n   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier\n   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier\n   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier\n   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier\n   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier\n   * \"lShift\" or \"l⇧\" for the left Shift modifier\n   * \"rShift\" or \"r⇧\" for the right Shift modifier\n * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number\n\nReturns:\n * None",
+        "stripped_doc" : [
+          "Deletes all previously set callbacks for a given keyboard combination",
+          ""
         ],
-        "name" : "new",
+        "def" : "LeftRightHotkey:deleteAll(mods, key)",
+        "desc" : "Deletes all previously set callbacks for a given keyboard combination",
         "notes" : [
-          " * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to `hs.hotkey.new` as is and any caveats or considerations outlined there also apply here."
+
+        ],
+        "signature" : "LeftRightHotkey:deleteAll(mods, key)",
+        "type" : "Method",
+        "returns" : [
+          " * None"
+        ],
+        "name" : "deleteAll",
+        "parameters" : [
+          " * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:",
+          "   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier",
+          "   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier",
+          "   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier",
+          "   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier",
+          "   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier",
+          "   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier",
+          "   * \"lShift\" or \"l⇧\" for the left Shift modifier",
+          "   * \"rShift\" or \"r⇧\" for the right Shift modifier",
+          " * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number",
+          ""
+        ]
+      },
+      {
+        "doc" : "Disables all previously set callbacks for a given keyboard combination\n\nParameters:\n * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:\n   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier\n   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier\n   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier\n   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier\n   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier\n   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier\n   * \"lShift\" or \"l⇧\" for the left Shift modifier\n   * \"rShift\" or \"r⇧\" for the right Shift modifier\n * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number\n\nReturns:\n * None",
+        "stripped_doc" : [
+          "Disables all previously set callbacks for a given keyboard combination",
+          ""
+        ],
+        "def" : "LeftRightHotkey:disableAll(mods, key)",
+        "desc" : "Disables all previously set callbacks for a given keyboard combination",
+        "notes" : [
+
+        ],
+        "signature" : "LeftRightHotkey:disableAll(mods, key)",
+        "type" : "Method",
+        "returns" : [
+          " * None"
+        ],
+        "name" : "disableAll",
+        "parameters" : [
+          " * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:",
+          "   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier",
+          "   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier",
+          "   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier",
+          "   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier",
+          "   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier",
+          "   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier",
+          "   * \"lShift\" or \"l⇧\" for the left Shift modifier",
+          "   * \"rShift\" or \"r⇧\" for the right Shift modifier",
+          " * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number",
+          ""
+        ]
+      },
+      {
+        "doc" : "Create a new hotkey with the specified left\/right specific modifiers.\n\nParameters:\n * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:\n   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier\n   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier\n   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier\n   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier\n   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier\n   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier\n   * \"lShift\" or \"l⇧\" for the left Shift modifier\n   * \"rShift\" or \"r⇧\" for the right Shift modifier\n * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number\n * message - (optional) A string containing a message to be displayed via [hs.alert()](hs.alert.html) when the hotkey has been triggered; if omitted, no alert will be shown\n * pressedfn - A function that will be called when the hotkey has been pressed, or nil\n * releasedfn - A function that will be called when the hotkey has been released, or nil\n * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil\n\nReturns:\n * a new, initially disabled, hotkey with the specified left\/right modifiers.\n\nNotes:\n * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to [hs.hotkey.new](hs.hotkey.html#new) as is and any caveats or considerations outlined there also apply here.",
+        "stripped_doc" : [
+          "Create a new hotkey with the specified left\/right specific modifiers.",
+          ""
+        ],
+        "def" : "LeftRightHotkey:new(mods, key, [message,] pressedfn, releasedfn, repeatfn) -> LeftRightHotkeyObject",
+        "desc" : "Create a new hotkey with the specified left\/right specific modifiers.",
+        "notes" : [
+          " * The modifiers table is adjusted for use when conditionally activating the appropriate hotkeys based on the current modifiers in effect, but the other arguments are passed to [hs.hotkey.new](hs.hotkey.html#new) as is and any caveats or considerations outlined there also apply here."
         ],
         "signature" : "LeftRightHotkey:new(mods, key, [message,] pressedfn, releasedfn, repeatfn) -> LeftRightHotkeyObject",
         "type" : "Method",
@@ -220,53 +327,74 @@
           " * a new, initially disabled, hotkey with the specified left\/right modifiers.",
           ""
         ],
-        "desc" : "Create a new hotkey with the specified left\/right specific modifiers.",
-        "def" : "LeftRightHotkey:new(mods, key, [message,] pressedfn, releasedfn, repeatfn) -> LeftRightHotkeyObject"
+        "name" : "new",
+        "parameters" : [
+          " * mods - A table containing as elements the keyboard modifiers required, which should be one or more of the following:",
+          "   * \"lCmd\", \"lCommand\", or \"l⌘\" for the left Command modifier",
+          "   * \"rCmd\", \"rCommand\", or \"r⌘\" for the right Command modifier",
+          "   * \"lCtrl\", \"lControl\" or \"l⌃\" for the left Control modifier",
+          "   * \"rCtrl\", \"rControl\" or \"r⌃\" for the right Control modifier",
+          "   * \"lAlt\", \"lOpt\", \"lOption\" or \"l⌥\" for the left Option modifier",
+          "   * \"rAlt\", \"rOpt\", \"rOption\" or \"r⌥\" for the right Option modifier",
+          "   * \"lShift\" or \"l⇧\" for the left Shift modifier",
+          "   * \"rShift\" or \"r⇧\" for the right Shift modifier",
+          " * key - A string containing the name of a keyboard key (as found in [hs.keycodes.map](hs.keycodes.html#map) ), or a raw keycode number",
+          " * message - (optional) A string containing a message to be displayed via [hs.alert()](hs.alert.html) when the hotkey has been triggered; if omitted, no alert will be shown",
+          " * pressedfn - A function that will be called when the hotkey has been pressed, or nil",
+          " * releasedfn - A function that will be called when the hotkey has been released, or nil",
+          " * repeatfn - A function that will be called when a pressed hotkey is repeating, or nil",
+          ""
+        ]
       },
       {
-        "doc" : "Starts the processing or displays for the LeftRightHotkey spoon\n\nParameters:\n * None\n\nReturns:\n * the LeftRightHotkey spoon object",
+        "doc" : "Starts watching for flag (modifier key) change events that can determine if the right or left modifiers have been pressed.\n\nParameters:\n * None\n\nReturns:\n * the LeftRightHotkey spoon object\n\nNotes:\n * this enables the use of hotkeys created by using this Spoon.",
         "stripped_doc" : [
-          "Starts the processing or displays for the LeftRightHotkey spoon",
+          "Starts watching for flag (modifier key) change events that can determine if the right or left modifiers have been pressed.",
           ""
         ],
-        "parameters" : [
-          " * None",
-          ""
-        ],
-        "name" : "start",
+        "def" : "LeftRightHotkey:start() -> self",
+        "desc" : "Starts watching for flag (modifier key) change events that can determine if the right or left modifiers have been pressed.",
         "notes" : [
-
+          " * this enables the use of hotkeys created by using this Spoon."
         ],
         "signature" : "LeftRightHotkey:start() -> self",
         "type" : "Method",
         "returns" : [
-          " * the LeftRightHotkey spoon object"
-        ],
-        "desc" : "Starts the processing or displays for the LeftRightHotkey spoon",
-        "def" : "LeftRightHotkey:start() -> self"
-      },
-      {
-        "doc" : "Stops the processing and\/or removes the displays generated by the LeftRightHotkey spoon\n\nParameters:\n * None\n\nReturns:\n * the LeftRightHotkey spoon object",
-        "stripped_doc" : [
-          "Stops the processing and\/or removes the displays generated by the LeftRightHotkey spoon",
+          " * the LeftRightHotkey spoon object",
           ""
         ],
+        "name" : "start",
         "parameters" : [
           " * None",
           ""
+        ]
+      },
+      {
+        "doc" : "Stops watching for flag (modifier key) change events that can determine if the right or left modifiers have been pressed.\n\nParameters:\n * None\n\nReturns:\n * the LeftRightHotkey spoon object\n\nNotes:\n * this will implicitly disable all hotkeys created by using this Spoon -- only those hotkeys which are defined with [hs.hotkey](hs.hotkey.html) directly will still be available.",
+        "stripped_doc" : [
+          "Stops watching for flag (modifier key) change events that can determine if the right or left modifiers have been pressed.",
+          ""
         ],
-        "name" : "stop",
+        "def" : "LeftRightHotkey:stop() -> self",
+        "desc" : "Stops watching for flag (modifier key) change events that can determine if the right or left modifiers have been pressed.",
         "notes" : [
-
+          " * this will implicitly disable all hotkeys created by using this Spoon -- only those hotkeys which are defined with [hs.hotkey](hs.hotkey.html) directly will still be available."
         ],
         "signature" : "LeftRightHotkey:stop() -> self",
         "type" : "Method",
         "returns" : [
-          " * the LeftRightHotkey spoon object"
+          " * the LeftRightHotkey spoon object",
+          ""
         ],
-        "desc" : "Stops the processing and\/or removes the displays generated by the LeftRightHotkey spoon",
-        "def" : "LeftRightHotkey:stop() -> self"
+        "name" : "stop",
+        "parameters" : [
+          " * None",
+          ""
+        ]
       }
+    ],
+    "Field" : [
+
     ],
     "name" : "LeftRightHotkey"
   }
