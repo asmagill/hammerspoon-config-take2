@@ -10,7 +10,7 @@ local module = {}
 
 -- adjust as you see fit
 local placeholderText = ".txt"
-local modifiers, key  = { "cmd", "alt", "ctrl" }, "t"
+local modifiers, key  = { "cmd", "alt", "ctrl", "shift" }, "t"
 
 -- now to the prime attraction:
 local createNewEmptyFile = function()
