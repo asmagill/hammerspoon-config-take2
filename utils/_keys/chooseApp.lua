@@ -1,13 +1,17 @@
 local spotlight   = require"hs.spotlight"
 local chooser     = require"hs.chooser"
 local image       = require"hs.image"
-local hotkey      = require"hs.hotkey"
 local application = require"hs.application"
 local mouse       = require"hs.mouse"
 local menubar     = require"hs.menubar"
 local inspect     = require"hs.inspect"
 local pasteboard  = require"hs.pasteboard"
 local styledText  = require"hs.styledText".new
+
+-- even if it's been started already, invoking it again doesn't
+-- hurt
+local lrhk        = hs.loadSpoon("LeftRightHotkey"):start()
+-- local hotkey      = require"hs.hotkey"
 
 local module = {}
 
@@ -87,7 +91,8 @@ module.chooser:fgColor{ list = "x11", name = "lightskyblue" }
               end)
 --              :bgDark(true)
 
-module.hotkey = hotkey.bind({"cmd", "ctrl", "alt"}, "return", function()
+-- module.hotkey = hotkey.bind({"cmd", "ctrl", "alt"}, "return", function()
+module.hotkey = lrhk:bind({"rCmd" }, "return", function()
     if module.chooser:isVisible() then
         module.chooser:hide()
     else

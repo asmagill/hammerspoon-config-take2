@@ -4,8 +4,11 @@ local canvas     = require("hs.canvas")
 local screen     = require("hs.screen")
 local styledtext = require("hs.styledtext")
 
-local hotkey     = require("hs.hotkey")
-local mods       = require("hs._asm.extras").mods
+-- even if it's been started already, invoking it again doesn't
+-- hurt
+local lrhk        = hs.loadSpoon("LeftRightHotkey"):start()
+-- local hotkey      = require"hs.hotkey"
+-- local mods       = require("hs._asm.extras").mods
 
 local wifimeter = require("utils.wifimeter")
 
@@ -86,7 +89,7 @@ local updateDataPoints = function()
         y = screenFrame.y + screenFrame.h - screenOffsetFromLLy
     }:show()
 
-    canvas.disableScreenUpdates()
+--     canvas.disableScreenUpdates()
 
     local wifiDetails = wifi.interfaceDetails()
     -- Signal and Noise are measured between 0 and -120. Signal closer to 0 is good.
@@ -124,7 +127,7 @@ local updateDataPoints = function()
     _canvas.legend.frame = legendFrame
     _canvas.legend.text = legend
 
-    canvas.enableScreenUpdates()
+--     canvas.enableScreenUpdates()
 end
 
 module.sampleTimer = timer.new(sampleRate, updateDataPoints)
@@ -144,7 +147,8 @@ module.wifimeter = wifimeter
 module["2GHz"] = wifimeter.new("2GHz"):setNetworkPersistence(0)
 module["5GHz"] = wifimeter.new("5GHz"):setNetworkPersistence(0)
 
-hotkey.bind(mods.CAsC, "w", function()
+-- hotkey.bind(mods.CAsC, "w", function()
+module._key_snr = lrhk:bind({ "rCmd", "rAlt" }, "w", function()
     if not module["2GHz"]:visible() then
         if module.sampleTimer:running() then
             module.stop()
@@ -154,7 +158,8 @@ hotkey.bind(mods.CAsC, "w", function()
     end
 end)
 
-hotkey.bind(mods.CASC, "w", function()
+-- hotkey.bind(mods.CASC, "w", function()
+module._key_full = lrhk:bind({ "rCmd", "rAlt", "rShift" }, "w", function()
     if module.sampleTimer:running() and module["2GHz"]:visible() then
         module.stop()
         module["2GHz"] = module["2GHz"]:hide():stop()
