@@ -154,10 +154,18 @@ local flagChangeCallback = function(ev)
             end
         end
     end
+
     if #foundMatches > 0 then
-        -- enable only the most recently created version in case of stacking
+        -- enable only the most recently created version for a given _keycode
+        -- in case of stacking
+        local enabled = {}
         table.sort(foundMatches, function(a, b) return a._creationID > b._creationID end)
-        foundMatches[1]._hotkey:enable()
+        for _, key in ipairs(foundMatches) do
+            if not enabled[key._keycode] then
+                enabled[key._keycode] = true
+                key._hotkey:enable()
+            end
+        end
     end
 end
 
