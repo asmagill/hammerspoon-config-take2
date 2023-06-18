@@ -16,6 +16,7 @@ local wifi       = require("hs.wifi")
 local fnutils    = require("hs.fnutils")
 local timer      = require("hs.timer")
 local styledtext = require("hs.styledtext")
+local location   = require("hs.location")
 
 local module = {}
 
@@ -422,6 +423,8 @@ objectMT.__methodIndex.updateCanvas = function(self)
 end
 
 module.new = function(band, frame)
+    location.start() -- ensure bssid is available
+
     if type(band) == "table" and frame == nil then
         band, frame = nil, band
     end
@@ -496,6 +499,6 @@ module.stopObserving = function()
     end
 end
 
-module.delayTimer = 2
+module.delayTimer = 5
 
 return module
