@@ -11,16 +11,38 @@
 ---  * `LeftRightHotkeyObject:delete()`   -- deletes the registered hotkey.
 ---  * `LeftRightHotkeyObject:isEnabled() -- returns a boolean value specifying whether the hotkey is currently enabled (true) or disabled (false)
 ---
+--- The following modifiers are recognized by this spoon in the modifier table when setting up hotkeys with this spoon:
+---    * "lCmd", "lCommand", or "l⌘" for the left Command modifier
+---    * "rCmd", "rCommand", or "r⌘" for the right Command modifier
+---    * "lCtrl", "lControl" or "l⌃" for the left Control modifier
+---    * "rCtrl", "rControl" or "r⌃" for the right Control modifier
+---    * "lAlt", "lOpt", "lOption" or "l⌥" for the left Option modifier
+---    * "rAlt", "rOpt", "rOption" or "r⌥" for the right Option modifier
+---    * "lShift" or "l⇧" for the left Shift modifier
+---    * "rShift" or "r⇧" for the right Shift modifier
+---
+--- The modifiers table for any given hotkey is all inclusive; this means that if you specify `{ "rShift", "lShift" }` then *both* the left and right shift keys *must* be pressed to trigger the hotkey -- if you want either/or, then stick with [hs.hotkey](hs.hotkey.html).
+---
+--- Alternatively, if you want to setup a hotkey when *either* command key is pressed with *only* the right shift, you would need to set up two hotkeys with this spoon:
+---  e.g. `LeftRightHotkey:bind({ "rCmd", "rShift" }, "a", myFunction)` *and* `LeftRightHotkey:bind({ "lCmd", "rShift" }, "a", myFunction)`
+---
+--- This spoon works by using an eventtap to detect flag changes (modifier keys) and when they change, the appropriate hotkeys are enabled or disabled. This means that you should be aware of the following:
+---  * like all eventtaps, if the Hammerspoon application is particularly busy with some other task, it is possible for the flag change to be missed or for the macOS to disable the eventtap entirely.
+---  * behind the scenes, when a given set of flag changes occur that match a defined hotkey, the hotkey is actually enabled through `hs.hotkey:enable()` -- this means that in truth, either side's modifiers would trigger the callback. Under normal circumstances this won't be noticed because as soon as you switch to the alternate side's modifier, the flag change event will be detected and the hotkey will be disabled. However, as noted above, if Hammerspoon is particularly busy, it is possible for this event to be missed.
+---    * a timer runs (once this Spoon has been started the first time) which will check to see if the eventtap has been internally disabled and re-enable it if necessary; alternatively you can re-issue [LeftRightHotkey:start()](#start) to force the eventtap to be reset if necessary.
+---    * if your hotkeys seem out of sync, try pressing and releasing any modifier key -- this will reset the enabled/disabled hotkeys if a previous flag change was missed, but the eventtap is still running or has been reset by one of the methods described above.
+---
 --- Like all Spoons, don't forget to use the [LeftRightHotkey:start()](#start) method to activate the modifier key watcher.
 ---
 --- Download: `svn export https://github.com/asmagill/hammerspoon-config-take2/trunk/_Spoons/LeftRightHotkey.spoon`
 
 local spoons  = require("hs.spoons")
--- local log     = require("hs.logger").new("LeftRightHotkey", settings.get("LeftRightHotkey_logLevel") or "warning")
+local log     = require("hs.logger").new("LeftRightHotkey", require("hs.settings").get("LeftRightHotkey_logLevel") or "warning")
 
 local fnutils  = require("hs.fnutils")
 local hotkey   = require("hs.hotkey")
 local keycodes = require("hs.keycodes")
+local timer    = require("hs.timer")
 local eventtap = require("hs.eventtap")
 local etevent  = eventtap.event
 
@@ -82,6 +104,8 @@ local existantHotKeys = {}
 local queuedHotKeys = {}
 for i = 1, (1 << 8) - 1, 1 do queuedHotKeys[i] = setmetatable({}, { __mode = "k" }) end
 
+-- copies flag tables so that if the user wants to reuse his tables, we don't
+-- modify them
 local shallowCopyTable = function(tbl)
     local newTbl = {}
     local key, value = next(tbl)
@@ -92,6 +116,7 @@ local shallowCopyTable = function(tbl)
     return newTbl
 end
 
+-- use lookup tables above to convert all flags to one format to simplify later checks
 local normalizeModsTable = function(tbl)
     local newTbl = shallowCopyTable(tbl)
     for i, m in ipairs(newTbl) do
@@ -108,9 +133,31 @@ local normalizeModsTable = function(tbl)
     return newTbl
 end
 
-local _flagWatcher ;
+-- converts our modifiers to the actual modifiers sent to `hs.hotkey`
+local convertModifiers = function(specifiedMods)
+    local actualMods, queueIndex  = {}, 0
+
+    for _, v in pairs(specifiedMods) do
+        queueIndex = queueIndex | (modifierMasks[v] or 0)
+        local hotkeyModEquivalant = modiferBase[v]
+        if hotkeyModEquivalant then
+            table.insert(actualMods, hotkeyModEquivalant)
+        else
+            queueIndex = 0
+            break
+        end
+    end
+    return actualMods, queueIndex
+end
+
+-- eventtap and watchdog timer predefined so they stay local
+local _flagWatcher, _watchTimer
+
+-- respond to flag changes or (if ev is null) resynchronize
 local flagChangeCallback = function(ev)
-    local rf = ev:getRawEventData().CGEventData.flags
+    local rf = ev and ev:getRawEventData().CGEventData.flags
+                  or  eventtap.checkKeyboardModifiers(true)._raw
+
     local queueIndex = 0
     if rf & etevent.rawFlagMasks.deviceLeftAlternate > 0 then
         queueIndex = queueIndex | modifierMasks.lalt
@@ -137,6 +184,7 @@ local flagChangeCallback = function(ev)
         queueIndex = queueIndex | modifierMasks.rshift
     end
 -- print("activating " .. tostring(queueIndex))
+
     local foundMatches = {}
     for i, v in ipairs(queuedHotKeys) do
         if i == queueIndex then
@@ -169,6 +217,16 @@ local flagChangeCallback = function(ev)
     end
 end
 
+-- checks that the flagwatcher is still running and synchronizes the callbacks
+local checkFlagWatcher = function()
+    if not _flagWatcher:isEnabled() then
+        log.w("re-enabling flag watcher")
+        _flagWatcher:start()
+        flagChangeCallback(nil)
+    end
+end
+
+-- define methods for our hotkey objects
 local _LeftRightHotkeyObjMT = {}
 _LeftRightHotkeyObjMT.__index = {
     enable = function(self)
@@ -192,22 +250,8 @@ _LeftRightHotkeyObjMT.__tostring = function(self)
     return self._modDesc .. " " .. (keycodes.map[self._keycode] or ("unmapped:" .. tostring(self._keycode)))
 end
 
-local convertModifiers = function(specifiedMods)
-    local actualMods, queueIndex  = {}, 0
-
-    for _, v in pairs(specifiedMods) do
-        queueIndex = queueIndex | (modifierMasks[v] or 0)
-        local hotkeyModEquivalant = modiferBase[v]
-        if hotkeyModEquivalant then
-            table.insert(actualMods, hotkeyModEquivalant)
-        else
-            queueIndex = 0
-            break
-        end
-    end
-    return actualMods, queueIndex
-end
-
+-- keeps track of creation order so we can enable only the latest enabled version
+-- (i.e. stacking)
 local definitionIndex = 0
 
 ---------- Spoon Methods ----------
@@ -410,6 +454,12 @@ obj.start = function(self)
     if self ~= obj then self = obj end
     if not _flagWatcher then
         _flagWatcher = eventtap.new({ etevent.types.flagsChanged }, flagChangeCallback):start()
+        _watchTimer  = timer.doEvery(1, checkFlagWatcher)
+-- for debugging purposes, may go away
+        obj._flagWatcher = _flagWatcher
+        obj._watchTimer = _watchTimer
+    else
+        checkFlagWatcher()
     end
     return self
 end
@@ -432,6 +482,11 @@ obj.stop = function(self)
     if _flagWatcher then
         _flagWatcher:stop()
         _flagWatcher = nil
+        _watchTimer:stop()
+        _watchTimer = nil
+-- for debugging purposes, may go away
+        obj._flagWatcher = nil
+        obj._watchTimer = nil
     end
     return self
 end
