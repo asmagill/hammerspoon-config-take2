@@ -153,6 +153,39 @@ end
 -- eventtap and watchdog timer predefined so they stay local
 local _flagWatcher, _watchTimer
 
+local enableAndDisableHotkeys = function(queueIndex)
+    local foundMatches = {}
+    for i, v in ipairs(queuedHotKeys) do
+        if i == queueIndex then
+            for key, _ in pairs(v) do
+                if key._enabled then
+                    table.insert(foundMatches, key)
+--                     key._hotkey:enable()
+                end
+            end
+        else
+            for key, _ in pairs(v) do
+                if key._enabled then
+                    key._hotkey:disable()
+                end
+            end
+        end
+    end
+
+    if #foundMatches > 0 then
+        -- enable only the most recently created version for a given _keycode
+        -- in case of stacking
+        local enabled = {}
+        table.sort(foundMatches, function(a, b) return a._creationID > b._creationID end)
+        for _, key in ipairs(foundMatches) do
+            if not enabled[key._keycode] then
+                enabled[key._keycode] = true
+                key._hotkey:enable()
+            end
+        end
+    end
+end
+
 -- respond to flag changes or (if ev is null) resynchronize
 local flagChangeCallback = function(ev)
     local rf = ev and ev:getRawEventData().CGEventData.flags
@@ -185,36 +218,7 @@ local flagChangeCallback = function(ev)
     end
 -- print("activating " .. tostring(queueIndex))
 
-    local foundMatches = {}
-    for i, v in ipairs(queuedHotKeys) do
-        if i == queueIndex then
-            for key, _ in pairs(v) do
-                if key._enabled then
-                    table.insert(foundMatches, key)
---                     key._hotkey:enable()
-                end
-            end
-        else
-            for key, _ in pairs(v) do
-                if key._enabled then
-                    key._hotkey:disable()
-                end
-            end
-        end
-    end
-
-    if #foundMatches > 0 then
-        -- enable only the most recently created version for a given _keycode
-        -- in case of stacking
-        local enabled = {}
-        table.sort(foundMatches, function(a, b) return a._creationID > b._creationID end)
-        for _, key in ipairs(foundMatches) do
-            if not enabled[key._keycode] then
-                enabled[key._keycode] = true
-                key._hotkey:enable()
-            end
-        end
-    end
+    enableAndDisableHotkeys(queueIndex)
 end
 
 -- checks that the flagwatcher is still running and synchronizes the callbacks
@@ -480,6 +484,7 @@ obj.stop = function(self)
     -- in case called as function
     if self ~= obj then self = obj end
     if _flagWatcher then
+        enableAndDisableHotkeys(0)
         _flagWatcher:stop()
         _flagWatcher = nil
         _watchTimer:stop()
