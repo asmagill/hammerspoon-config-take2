@@ -78,11 +78,6 @@ local __internals = {
     timers       = {},
     cachedImages = {},
 --     keyRepeating = {},
-    -- apparently there is a bug perhaps introduced in a new OS X release with the NSStatusBar approach
-    -- used for menu items that means pop up menus aren't always deleted from the menubar correctly...
-    -- its probably time to stop using the deprecated approach anyways and finish the more "Apple approved"
-    -- version in hs._asm.guitk.menubar soon... until then, lets create them once to at least mitigate the
-    -- issue
     menus        = {
         _Launch   = menu.new():removeFromMenuBar(),
         _Device   = menu.new():removeFromMenuBar(),

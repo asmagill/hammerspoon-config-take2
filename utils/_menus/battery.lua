@@ -24,8 +24,6 @@ local module = {
 --]=]
 }
 
--- local menubar    = require("hs.menubar")
--- local menubar    = require("hs._asm.guitk.menubar")
 local menubar    = require("hs.menubar")
 local utf8       = require("hs.utf8")
 local battery    = require("hs.battery")
