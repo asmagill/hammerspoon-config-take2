@@ -237,25 +237,31 @@ which = function(what)
     end
 end
 
-local prevFrame = settings.get("positionConsoleOnLoad")
-if prevFrame then
-    local hspoon = application.applicationsForBundleID(hs.processInfo.bundleID)[1]
-    local conswin = hspoon:mainWindow()
-    if conswin then conswin:setFrame(prevFrame) end
-end
-
--- now restore console and its position, if it was open when we relaunched/loaded
+-- if set, restore console and its position, otherwise restore
+-- last window before HS started...
+local restoreTimer
 if settings.get("openConsoleOnLoad") then
-    hs.openConsole()
+    restoreTimer = timer.doAfter(math.minFloat, function()
+        hs.openConsole()
+
+        local prevFrame = settings.get("positionConsoleOnLoad")
+        if prevFrame then
+            local hspoon = application.applicationsForBundleID(hs.processInfo.bundleID)[1]
+            local conswin = hspoon:mainWindow()
+            if conswin then conswin:setFrame(prevFrame) end
+        end
+
+        settings.clear("openConsoleOnLoad")
+        settings.clear("positionConsoleOnLoad")
+
+        restoreTimer = nil
+    end)
 else
     -- refocus captured window from begining
-    local restoreFMWTimer = timer.doAfter(math.minFloat, function()
+    restoreTimer = timer.doAfter(math.minFloat, function()
         if fmW then fmW:focus() end
-        restoreFMWTimer = nil
+        restoreTimer = nil
     end)
 end
-
-settings.clear("openConsoleOnLoad")
-settings.clear("positionConsoleOnLoad")
 
 hs.loadSpoon("FadeLogo"):start(.5)
