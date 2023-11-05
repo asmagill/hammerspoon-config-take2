@@ -2,7 +2,7 @@
 -- Creates panels which slide from the side of the screen when specific key modifiers are held and the mouse pointer is
 -- moved to the screen edge.  Each panel can have its own elements for display or user interaction.
 --
--- This is expected to become part of a spoon once `hs._asm.guitk` becomes a part of core.
+-- This is expected to become part of a spoon once `hs._asm.uitk` becomes a part of core.
 --
 
 --[[ -- simple test suite:
@@ -29,15 +29,16 @@ local internalData, activeSides = setmetatable({}, {__mode = "k" }), setmetatabl
 
 -- module.DEBUG_TRANSIT = true
 
-local guitk    = require("hs._asm.guitk")
+local uitk     = require("hs._asm.uitk")
 local timer    = require("hs.timer")
-local canvas   = require("hs.canvas")
-local drawing  = require("hs.drawing")
 local screen   = require("hs.screen")
 local mouse    = require("hs.mouse")
 local inspect  = require("hs.inspect")
 local eventtap = require("hs.eventtap")
 local fs       = require("hs.fs")
+
+local canvas   = require("hs.canvas")
+local drawing  = require("hs.drawing")
 
 local ANIMATION_STEPS    = 10    -- how many steps should the panel take to go from full close to full open or vice-versa
 local ANIMATION_DURATION =  0.5  -- how long the panel takes to fully open or close
@@ -166,7 +167,7 @@ local updatePanelFrame = function(self)
     end
 
     obj._panel:frame(newFrame)
-    obj._panel["display"].frameDetails = {
+    obj._panelC["display"].containerFrame = {
         x = obj.padding,
         y = obj.padding,
         h = newFrame.h - 2 * obj.padding,
@@ -360,22 +361,23 @@ objectMT.__gc = function(self)
             obj._eventWatcher = nil
         end
         if obj._sensor then
-            obj._sensor:delete() -- passes up to the sensor window
+--             obj._sensor:delete() -- passes up to the sensor window
             obj._sensor = nil
         end
-        if obj._panel then
-            local cv = obj._panel("background")
-            obj._panel:elementRemoveFromManager(cv)
-            -- this step of deleting the canvas we created is necessary because canvas isn't a "true" guitk element
+        if obj._panelC then
+            local cv = obj._panelC("background")
+            obj._panelC:elementRemoveFromManager(cv)
+            -- this step of deleting the canvas we created is necessary because canvas isn't a "true" uitk element
             -- yet and it has it's own requirement of explicit delete for true garbage collection
             cv:delete()
             -- we don't bother with the potential canvas elements in "display" since this code didn't create them --
             -- it only "borrowed" them from stuff the user added; it's up to the user to handle cleanup if they care
-            -- about memory that closely; eventually canvas should become a proper element of guitk and the distinction
+            -- about memory that closely; eventually canvas should become a proper element of uitk and the distinction
             -- will no longer matter then.
             obj._display = nil
-            obj._panel:delete() -- passes up to the panel window
+--             obj._panel:delete() -- passes up to the panel window
             obj._panel = nil
+            obj._panelC = nil
         end
     end
     obj = nil
@@ -394,7 +396,7 @@ end
 
 objectMT.color = function(self, ...)
     local obj, args = internalData[self], table.pack(...)
-    local backPanel = obj._panel("background")["backPanel"]
+    local backPanel = obj._panelC("background")["backPanel"]
     if args.n == 0 then
         return setmetatable({
             red   = backPanel.fillColor.red,
@@ -684,7 +686,8 @@ objectMT.removeWidget = function(self, name)
         error("unexpected widget type")
     end
 
-    if element and pcall(require("hs._asm.guitk.element._view")._nextResponder, element) then
+--     if element and element._nextResponder and element:_nextResponder() then
+    if uitk.element.isElementType(element) then
         local fd = obj._display:elementFrameDetails(element)
         if fd and fd.id then obj._ignoreAutoClose[fd.id] = nil end
         obj._display:elementRemoveFromManager(element)
@@ -748,7 +751,8 @@ objectMT.addWidget = function(self, name, frameDetails, ...)
         error("unexpected widget type")
     end
 
-    if element and pcall(require("hs._asm.guitk.element._view")._nextResponder, element) then
+--     if element and element._nextResponder and element:_nextResponder() then
+    if uitk.element.isElementType(element) then
         if frameDetails.preventAutoClose then
             obj._ignoreAutoClose[frameDetails.id] = true
             frameDetails.preventAutoClose = nil
@@ -783,16 +787,30 @@ module.new = function()
         strokeAlpha       = STROKE_ALPHA,
 
         _selfLabel        = selfLabel,
-        _panel            = guitk.newCanvas{}:level("status")
-                                             :ignoresMouseEvents(false)
-                                             :allowTextEntry(true)
-                                             :contentManager(guitk.manager.new()),
-        _sensor           = guitk.newCanvas{}:level("status")
-                                             :collectionBehavior("canJoinAllSpaces")
-                                             :contentManager(guitk.manager.new():mouseCallback(function(mgr, msg, loc)
+        _panel            = uitk.window({}, uitk.window.masks.borderless):level("status")
+                                         :ignoresMouseEvents(false)
+                                         :allowTextEntry(true)
+                                         :content(uitk.element.container())
+                                         :backgroundColor{ alpha = 0 }
+                                         :opaque(false)
+                                         :hasShadow(false)
+                                         :animationBehavior("none")
+                                         :level(uitk.window.levels.screenSaver),
+        _sensor           = uitk.window({}, uitk.window.masks.borderless):level("status")
+                                         :collectionBehavior("canJoinAllSpaces")
+                                         :backgroundColor{ alpha = 0 }
+                                         :opaque(false)
+                                         :hasShadow(false)
+                                         :ignoresMouseEvents(true)
+                                         :allowTextEntry(false)
+                                         :animationBehavior("none")
+                                         :level(uitk.window.levels.screenSaver)
+                                         :content(uitk.element.container():mouseCallback(
+                                             function(mgr, msg, loc)
                                                  sensorCallback(self, mgr, msg, loc)
-                                             end)),
-        _display         = guitk.manager.new(),
+                                             end)
+                                          ),
+        _display         = uitk.element.container(),
         _widgets         = {},
         _ignoreAutoClose = {},
     }
@@ -803,32 +821,27 @@ module.new = function()
     -- panel, but this defats the ability to allow user to interact with panel when it's persistent
     obj._sensor:level(obj._sensor:level() + 1)
 
-    -- since we access the content managers more often then the windows, save the manager object instead;
-    -- it makes for clearer code IMHO. We can always get the window if we need it with :_nextResponder()
-    obj._panel, obj._sensor = obj._panel:contentManager(), obj._sensor:contentManager()
-
-    obj._panel[#obj._panel + 1] = {
-        _element     = canvas.new{}:assignElement{
-                         type             = "rectangle",
-                         id               = "backPanel",
-                         strokeWidth      = 10,
-                         fillColor        = { alpha = obj.fillAlpha },
-                         strokeColor      = { alpha = obj.strokeAlpha },
-                         roundedRectRadii = { xRadius = 10, yRadius = 10 },
-                         clipToPath       = true,
-                     },
-        id           = "background",
-        frameDetails = { x = 0, y = 0, h = "100%", w = "100%" },
+    obj._panelC, obj._sensorC = obj._panel:content(), obj._sensor:content()
+    obj._panelC[#obj._panelC + 1] = {
+        _element       = canvas.new{}:assignElement{
+                           type             = "rectangle",
+                           id               = "backPanel",
+                           strokeWidth      = 10,
+                           fillColor        = { alpha = obj.fillAlpha },
+                           strokeColor      = { alpha = obj.strokeAlpha },
+                           roundedRectRadii = { xRadius = 10, yRadius = 10 },
+                           clipToPath       = true,
+                       },
+        id             = "background",
+        containerFrame = { x = 0, y = 0, h = "100%", w = "100%" },
     }
-
-    obj._panel[#obj._panel + 1] = {
-        _element     = obj._display,
-        id           = "display",
-        frameDetails = { h = "100%", w = "100%" }, -- placeholder, gets set in updatePanelFrame()
+    obj._panelC[#obj._panelC + 1] = {
+        _element       = obj._display,
+        id             = "display",
+        containerFrame = { h = "100%", w = "100%" }, -- placeholder, gets set in updatePanelFrame()
     }
-
+pobj = obj
     updatePanelFrame(self)
-
     return self
 end
 

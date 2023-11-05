@@ -5,7 +5,8 @@
 local module = {}
 local USERDATA_TAG = "applicationsWidget"
 
-local canvas      = require("hs.canvas")
+local uitk        = require("hs._asm.uitk")
+-- local canvas      = require("hs.canvas")
 local settings    = require("hs.settings")
 local image       = require("hs.image")
 local application = require("hs.application")
@@ -17,7 +18,7 @@ if not _bundleIDs then
 end
 
 
-local _canvas = canvas.new{ h = 42 }:appendElements{
+local _canvas = uitk.element.canvas{ h = 42 }:appendElements{
     {
         id               = "background",
         type             = "rectangle",

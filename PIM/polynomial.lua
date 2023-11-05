@@ -8,7 +8,7 @@
 ---
 --- Polynomials override the basic arithmetic operations.
 ---
---- Based primarily on python library written for _A_Programmer's_Introduction_to_Mathematics_, located at https://github.com/pim-book/programmers-introduction-to-mathematics/secret-sharing/polynomial.py rewritten for use with Lua.
+--- Based primarily on python library written for _A_Programmer's_Introduction_to_Mathematics_, located at https://github.com/pim-book/programmers-introduction-to-mathematics/blob/master/secret_sharing/polynomial.py rewritten for use with Lua.
 ---
 --- Differences between this and the Python implementation:
 ---  * the zero polynomial's string representation is "0" rather than an empty string
@@ -79,7 +79,7 @@ _MT_polynomial.__tostring = function(self)
     local result = {}
     for i,v in ipairs(_internals[self].coefficients) do
         if module.literal or v ~= 0 then
-            table.insert(result, tostring(v) .. ((i > 1) and " x^" .. tostring(i - 1) or ""))
+            table.insert(result, tostring(v) .. ((i > 1) and " " .. _internals[self].indeterminate .. "^" .. tostring(i - 1) or ""))
         end
     end
     result = table.concat(result, " + ")

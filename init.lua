@@ -47,16 +47,12 @@ local math        = require("hs.math")
 local settings    = require("hs.settings")
 local fs          = require("hs.fs")
 
--- using yabai for a while, lets see if this causes problems when I start the
--- hs.window.filter rewrite
-require("hs.canvas").useCustomAccessibilitySubrole(false)
-
 -- wrap these here so my personal modules see the wrapped versions
 local _hsrelaunch = hs.relaunch
 hs.relaunch = function(...)
     local hspoon = application.applicationsForBundleID(hs.processInfo.bundleID)[1]
     local conswin = hspoon:mainWindow()
-    if conswin then
+    if conswin and conswin:title() == "Hammerspoon Console" then
         settings.set("openConsoleOnLoad", true)
 
         local fr = conswin:frame()
@@ -71,7 +67,7 @@ local _hsreload = hs.reload
 hs.reload = function(...)
     local hspoon = application.applicationsForBundleID(hs.processInfo.bundleID)[1]
     local conswin = hspoon:mainWindow()
-    if conswin then
+    if conswin and conswin:title() == "Hammerspoon Console" then
         local fr = conswin:frame()
         -- stupid hs.geometry doesn't allow settings to serialize this properly
         fr = { x = fr.x, y = fr.y, h = fr.h, w = fr.w }
