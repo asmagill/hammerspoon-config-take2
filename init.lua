@@ -11,9 +11,11 @@ if #luarocks > 0 then
 end
 
 local logger = require("hs.logger")
-logger.historySize(1000)
+logger.historySize(10000)
 logger.truncateID = "head"
 logger.truncateIDWithEllipsis = true
+
+uitk = require("hs._asm.uitk")
 
 -- I do too much with developmental versions of HS -- I don't need
 -- extraneous info in the Console application for every require; very
@@ -151,7 +153,7 @@ _asm._menus   = requirePlus.requirePath("utils._menus")
 -- terminal shell equivalencies...
 edit = function(where)
     where = where or "."
-    os.execute("/usr/local/bin/edit "..where)
+    os.execute("/usr/local/bin/bbedit "..where)
 end
 
 history = _asm._actions.consoleHistory.history

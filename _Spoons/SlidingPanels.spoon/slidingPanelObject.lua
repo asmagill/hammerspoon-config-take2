@@ -37,7 +37,8 @@ local inspect  = require("hs.inspect")
 local eventtap = require("hs.eventtap")
 local fs       = require("hs.fs")
 
-local canvas   = require("hs.canvas")
+-- local canvas   = require("hs.canvas")
+local canvas   = uitk.element.canvas
 local drawing  = require("hs.drawing")
 
 local ANIMATION_STEPS    = 10    -- how many steps should the panel take to go from full close to full open or vice-versa
@@ -167,7 +168,7 @@ local updatePanelFrame = function(self)
     end
 
     obj._panel:frame(newFrame)
-    obj._panelC["display"].containerFrame = {
+    obj._panelC["display"]._properties.containerFrame = {
         x = obj.padding,
         y = obj.padding,
         h = newFrame.h - 2 * obj.padding,
@@ -712,7 +713,6 @@ end
 
 objectMT.addWidget = function(self, name, frameDetails, ...)
     local obj = internalData[self]
-
     local element
     if type(name) == "userdata" then
         element    = name

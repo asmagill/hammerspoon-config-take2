@@ -49,7 +49,7 @@ return function(name, frameDetails, config)
         spoonWrapper[2] = {
             id             = "spoon",
             containerFrame = { x = 0, y = 0, h = "100%", w = "100%" },
-            _element       = spoonCanvas,
+            _element       = spoonCanvas._view,
         }
         frameDetails.h     = frameDetails.h  or spoonCanvasSize.h
         frameDetails.w     = frameDetails.w  or spoonCanvasSize.w
@@ -91,7 +91,7 @@ return function(name, frameDetails, config)
     end
 
     return {
-        element      = (spoonWrapper or spoonCanvas),
+        element      = (spoonWrapper or spoonCanvas._view),
         source       = spoon,
         frameDetails = frameDetails,
     }
