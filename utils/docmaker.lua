@@ -45,14 +45,25 @@ $ cd ~/.hammerspoon # or wherever your Hammerspoon init.lua file is located
 $ tar -xzf ~/Downloads/]] .. m.name:match("^.-([^%.]+)$") .. [[-v0.x.tar.gz # or wherever your downloads are located
 ~~~
 
-If you wish to build this module yourself, and have XCode installed on your Mac, the best way (you are welcome to clone the entire repository if you like, but no promises on the current state of anything else) is to download `init.lua`, `internal.m`, and `Makefile` (at present, nothing else is required) into a directory of your choice and then do the following:
+If you wish to build this module yourself and have XCode installed on your Mac, the best way is to download or clone this repository and then do one of the following:
+
+If you want to add the documentation to the built in Hammerspoon help available through `hs.help`, you must have installed the Hammerspoon command line tool (this can be done by typing `hs.ipc.cliInstall()` into the Hammerspoon console) and then do the following:
 
 ~~~sh
 $ cd wherever-you-downloaded-the-files
 $ [HS_APPLICATION=/Applications] [PREFIX=~/.hammerspoon] make docs install
 ~~~
 
+If you do not care about the documentation do the following:
+
+~~~sh
+$ cd wherever-you-downloaded-the-files
+$ [HS_APPLICATION=/Applications] [PREFIX=~/.hammerspoon] make install
+~~~
+
 If your Hammerspoon application is located in `/Applications`, you can leave out the `HS_APPLICATION` environment variable, and if your Hammerspoon files are located in their default location, you can leave out the `PREFIX` environment variable.  For most people it will be sufficient to just type `make docs install`.
+
+If you wish to build a universal library that will work on both Intel and Apple Silicon Macs, use `make [docs] install-universal`.
 
 As always, whichever method you chose, if you are updating from an earlier version it is recommended to fully quit and restart Hammerspoon after installing this module to ensure that the latest version of the module is loaded into memory.
 
@@ -118,7 +129,7 @@ As always, whichever method you chose, if you are updating from an earlier versi
 
 >     The MIT License (MIT)
 >
-> Copyright (c) 2020 Aaron Magill
+> Copyright (c) 2024 Aaron Magill
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 >
