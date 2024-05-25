@@ -678,7 +678,7 @@ objectMT.removeWidget = function(self, name)
     elseif type(name) == "string" then
         for k,v in pairs(obj._display) do
             if name == v.frameDetails.id then
-                element = v._element
+                element = v._self
                 obj._widgets[v.frameDetails.id] = nil
                 break
             end
@@ -823,7 +823,7 @@ module.new = function()
 
     obj._panelC, obj._sensorC = obj._panel:content(), obj._sensor:content()
     obj._panelC[#obj._panelC + 1] = {
-        _element       = canvas.new{}:assignElement{
+        _self          = canvas.new{}:assignElement{
                            type             = "rectangle",
                            id               = "backPanel",
                            strokeWidth      = 10,
@@ -836,7 +836,7 @@ module.new = function()
         containerFrame = { x = 0, y = 0, h = "100%", w = "100%" },
     }
     obj._panelC[#obj._panelC + 1] = {
-        _element       = obj._display,
+        _self          = obj._display,
         id             = "display",
         containerFrame = { h = "100%", w = "100%" }, -- placeholder, gets set in updatePanelFrame()
     }
