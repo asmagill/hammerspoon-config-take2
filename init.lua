@@ -100,23 +100,30 @@ require("hs.hotkey").setLogLevel("warning")
 _xtras = require("hs._asm.extras")
 
 _xtras.launchNewBuild = function()
-    local zipFile = "~/Hammerspoon.zip"
+    local full, dir, app = hs.processInfo.bundlePath:match("^((.+/)(.+%.app))$")
+    local zipFile        = app:match("^(.+)%.app$") .. ".zip"
 
-    assert((fs.attributes(zipFile) or {}).mode == "file", zipFile .. " not found or wrong type")
+    local srcZipFile = os.getenv("HOME") .. "/" .. zipFile
+
+    assert((fs.attributes(srcZipFile) or {}).mode == "file", srcZipFile .. " not found or wrong type")
     local prevDir = fs.currentDir()
     -- force return to original dir, even if we error out
     local onClose <close> = setmetatable({}, { __close = function(_) fs.chdir(prevDir) end })
 
-    fs.chdir("~")
-    assert(os.execute("unzip " .. zipFile), "Unable to expand " .. zipFile)
+    fs.chdir(dir)
+    assert(os.execute([[rm -f "]] .. zipFile .. [["]]), "Unable to remove previous " .. app .. " archive")
+    assert(os.execute([[zip -yqr "]] .. zipFile .. [[" "]] .. app .. [["]]), "Unable to archive current " .. app)
+
+    fs.chdir(os.getenv("HOME"))
+    assert(os.execute([[unzip "]] .. srcZipFile .. [["]]), "Unable to expand " .. srcZipFile)
 
     os.execute([[
 (while ps -p ]] .. hs.processInfo.processID .. [[ > /dev/null ; do
     sleep 1
 done
-rm -fr "]] .. hs.processInfo.bundlePath .. [["
-mv Hammerspoon.app "]] .. hs.processInfo.bundlePath .. [["
-open -a "]] .. hs.processInfo.bundlePath .. [[" ) &
+rm -fr "]] .. full .. [["
+mv Hammerspoon.app "]] .. full .. [["
+open -a "]] .. full .. [[" ) &
 ]])
 
     local hspoon = application.applicationsForBundleID(hs.processInfo.bundleID)[1]
