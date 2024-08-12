@@ -66,6 +66,7 @@ finspect2 = function(what, ...)
 end
 
 cbinspect = function (...) print(timestamp() .. ":: " .. finspect(...)) end
+_cbinspect = function(label) return function(...) print(timestamp() .. "::" .. label .. ":: " ..finspect(...)) end end
 
 module.help = function(...)
     return [[
