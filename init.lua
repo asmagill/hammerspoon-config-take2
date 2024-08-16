@@ -227,7 +227,7 @@ table.insert(spoon.BonjourLauncher.templates, {
 
 _objc = require("hs._asm.objc")
 
-hd = require("hs.utf8").hexDump
+_hex = require("hs.utf8").hexDump
 
 which = function(what)
     local results = {}
