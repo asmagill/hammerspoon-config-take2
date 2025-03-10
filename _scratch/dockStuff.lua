@@ -40,7 +40,7 @@ local axuielement = require("hs.axuielement")
 local inspect     = require("hs.inspect")
 
 local getDock = function()
-    local dockElement = axuielement.applicationElement("Dock")
+    local dockElement = axuielement.applicationElement("com.apple.dock")
     assert(dockElement, "Unable to aquire Dock accessibility element")
     return dockElement
 end
