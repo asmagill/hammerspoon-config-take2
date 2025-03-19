@@ -33,6 +33,8 @@ appMenu:rootDirectory({
     User         = os.getenv("HOME") .. "/Applications",
 })
 
+appMenu:mergeSources(true)
+
 -- The maximum folder depth that we will search for files or folders which match the
 -- criteria.  This prevents potential loops, which would ultimately crash HS.
 appMenu:subFolderDepth(7)
